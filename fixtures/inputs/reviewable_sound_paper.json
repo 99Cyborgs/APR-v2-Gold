@@ -1,0 +1,33 @@
+{
+  "audit_mode": "full",
+  "manuscript_id": "reviewable-sound-001",
+  "title": "Benchmarking a compact calibration routine for satellite thermal sensors",
+  "abstract": "We present a calibration routine for low-cost satellite thermal sensors and show that it reduces drift by 18% relative to the current baseline. The study compares three sensor families, identifies the failure regime above 80 C, and documents when the routine should not be used. Dataset and code are publicly released.",
+  "manuscript_text": "We benchmark the routine on three satellite thermal sensor families using a controlled thermal chamber. Table 1 reports pre-calibration and post-calibration error. Figure 1 shows drift reduction for each family, and Figure 2 shows the failure regime above 80 C. The method is limited by thermal shock transients and should not be used outside the validated temperature ramp. We compare against the current flightline baseline and report uncertainty intervals for each estimate.",
+  "figures_and_captions": [
+    "Figure 1. Drift reduction across the three sensor families after calibration.",
+    "Figure 2. Failure regime observed when the chamber exceeds 80 C."
+  ],
+  "tables": [
+    "Table 1. Pre-calibration and post-calibration error with uncertainty intervals."
+  ],
+  "references": [
+    "Ref1 baseline flightline calibration protocol.",
+    "Ref2 thermal chamber validation methods.",
+    "Ref3 uncertainty estimation for compact sensors."
+  ],
+  "supplement_or_appendix": "Appendix A provides chamber settings and measurement intervals.",
+  "target_venue": "Journal of Small Satellite Systems",
+  "target_audience": "space systems instrumentation researchers",
+  "outlet_profile_hint": null,
+  "declared_article_type": "methods_or_tools",
+  "data_availability": "Public dataset archived at Zenodo with accession ZEN-APR-001.",
+  "code_availability": "Public calibration code archived in a public repository.",
+  "materials_availability": "Fixture design and chamber settings are in the appendix.",
+  "ethics_and_disclosures": "The authors declare no competing interests.",
+  "reporting_checklist": null,
+  "prior_reviews": null,
+  "author_response_to_reviews": null,
+  "reviewer_notes": null,
+  "external_constraints": null
+}

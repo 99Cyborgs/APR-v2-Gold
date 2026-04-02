@@ -1,0 +1,32 @@
+{
+  "audit_mode": "full",
+  "manuscript_id": "venue-mismatch-001",
+  "title": "A narrow superconducting cavity correction for low-noise microwave readout",
+  "abstract": "We derive a correction term for a specific superconducting cavity geometry and show that it improves readout stability in one experimentally relevant operating window. The result is technically sound and scoped to a specialist microwave instrumentation audience.",
+  "manuscript_text": "We derive the correction from the cavity boundary conditions and validate the regime with a focused simulation plus one bench measurement. Figure 1 shows the stability improvement in the relevant operating window. The claim is narrow, not field-redefining, and limited to the studied geometry.",
+  "figures_and_captions": [
+    "Figure 1. Readout stability improvement in the validated operating window."
+  ],
+  "tables": [
+    "Table 1. Parameters for the studied cavity geometry."
+  ],
+  "references": [
+    "Ref1 cavity boundary condition derivation.",
+    "Ref2 superconducting microwave readout baseline.",
+    "Ref3 noise analysis for narrow-band cavity systems."
+  ],
+  "supplement_or_appendix": "Supplementary derivation details for the correction term.",
+  "target_venue": "Nature Physics",
+  "target_audience": "broad condensed-matter physics readership",
+  "outlet_profile_hint": null,
+  "declared_article_type": "theory_or_model",
+  "data_availability": "Bench measurement traces available on request.",
+  "code_availability": "Simulation code available on request.",
+  "materials_availability": "Geometry parameters are in Table 1 and the supplement.",
+  "ethics_and_disclosures": "The authors declare no competing interests.",
+  "reporting_checklist": null,
+  "prior_reviews": null,
+  "author_response_to_reviews": null,
+  "reviewer_notes": null,
+  "external_constraints": null
+}

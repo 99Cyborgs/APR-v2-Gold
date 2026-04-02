@@ -1,0 +1,111 @@
+policy_layer:
+  name: APR v2 Policy Layer
+  version: 2.0.0
+  doctrine:
+    - Claim before judgment.
+    - Scientific-record threshold before venue threshold.
+    - Canonical record supremacy over derived reports.
+    - Explicit uncertainty over inferred completeness.
+    - Domain logic stays outside core unless promoted intentionally.
+    - Packs are advisory only in v2.0.0.
+    - Human escalation is mandatory for high-stakes ambiguity.
+    - Gold-set evidence precedes calibration claims.
+  compatibility:
+    active_contract_versions:
+      - 2.0.0
+    one_active_contract_only: true
+    renderer_rule: renderers consume canonical output and do not redefine it
+  input_sufficiency_grades:
+    - low
+    - medium
+    - high
+  document_states:
+    - abstract_only
+    - partial_manuscript
+    - complete_manuscript
+  article_types:
+    - original_research
+    - methods_or_tools
+    - theory_or_model
+    - constraint_or_null_result
+    - replication_or_validation
+    - review
+    - systematic_review
+    - commentary_or_perspective
+    - protocol_or_registered_report
+    - case_report
+    - editorial_or_opinion
+  claim_types:
+    - empirical_claim
+    - benchmark_claim
+    - model_claim
+    - null_result_claim
+    - replication_claim
+    - synthesis_claim
+    - protocol_claim
+    - opinion_claim
+  domain_modules:
+    - methods_or_tools
+    - observational_or_empirical
+    - theory_physics_or_applied_math
+    - computational_or_simulation
+    - review_synthesis
+    - clinical_or_human_subjects
+    - general_scientific_manuscript
+  processing_states:
+    - INGESTED
+    - PARSED
+    - CLASSIFIED
+    - REVIEWABILITY_ASSESSED
+    - SCIENTIFIC_RECORD_ASSESSED
+    - VENUE_CALIBRATED
+    - REHABILITATION_COMPUTED
+    - PACKS_EXECUTED
+    - RENDERED
+  recommendation_states:
+    - NON_REVIEWABLE
+    - DO_NOT_SUBMIT
+    - REBUILD_BEFORE_SUBMISSION
+    - REVISE_BEFORE_SUBMISSION
+    - RETARGET_SPECIALIST
+    - RETARGET_SOUNDNESS_FIRST
+    - PREPRINT_READY_NOT_JOURNAL_READY
+    - SUBMIT_WITH_CAUTION
+    - PLAUSIBLE_SEND_OUT
+  outlet_profiles:
+    - nature_selective
+    - aps_selective
+    - specialist_research_journal
+    - soundness_first_journal
+    - review_only_venue
+    - preprint_screen
+  reviewability_checks:
+    - recoverable_central_claim
+    - coherent_article_claim_pair
+    - assessable_method_model_or_protocol
+    - identifiable_support_object
+    - scholarly_form_for_audit
+  scientific_record_core_criteria:
+    - problem_definition_and_claim_clarity
+    - methodological_legibility
+    - evidence_to_claim_alignment
+    - literature_positioning
+    - transparency_and_reporting_readiness
+    - integrity_and_policy_readiness
+  human_escalation_triggers:
+    - suspected_duplicate_publication
+    - authorship_or_credit_dispute
+    - image_or_figure_integrity_signal
+    - missing_critical_ethics_clearance
+    - possible_fabrication_or_manipulation
+    - high-impact ambiguity with thin support
+    - advisory_pack_escalation_request
+  pack_model:
+    advisory_only: true
+    rules:
+      - packs_must_be_loaded_explicitly
+      - packs_must_declare_metadata_and_supported_domains
+      - packs_may_return_not_applicable
+      - packs_may_add_signals_fatal_gate_requests_and_escalation_requests
+      - packs_may_not_redefine_core_field_meanings
+      - packs_may_not_silently_overwrite_core_recommendations

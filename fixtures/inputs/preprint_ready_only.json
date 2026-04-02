@@ -1,0 +1,30 @@
+{
+  "audit_mode": "triage",
+  "manuscript_id": "preprint-only-001",
+  "title": "An initial note on adaptive eclipse scheduling for small satellites",
+  "abstract": "We describe an initial scheduling heuristic for small satellites during eclipse transitions and show one toy simulation. The note is likely useful for discussion and preprint dissemination, but the evidence package is still narrow and the literature context is incomplete.",
+  "manuscript_text": "The note describes the heuristic and one toy simulation figure. It does not yet include a serious comparator set, mature reference layer, or a complete transparency statement. The authors frame the note as an early release to solicit feedback.",
+  "figures_and_captions": [
+    "Figure 1. Toy simulation of eclipse scheduling under one operating scenario."
+  ],
+  "tables": null,
+  "references": [
+    "Ref1 eclipse scheduling background note."
+  ],
+  "supplement_or_appendix": null,
+  "target_venue": "arXiv",
+  "target_audience": "small satellite methods community",
+  "outlet_profile_hint": "preprint_screen",
+  "declared_article_type": "methods_or_tools",
+  "data_availability": null,
+  "code_availability": null,
+  "materials_availability": null,
+  "ethics_and_disclosures": "The authors declare no competing interests.",
+  "reporting_checklist": null,
+  "prior_reviews": null,
+  "author_response_to_reviews": null,
+  "reviewer_notes": null,
+  "external_constraints": [
+    "Early release requested before full validation."
+  ]
+}

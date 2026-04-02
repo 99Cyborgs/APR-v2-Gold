@@ -1,0 +1,23 @@
+contract:
+  name: APR v2 Active Contract
+  version: 2.0.0
+  status: active
+  canonical_record: CanonicalAuditRecord
+  audit_input: NormalizedManuscriptPackage
+  audit_input_schema: contracts/active/audit_input.schema.json
+  canonical_record_schema: contracts/active/canonical_audit_record.schema.json
+  policy_layer: contracts/active/policy_layer.yaml
+  system_prompt: contracts/active/system_prompt.md
+  user_prompt_template: contracts/active/user_prompt_template.md
+  policy_layer_version: 2.0.0
+  compatibility:
+    runtime_loadable_contracts:
+      - 2.0.0
+    legacy_runtime_loading: false
+    notes:
+      - Renderers consume canonical output and do not redefine it.
+      - Legacy contracts under contracts/legacy are archive only.
+      - Advisory packs may annotate pack_results but may not mutate core recommendation semantics.
+  release:
+    version_source: contracts/active/manifest.yaml
+    clean_tree_required: true

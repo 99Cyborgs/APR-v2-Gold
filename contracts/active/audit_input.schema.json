@@ -1,0 +1,32 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://apr-v2.local/contracts/active/audit_input.schema.json",
+  "title": "NormalizedManuscriptPackage",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["audit_mode"],
+  "properties": {
+    "audit_mode": { "type": "string", "enum": ["triage", "full"] },
+    "manuscript_id": { "type": ["string", "null"] },
+    "title": { "type": ["string", "null"] },
+    "abstract": { "type": ["string", "null"] },
+    "manuscript_text": { "type": ["string", "null"] },
+    "figures_and_captions": { "type": ["array", "null"], "items": { "type": "string" } },
+    "tables": { "type": ["array", "null"], "items": { "type": "string" } },
+    "references": { "type": ["array", "null"], "items": { "type": "string" } },
+    "supplement_or_appendix": { "type": ["string", "null"] },
+    "target_venue": { "type": ["string", "null"] },
+    "target_audience": { "type": ["string", "null"] },
+    "outlet_profile_hint": { "type": ["string", "null"] },
+    "declared_article_type": { "type": ["string", "null"] },
+    "data_availability": { "type": ["string", "null"] },
+    "code_availability": { "type": ["string", "null"] },
+    "materials_availability": { "type": ["string", "null"] },
+    "ethics_and_disclosures": { "type": ["string", "null"] },
+    "reporting_checklist": { "type": ["string", "null"] },
+    "prior_reviews": { "type": ["array", "null"], "items": { "type": "string" } },
+    "author_response_to_reviews": { "type": ["string", "null"] },
+    "reviewer_notes": { "type": ["string", "null"] },
+    "external_constraints": { "type": ["array", "null"], "items": { "type": "string" } }
+  }
+}

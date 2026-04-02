@@ -1,0 +1,32 @@
+{
+  "audit_mode": "full",
+  "manuscript_id": "integrity-001",
+  "title": "Perfect agreement in a retrospective imaging cohort after manual enhancement",
+  "abstract": "We report perfect agreement between a new classifier and all retrospective cohort outcomes. The manuscript claims no exclusions, no failures, and no uncertainty, and it states that several panels were manually enhanced for clarity.",
+  "manuscript_text": "The paper presents a classifier result with identical performance across all cohorts and states that figure panels were manually enhanced after export. It also states that ethics approval was deferred because the dataset was already on hand. The manuscript does not explain overlap with a prior conference version despite matching figures and tables.",
+  "figures_and_captions": [
+    "Figure 1. Enhanced classifier output panel with manually adjusted contrast."
+  ],
+  "tables": [
+    "Table 1. Perfect agreement across all cohorts with no uncertainty intervals."
+  ],
+  "references": [
+    "Ref1 prior conference version of a similar classifier."
+  ],
+  "supplement_or_appendix": null,
+  "target_venue": "Specialist Imaging Journal",
+  "target_audience": "medical imaging reviewers",
+  "outlet_profile_hint": null,
+  "declared_article_type": "original_research",
+  "data_availability": "Patient data cannot be shared.",
+  "code_availability": null,
+  "materials_availability": null,
+  "ethics_and_disclosures": "No ethics approval was obtained because the dataset was already available. The authors declare no competing interests.",
+  "reporting_checklist": null,
+  "prior_reviews": [
+    "Reviewer asked whether Figure 1 duplicates the conference version."
+  ],
+  "author_response_to_reviews": null,
+  "reviewer_notes": "Possible duplicate-publication overlap and image manipulation concern. Authorship order is disputed in the cover letter.",
+  "external_constraints": null
+}

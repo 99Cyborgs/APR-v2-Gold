@@ -1,0 +1,11 @@
+pack:
+  pack_id: physics_pack
+  display_name: APR Physics Pack
+  version: 0.1.0
+  api_version: 1
+  advisory_only: true
+  supported_domains:
+    - theory_physics_or_applied_math
+    - computational_or_simulation
+  python_module: apr_pack_physics.entry
+  builder: build_pack

@@ -1,0 +1,111 @@
+manifest_version: 2.0.0
+contract_version: 2.0.0
+case_root: ../../fixtures/inputs
+partitions:
+  - name: core_structural
+    description: Core reviewability and scientific-record threshold checks.
+    cases:
+      - case_id: reviewable_sound_paper
+        input: reviewable_sound_paper.json
+        expected:
+          decision.recommendation: PLAUSIBLE_SEND_OUT
+          reviewability.status: pass
+          scientific_record.status: pass
+          classification.article_type: methods_or_tools
+          classification.claim_type: benchmark_claim
+          classification.domain_module: methods_or_tools
+          classification.outlet_profile: specialist_research_journal
+          decision.human_escalation_required: false
+        required_nonempty_paths:
+          - parsing.central_claim_anchor
+          - parsing.decisive_support_object
+          - scientific_record.criteria.evidence_to_claim_alignment.evidence_anchors
+      - case_id: abstract_only_fragment
+        input: abstract_only_fragment.json
+        expected:
+          decision.recommendation: NON_REVIEWABLE
+          reviewability.status: fail
+          scientific_record.status: fatal_fail
+          classification.article_type: commentary_or_perspective
+          classification.claim_type: opinion_claim
+          decision.human_escalation_required: false
+        required_nonempty_paths:
+          - parsing.central_claim_anchor
+          - scientific_record.criteria.problem_definition_and_claim_clarity.evidence_anchors
+      - case_id: non_reviewable_speculative_paper
+        input: non_reviewable_speculative_paper.json
+        expected:
+          decision.recommendation: NON_REVIEWABLE
+          reviewability.status: fail
+          scientific_record.status: fatal_fail
+          classification.outlet_profile: nature_selective
+          classification.domain_module: theory_physics_or_applied_math
+          decision.human_escalation_required: false
+        required_nonempty_paths:
+          - parsing.central_claim_anchor
+          - reviewability.evidence_anchors
+  - name: venue_calibration
+    description: Cases that are record-ready but venue-mismatched or profile-specific.
+    cases:
+      - case_id: venue_mismatched_selective
+        input: venue_mismatched_selective.json
+        expected:
+          decision.recommendation: RETARGET_SPECIALIST
+          reviewability.status: pass
+          scientific_record.status: pass
+          venue.routing_state: retarget_specialist
+          classification.outlet_profile: nature_selective
+          decision.human_escalation_required: false
+        required_nonempty_paths:
+          - venue.evidence_anchors
+      - case_id: null_replication_case
+        input: null_replication_case.json
+        expected:
+          decision.recommendation: PLAUSIBLE_SEND_OUT
+          reviewability.status: pass
+          scientific_record.status: pass
+          classification.article_type: replication_or_validation
+          classification.claim_type: replication_claim
+          classification.outlet_profile: soundness_first_journal
+          decision.human_escalation_required: false
+        required_nonempty_paths:
+          - scientific_record.criteria.transparency_and_reporting_readiness.evidence_anchors
+      - case_id: preprint_ready_only
+        input: preprint_ready_only.json
+        expected:
+          decision.recommendation: PREPRINT_READY_NOT_JOURNAL_READY
+          reviewability.status: pass
+          scientific_record.status: borderline
+          classification.outlet_profile: preprint_screen
+          decision.human_escalation_required: false
+        required_nonempty_paths:
+          - venue.evidence_anchors
+  - name: adversarial
+    description: Inputs that should escalate or fail cleanly.
+    cases:
+      - case_id: integrity_escalation
+        input: integrity_escalation.json
+        expected:
+          decision.recommendation: DO_NOT_SUBMIT
+          integrity.status: escalate
+          scientific_record.status: fatal_fail
+          decision.human_escalation_required: true
+        required_nonempty_paths:
+          - integrity.evidence_anchors
+          - scientific_record.criteria.integrity_and_policy_readiness.evidence_anchors
+  - name: pack_specific
+    description: Domain-specific advisory pack behavior.
+    cases:
+      - case_id: theory_pack_case
+        input: theory_pack_case.json
+        pack_paths:
+          - ../../fixtures/external_packs/apr-pack-physics
+        expected:
+          decision.recommendation: PLAUSIBLE_SEND_OUT
+          reviewability.status: pass
+          scientific_record.status: pass
+          classification.domain_module: theory_physics_or_applied_math
+          decision.human_escalation_required: false
+        required_nonempty_paths:
+          - pack_results
+          - pack_execution.loaded_packs

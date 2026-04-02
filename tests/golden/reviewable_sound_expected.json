@@ -1,0 +1,18 @@
+{
+  "contract_version": "2.0.0",
+  "classification": {
+    "article_type": "methods_or_tools",
+    "claim_type": "benchmark_claim",
+    "outlet_profile": "specialist_research_journal",
+    "domain_module": "methods_or_tools"
+  },
+  "reviewability": {
+    "status": "pass"
+  },
+  "scientific_record": {
+    "status": "pass"
+  },
+  "decision": {
+    "recommendation": "PLAUSIBLE_SEND_OUT"
+  }
+}

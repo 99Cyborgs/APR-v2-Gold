@@ -1,0 +1,32 @@
+{
+  "audit_mode": "full",
+  "manuscript_id": "replication-001",
+  "title": "Replication of the reported transit-timing anomaly in archival survey data",
+  "abstract": "We reanalyze the reported transit-timing anomaly using the original archival survey pipeline and an independent replication workflow. We do not recover the claimed anomaly and instead constrain its effect size below the previously reported threshold. Data and code are publicly archived.",
+  "manuscript_text": "The manuscript reproduces the original preprocessing choices, runs an independent pipeline, and compares the outputs against the published anomaly claim. Table 1 reports the constrained effect sizes and Figure 1 shows agreement between the two replication pipelines. The result is a sound replication-style null finding rather than a broad novelty claim.",
+  "figures_and_captions": [
+    "Figure 1. Agreement between the original and independent replication pipelines."
+  ],
+  "tables": [
+    "Table 1. Effect-size constraints relative to the published anomaly."
+  ],
+  "references": [
+    "Ref1 original anomaly report.",
+    "Ref2 archival survey pipeline documentation.",
+    "Ref3 replication workflow reference."
+  ],
+  "supplement_or_appendix": "Replication scripts and parameter settings are listed in the supplement.",
+  "target_venue": "Scientific Reports",
+  "target_audience": "observational astronomy researchers",
+  "outlet_profile_hint": null,
+  "declared_article_type": "replication_or_validation",
+  "data_availability": "Archival survey identifiers and processed replication tables are public.",
+  "code_availability": "Replication workflow and analysis notebooks are public.",
+  "materials_availability": "No additional materials are required.",
+  "ethics_and_disclosures": "The authors declare no competing interests.",
+  "reporting_checklist": null,
+  "prior_reviews": null,
+  "author_response_to_reviews": null,
+  "reviewer_notes": null,
+  "external_constraints": null
+}

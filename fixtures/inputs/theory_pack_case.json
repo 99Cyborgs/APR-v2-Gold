@@ -1,0 +1,30 @@
+{
+  "audit_mode": "full",
+  "manuscript_id": "theory-pack-001",
+  "title": "A Hamiltonian model for driven qubit relaxation with a measurable spectroscopy signature",
+  "abstract": "We develop a Hamiltonian model for driven qubit relaxation and predict a spectroscopy line-splitting signature that differs from standard Lindblad dynamics. In the weak-drive limit the model reduces to the standard relaxation result.",
+  "manuscript_text": "The Hamiltonian introduces a drive-dependent coupling term and we derive the equations of motion for the reduced qubit dynamics. We compute predicted spectroscopy curves across drive amplitudes and compare the signature against the standard Lindblad baseline. Figure 1 shows the predicted line splitting versus drive amplitude.",
+  "figures_and_captions": [
+    "Figure 1. Predicted spectroscopy line splitting versus drive amplitude."
+  ],
+  "tables": null,
+  "references": [
+    "Ref1 driven qubit relaxation baseline.",
+    "Ref2 Lindblad dynamics in the weak-drive limit.",
+    "Ref3 spectroscopy of driven superconducting qubits."
+  ],
+  "supplement_or_appendix": "Appendix A derives the reduced equations of motion and limiting-case reduction.",
+  "target_venue": "Physical Review B",
+  "target_audience": "quantum condensed-matter specialists",
+  "outlet_profile_hint": null,
+  "declared_article_type": "theory_or_model",
+  "data_availability": "No new dataset is produced; analytic derivations and generated curves are in the manuscript.",
+  "code_availability": "Symbolic derivation scripts are available on request.",
+  "materials_availability": "Not applicable.",
+  "ethics_and_disclosures": "The authors declare no competing interests.",
+  "reporting_checklist": null,
+  "prior_reviews": null,
+  "author_response_to_reviews": null,
+  "reviewer_notes": null,
+  "external_constraints": null
+}
