@@ -1,6 +1,8 @@
-# APR v2
+# APR v2 Gold
 
-APR v2 is a deterministic manuscript-audit engine. It extracts a recoverable central claim, evaluates reviewability, evaluates scientific-record readiness, routes only after the scientific-record gate, and produces one canonical audit record that every renderer and harness consumes.
+APR v2 Gold is the public repository foundation for APR v2, a deterministic manuscript-audit engine. It extracts a recoverable central claim, evaluates reviewability, evaluates scientific-record readiness, routes only after the scientific-record gate, and produces one canonical audit record that every renderer and harness consumes.
+
+The public repository label is `APR v2 Gold`. The installable package remains `apr-v2`, and the supported CLI remains `apr`.
 
 APR v2 is not a journal submission bot, reviewer assignment system, collaboration surface, or misconduct adjudicator. Domain-specific logic stays outside core semantics and is loaded only through advisory packs.
 
