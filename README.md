@@ -1,54 +1,22 @@
 # APR v2 Gold
 
-APR v2 Gold is the public repository foundation for APR v2, a deterministic manuscript-audit engine. It extracts a recoverable central claim, evaluates reviewability, evaluates scientific-record readiness, routes only after the scientific-record gate, and produces one canonical audit record that every renderer and harness consumes.
+## Current State
 
-The public repository label is `APR v2 Gold`. The installable package remains `apr-v2`, and the supported CLI remains `apr`.
+- `APR v2 Gold` is a Python 3.12 deterministic manuscript-audit engine packaged as `apr-v2` with the `apr` CLI.
+- The active local runtime lives in `src/apr_core/`, and the active contract and policy layer live in `contracts/active/`.
+- The CLI currently supports repo/runtime validation (`apr doctor`), audit execution (`apr audit`), markdown rendering from canonical records (`apr render`), benchmark execution (`apr goldset`), and advisory-pack inspection (`apr packs`).
+- The benchmark harness is live in `benchmarks/goldset/` with an executable manifest, JSON Schemas for manifest and summary validation, and a calibration-ledger flow.
+- The benchmarked surfaces currently include central-claim recovery, article and claim classification, reviewability gating, scientific-record gating, venue routing after gating, integrity escalation, human-escalation signaling, and advisory-pack execution visibility.
+- The public repo already distinguishes `core_gold`, `stress_gold`, and `holdout` strata, but the `holdout` stratum is still reserved because there are no active untuned public holdout fixtures yet.
 
-APR v2 is not a journal submission bot, reviewer assignment system, collaboration surface, or misconduct adjudicator. Domain-specific logic stays outside core semantics and is loaded only through advisory packs.
+## Goal
 
-## Repo Boundary
+- Build a deterministic, contract-driven audit engine that turns a normalized manuscript package into one canonical audit record.
+- Keep the system benchmarkable and reproducible so claim recovery, record-readiness decisions, routing, and escalation behavior can be checked against explicit expectations.
+- Preserve core semantics in the local engine while allowing external packs to add advisory context without redefining the canonical decision surfaces.
 
-- `src/apr_core/` contains the deterministic local runtime.
-- `contracts/active/` contains the only loadable runtime contract.
-- `benchmarks/goldset/` contains the benchmark harness manifest.
-- `fixtures/external_packs/` contains a sample advisory pack scaffold for path-based loading.
-- Generated reports, runtime output, release bundles, caches, and local state are excluded from git.
+## Next Steps
 
-## Active Contract
-
-- Canonical input schema: `contracts/active/audit_input.schema.json`
-- Canonical output schema: `contracts/active/canonical_audit_record.schema.json`
-- Active manifest: `contracts/active/manifest.yaml`
-- Active policy layer: `contracts/active/policy_layer.yaml`
-
-Renderers consume canonical records and may not redefine their meaning.
-
-## CLI
-
-Install in editable mode and use the `apr` command:
-
-```bash
-python -m pip install -e .[dev]
-apr doctor
-apr audit fixtures/inputs/reviewable_sound_paper.json --output output/reviewable_record.json
-apr render output/reviewable_record.json --output output/reviewable_report.md
-apr goldset --output output/goldset_summary.json
-apr packs --pack-path fixtures/external_packs/apr-pack-physics
-```
-
-## Deterministic Flow
-
-1. Normalize the manuscript package.
-2. Extract claim candidates, anchors, and support objects.
-3. Infer article type, claim type, domain module, and outlet profile.
-4. Apply the reviewability gate.
-5. Apply the scientific-record gate.
-6. Route through venue logic only if the scientific-record gate allows it.
-7. Build a ranked rehabilitation plan.
-8. Execute explicitly requested advisory packs.
-9. Emit a schema-valid `CanonicalAuditRecord`.
-10. Render markdown from that canonical record only.
-
-## Calibration Honesty
-
-APR v2 ships with a real gold-set harness, but it does not claim calibrated editorial priors beyond the included fixtures. Benchmark output is explicit about what was tested, what matched expectations, and what remains holdout-only scaffolding.
+- Expand benchmark coverage for implemented-but-not-frozen surfaces such as transparency sub-assessment details, rehabilitation-plan ranking, and markdown rendering behavior.
+- Populate the reserved `holdout` lane with real untuned public fixtures and use the existing blind holdout evaluation path to measure drift separately from development cases.
+- Continue tightening the benchmark-governance layer so the manifest, schemas, ledger outputs, and spec/implementation boundary stay aligned as the engine evolves.
