@@ -1,5 +1,13 @@
 from __future__ import annotations
 
+"""Gate whether a manuscript is assessable before scientific-record judgment.
+
+Reviewability failure means APR lacks a stable claim, reconstructable method
+surface, or claim-bearing support object. That state is rejected early so later
+scientific judgments are not mistaken for justified evaluation of an
+unassessable manuscript.
+"""
+
 from typing import Any
 
 from apr_core.anchors import dedupe_anchors, first_anchor_from_fields
@@ -10,6 +18,8 @@ def assess_reviewability(payload: dict[str, Any], parsing: dict[str, Any], class
     decisive_support_object = parsing.get("decisive_support_object")
     central_claim_anchor = parsing.get("central_claim_anchor")
 
+    # This layer blocks downstream adequacy judgments when the manuscript cannot
+    # yet support disciplined review, even if the JSON shape is otherwise valid.
     checks = {
         "recoverable_central_claim": "pass"
         if parsing.get("central_claim") and parsing.get("claim_extraction_confidence", 0.0) >= 0.45

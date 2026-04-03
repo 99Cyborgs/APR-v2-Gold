@@ -1,5 +1,13 @@
 from __future__ import annotations
 
+"""Dataclasses for APR's canonical in-memory contract shapes.
+
+These types improve structural discipline, but most governance-bearing surfaces
+remain intentionally open dictionaries because the authoritative semantics live
+in the active schemas and policy layer. Treat these classes as transport shells,
+not as a substitute for schema and semantic validation.
+"""
+
 from dataclasses import asdict, dataclass
 from typing import Any
 
@@ -66,6 +74,9 @@ class NormalizedManuscriptPackage:
 
 @dataclass(slots=True)
 class CanonicalAuditRecord:
+    # These nested mappings carry contract-governed semantics that exceed Python
+    # typing. They must stay aligned with the canonical record schema and the
+    # pipeline's semantic gates, not merely with this dataclass field list.
     contract_version: str
     policy_layer_version: str
     audit_mode: str

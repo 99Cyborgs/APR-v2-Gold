@@ -1,0 +1,2067 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://apr-v2-gold/benchmarks/goldset/schemas/ledger_entry.schema.json",
+  "title": "APR v2 Goldset Ledger Entry",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "generated_at_utc",
+    "commit_sha",
+    "git_dirty",
+    "operator",
+    "notes",
+    "contract_version",
+    "manifest_version",
+    "manifest_path",
+    "manifest_sha256",
+    "result_type_counts",
+    "error_class_counts",
+    "case_deltas",
+    "recommendation_changes_vs_prior",
+    "gates",
+    "prior_generated_at_utc",
+    "case_outcomes"
+  ],
+  "properties": {
+    "generated_at_utc": {
+      "type": "string"
+    },
+    "commit_sha": {
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "git_dirty": {
+      "type": [
+        "boolean",
+        "null"
+      ]
+    },
+    "operator": {
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "notes": {
+      "type": "string"
+    },
+    "contract_version": {
+      "type": "string"
+    },
+    "manifest_version": {
+      "type": "string"
+    },
+    "manifest_path": {
+      "type": "string"
+    },
+    "manifest_sha256": {
+      "type": "string"
+    },
+    "evaluation_mode": {
+      "type": "string"
+    },
+    "holdout": {
+      "$ref": "#/$defs/holdout"
+    },
+    "prior_generated_at_utc": {
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "result_type_counts": {
+      "type": "object",
+      "additionalProperties": {
+        "type": "integer",
+        "minimum": 0
+      }
+    },
+    "error_class_counts": {
+      "type": "object",
+      "additionalProperties": {
+        "type": "integer",
+        "minimum": 0
+      }
+    },
+    "governance": {
+      "$ref": "#/$defs/governance"
+    },
+    "decision_algebra": {
+      "$ref": "#/$defs/decisionAlgebra"
+    },
+    "decision_consistency": {
+      "$ref": "#/$defs/decisionConsistency"
+    },
+    "editorial_first_pass_score": {
+      "$ref": "#/$defs/editorialFirstPassSummary"
+    },
+    "editorial_plausibility_flags": {
+      "type": "object",
+      "additionalProperties": {
+        "type": "integer",
+        "minimum": 0
+      }
+    },
+    "calibration_export": {
+      "$ref": "#/$defs/calibrationExport"
+    },
+    "system_diagnostics": {
+      "$ref": "#/$defs/systemDiagnostics"
+    },
+    "regression_governor": {
+      "$ref": "#/$defs/regressionGovernor"
+    },
+    "case_deltas": {
+      "$ref": "#/$defs/caseDeltas"
+    },
+    "recommendation_changes_vs_prior": {
+      "$ref": "#/$defs/recommendationChanges"
+    },
+    "gates": {
+      "$ref": "#/$defs/gates"
+    },
+    "case_outcomes": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "case_id",
+          "stratum",
+          "partition",
+          "status",
+          "error_classes",
+          "decision_recommendation",
+          "observed"
+        ],
+        "properties": {
+          "case_id": {
+            "type": "string"
+          },
+          "stratum": {
+            "type": "string"
+          },
+          "partition": {
+            "type": "string"
+          },
+          "category": {
+            "type": "string"
+          },
+          "gate_behavior": {
+            "type": "string"
+          },
+          "status": {
+            "type": "string"
+          },
+          "error_classes": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "decision_recommendation": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "observed": {
+            "type": "object",
+            "additionalProperties": {
+              "$ref": "#/$defs/primitiveOrNull"
+            }
+          },
+          "expected_decision": {
+            "$ref": "#/$defs/expectedDecision"
+          },
+          "decision_consistency_status": {
+            "type": "string"
+          },
+          "decision_score": {
+            "type": [
+              "number",
+              "null"
+            ]
+          },
+          "recommendation_bias": {
+            "type": [
+              "number",
+              "null"
+            ]
+          },
+          "recommendation_loss": {
+            "type": [
+              "number",
+              "null"
+            ]
+          },
+          "total_score": {
+            "type": [
+              "number",
+              "null"
+            ]
+          },
+          "editorial_forecast": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "author_recommendation": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "fatal_override": {
+            "type": "boolean"
+          },
+          "editorial_plausibility_flags": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "editorial_first_pass": {
+            "$ref": "#/$defs/editorialFirstPass"
+          },
+          "scientific_recommendation": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "scientific_recommendation_band": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "decision_confidence": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "scientific_score": {
+            "$ref": "#/$defs/scientificScoreVector"
+          },
+          "scientific_score_vector": {
+            "description": "Compatibility alias of scientific_score_vector_native.",
+            "$ref": "#/$defs/nativeScientificScoreVector"
+          },
+          "scientific_score_vector_legacy": {
+            "$ref": "#/$defs/scientificScoreVector"
+          },
+          "scientific_score_vector_native": {
+            "$ref": "#/$defs/nativeScientificScoreVector"
+          },
+          "editorial_score": {
+            "$ref": "#/$defs/editorialScoreVector"
+          },
+          "scientific_loss": {
+            "type": [
+              "number",
+              "null"
+            ]
+          },
+          "editorial_penalty": {
+            "type": [
+              "number",
+              "null"
+            ]
+          },
+          "total_loss": {
+            "type": [
+              "number",
+              "null"
+            ]
+          },
+          "boundary_margin": {
+            "type": [
+              "number",
+              "null"
+            ]
+          },
+          "loss_band": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "drift_counterfactual": {
+            "anyOf": [
+              {
+                "$ref": "#/$defs/driftCounterfactual"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "drift_counterfactuals": {
+            "type": "array",
+            "items": {
+              "$ref": "#/$defs/driftCounterfactual"
+            }
+          },
+          "drift_counterfactual_stability": {
+            "type": [
+              "number",
+              "null"
+            ]
+          },
+          "editorial_anomalies": {
+            "$ref": "#/$defs/editorialAnomalies"
+          },
+          "recommendation_bin": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "error_class_bins": {
+            "type": "object",
+            "additionalProperties": {
+              "type": "integer",
+              "minimum": 0
+            }
+          },
+          "error_class_groups": {
+            "type": "object",
+            "additionalProperties": {
+              "type": "integer",
+              "minimum": 0
+            }
+          }
+        }
+      }
+    },
+    "scientific_score_summary": {
+      "$ref": "#/$defs/scoreVectorSummary"
+    },
+    "editorial_score_summary": {
+      "$ref": "#/$defs/scoreVectorSummary"
+    },
+    "editorial_anomalies": {
+      "type": "object",
+      "additionalProperties": {
+        "type": "integer",
+        "minimum": 0
+      }
+    }
+  },
+  "$defs": {
+    "primitiveOrNull": {
+      "type": [
+        "string",
+        "boolean",
+        "number",
+        "null"
+      ]
+    },
+    "expectedDecision": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "recommendation",
+        "recommendation_band",
+        "human_escalation_required"
+      ],
+      "properties": {
+        "recommendation": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "recommendation_band": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "human_escalation_required": {
+          "type": [
+            "boolean",
+            "null"
+          ]
+        }
+      }
+    },
+    "caseDelta": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "case_id",
+        "change_type",
+        "previous_status",
+        "current_status",
+        "previous_recommendation",
+        "current_recommendation",
+        "new_error_classes",
+        "resolved_error_classes"
+      ],
+      "properties": {
+        "case_id": {
+          "type": "string"
+        },
+        "change_type": {
+          "type": "string",
+          "enum": [
+            "new_case",
+            "changed"
+          ]
+        },
+        "previous_status": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "current_status": {
+          "type": "string"
+        },
+        "previous_recommendation": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "current_recommendation": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "new_error_classes": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "resolved_error_classes": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "caseDeltas": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "available",
+        "prior_generated_at_utc",
+        "changed_case_count",
+        "unchanged_case_count",
+        "cases"
+      ],
+      "properties": {
+        "available": {
+          "type": "boolean"
+        },
+        "prior_generated_at_utc": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "changed_case_count": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "unchanged_case_count": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "cases": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/caseDelta"
+          }
+        }
+      }
+    },
+    "recommendationChanges": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "available",
+        "total_changed_cases",
+        "by_transition"
+      ],
+      "properties": {
+        "available": {
+          "type": "boolean"
+        },
+        "total_changed_cases": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "by_transition": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "integer",
+            "minimum": 0
+          }
+        }
+      }
+    },
+    "gateFailure": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "gate_id",
+        "description",
+        "case_ids"
+      ],
+      "properties": {
+        "gate_id": {
+          "type": "string"
+        },
+        "description": {
+          "type": "string"
+        },
+        "case_ids": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "current_count": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "previous_count": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "details": {
+          "type": "object"
+        }
+      }
+    },
+    "gateSkip": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "gate_id",
+        "reason"
+      ],
+      "properties": {
+        "gate_id": {
+          "type": "string"
+        },
+        "reason": {
+          "type": "string"
+        }
+      }
+    },
+    "gates": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "status",
+        "absolute_failures",
+        "delta_failures",
+        "skipped",
+        "prior_run_available",
+        "changed_case_count_vs_prior"
+      ],
+      "properties": {
+        "status": {
+          "type": "string",
+          "enum": [
+            "pass",
+            "fail"
+          ]
+        },
+        "absolute_failures": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/gateFailure"
+          }
+        },
+        "delta_failures": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/gateFailure"
+          }
+        },
+        "rolling_failures": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/gateFailure"
+          }
+        },
+        "skipped": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/gateSkip"
+          }
+        },
+        "prior_run_available": {
+          "type": "boolean"
+        },
+        "changed_case_count_vs_prior": {
+          "type": "integer",
+          "minimum": 0
+        }
+      }
+    },
+    "holdout": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "mode",
+        "blind_evaluation",
+        "active_case_count",
+        "scaffold_case_count",
+        "excluded_case_ids",
+        "evaluated_case_ids",
+        "redacted_case_ids"
+      ],
+      "properties": {
+        "mode": {
+          "type": "string"
+        },
+        "blind_evaluation": {
+          "type": "boolean"
+        },
+        "active_case_count": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "scaffold_case_count": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "excluded_case_ids": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "evaluated_case_ids": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "redacted_case_ids": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "noise_injected": {
+          "type": "boolean"
+        },
+        "blindness_level": {
+          "type": "string"
+        }
+      }
+    },
+    "decisionAlgebra": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "severity_weights",
+        "fatal_weight_scale",
+        "recommendation_loss_model",
+        "fatal_override_error_classes",
+        "total_decision_score",
+        "total_recommendation_loss",
+        "total_score",
+        "fatal_override_cases",
+        "editorial_forecast_counts",
+        "author_recommendation_counts"
+      ],
+      "properties": {
+        "severity_weights": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "number"
+          }
+        },
+        "fatal_weight_scale": {
+          "type": "number",
+          "exclusiveMinimum": 0
+        },
+        "recommendation_loss_model": {
+          "type": "string"
+        },
+        "fatal_override_error_classes": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "total_decision_score": {
+          "type": "number",
+          "minimum": 0
+        },
+        "total_recommendation_loss": {
+          "type": "number",
+          "minimum": 0
+        },
+        "total_score": {
+          "type": "number",
+          "minimum": 0
+        },
+        "fatal_override_cases": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "editorial_forecast_counts": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "integer",
+            "minimum": 0
+          }
+        },
+        "author_recommendation_counts": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "integer",
+            "minimum": 0
+          }
+        },
+        "plane_mode": {
+          "type": "string"
+        },
+        "use_editorial_for_decision": {
+          "type": "boolean"
+        },
+        "total_scientific_loss": {
+          "type": "number",
+          "minimum": 0
+        },
+        "total_editorial_penalty": {
+          "type": "number",
+          "minimum": 0
+        },
+        "minimum_boundary_margin": {
+          "type": [
+            "number",
+            "null"
+          ]
+        }
+      }
+    },
+    "decisionConsistency": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "exact_match_cases",
+        "band_match_cases",
+        "mismatch_cases",
+        "unavailable_cases",
+        "scaffold_cases",
+        "consistency_rate"
+      ],
+      "properties": {
+        "exact_match_cases": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "band_match_cases": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "mismatch_cases": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "unavailable_cases": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "scaffold_cases": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "consistency_rate": {
+          "type": [
+            "number",
+            "null"
+          ]
+        }
+      }
+    },
+    "editorialFirstPass": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "abstract_clarity",
+        "novelty_explicitness",
+        "evidence_visibility",
+        "total"
+      ],
+      "properties": {
+        "abstract_clarity": {
+          "type": [
+            "integer",
+            "null"
+          ]
+        },
+        "novelty_explicitness": {
+          "type": [
+            "integer",
+            "null"
+          ]
+        },
+        "evidence_visibility": {
+          "type": [
+            "integer",
+            "null"
+          ]
+        },
+        "total": {
+          "type": [
+            "integer",
+            "null"
+          ]
+        }
+      }
+    },
+    "editorialFirstPassSummary": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "case_count",
+        "mean_total",
+        "mean_abstract_clarity",
+        "mean_novelty_explicitness",
+        "mean_evidence_visibility",
+        "max_total",
+        "min_total"
+      ],
+      "properties": {
+        "case_count": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "mean_total": {
+          "type": [
+            "number",
+            "null"
+          ]
+        },
+        "mean_abstract_clarity": {
+          "type": [
+            "number",
+            "null"
+          ]
+        },
+        "mean_novelty_explicitness": {
+          "type": [
+            "number",
+            "null"
+          ]
+        },
+        "mean_evidence_visibility": {
+          "type": [
+            "number",
+            "null"
+          ]
+        },
+        "max_total": {
+          "type": [
+            "integer",
+            "null"
+          ]
+        },
+        "min_total": {
+          "type": [
+            "integer",
+            "null"
+          ]
+        }
+      }
+    },
+    "governance": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "baseline_window",
+        "regression_threshold",
+        "fatal_weight_scale",
+        "drift_thresholds",
+        "holdout_noise",
+        "recommendation_loss_matrix",
+        "editorial_first_pass",
+        "severity_weights"
+      ],
+      "properties": {
+        "baseline_window": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "regression_threshold": {
+          "type": "number",
+          "minimum": 0
+        },
+        "fatal_weight_scale": {
+          "type": "number",
+          "exclusiveMinimum": 0
+        },
+        "drift_thresholds": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "false_accept_rate",
+            "recommendation_bias"
+          ],
+          "properties": {
+            "false_accept_rate": {
+              "type": "number",
+              "minimum": 0
+            },
+            "recommendation_bias": {
+              "type": "number",
+              "minimum": 0
+            }
+          }
+        },
+        "holdout_noise": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "enabled",
+            "error_count_jitter",
+            "mask_recommendations"
+          ],
+          "properties": {
+            "enabled": {
+              "type": "boolean"
+            },
+            "error_count_jitter": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "mask_recommendations": {
+              "type": "boolean"
+            },
+            "loss_epsilon": {
+              "type": "number",
+              "minimum": 0
+            }
+          }
+        },
+        "recommendation_loss_matrix": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "object",
+            "additionalProperties": {
+              "type": "integer",
+              "minimum": 0
+            }
+          }
+        },
+        "editorial_first_pass": {
+          "type": "object"
+        },
+        "severity_weights": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "number"
+          }
+        },
+        "scientific_weights": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "number"
+          }
+        },
+        "editorial_weights": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "number"
+          }
+        },
+        "editorial_penalty_weight": {
+          "type": "number",
+          "minimum": 0
+        },
+        "gating": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "use_editorial_for_decision": {
+              "type": "boolean"
+            }
+          },
+          "required": [
+            "use_editorial_for_decision"
+          ]
+        },
+        "drift_intervention": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "enabled": {
+              "type": "boolean"
+            }
+          },
+          "required": [
+            "enabled"
+          ]
+        },
+        "drift_counterfactuals": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "enabled": {
+              "type": "boolean"
+            },
+            "perturbations": {
+              "type": "integer",
+              "minimum": 1
+            },
+            "jitter": {
+              "type": "number",
+              "minimum": 0
+            }
+          },
+          "required": [
+            "enabled"
+          ]
+        },
+        "holdout_blindness": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "level": {
+              "type": "string"
+            },
+            "recommendation_bins": {
+              "type": "boolean"
+            },
+            "error_class_binning": {
+              "type": "boolean"
+            },
+            "pass_fail_jitter": {
+              "type": "boolean"
+            }
+          },
+          "required": [
+            "level",
+            "recommendation_bins",
+            "error_class_binning",
+            "pass_fail_jitter"
+          ]
+        },
+        "calibration": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "extended_export": {
+              "type": "boolean"
+            }
+          },
+          "required": [
+            "extended_export"
+          ]
+        },
+        "loss_quantization": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "enabled": {
+              "type": "boolean"
+            },
+            "places": {
+              "type": "integer",
+              "minimum": 0
+            }
+          },
+          "required": [
+            "enabled",
+            "places"
+          ]
+        },
+        "planes": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "mode": {
+              "type": "string"
+            },
+            "explicit_cli_flag": {
+              "type": "boolean"
+            }
+          },
+          "required": [
+            "mode",
+            "explicit_cli_flag"
+          ]
+        }
+      }
+    },
+    "calibrationExample": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "case_id",
+        "decision_score",
+        "outcome"
+      ],
+      "properties": {
+        "case_id": {
+          "type": "string"
+        },
+        "decision_score": {
+          "type": "number"
+        },
+        "outcome": {
+          "type": "string"
+        },
+        "scientific_score_vector": {
+          "description": "Legacy vector derived from scientific_record.criteria.",
+          "$ref": "#/$defs/scientificScoreVector"
+        },
+        "scientific_score_vector_legacy": {
+          "$ref": "#/$defs/scientificScoreVector"
+        },
+        "scientific_score_vector_native": {
+          "$ref": "#/$defs/nativeScientificScoreVector"
+        },
+        "editorial_score_vector": {
+          "$ref": "#/$defs/editorialScoreVector"
+        },
+        "decision": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "confidence": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "loss": {
+          "type": [
+            "number",
+            "null"
+          ]
+        },
+        "boundary_margin": {
+          "type": [
+            "number",
+            "null"
+          ]
+        },
+        "calibration_extended": {
+          "$ref": "#/$defs/calibrationExtended"
+        }
+      }
+    },
+    "calibrationExtended": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "scientific_vector",
+        "editorial_vector",
+        "decision_margin",
+        "loss_band",
+        "drift_features",
+        "counterfactuals"
+      ],
+      "properties": {
+        "scientific_vector": {
+          "description": "Compatibility alias of scientific_vector_native.",
+          "$ref": "#/$defs/nativeScientificScoreVector"
+        },
+        "scientific_vector_legacy": {
+          "$ref": "#/$defs/scientificScoreVector"
+        },
+        "scientific_vector_native": {
+          "$ref": "#/$defs/nativeScientificScoreVector"
+        },
+        "editorial_vector": {
+          "$ref": "#/$defs/editorialScoreVector"
+        },
+        "decision_margin": {
+          "type": [
+            "number",
+            "null"
+          ]
+        },
+        "loss_band": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "drift_features": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "counterfactuals": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/driftCounterfactual"
+          }
+        },
+        "drift_counterfactual": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/driftCounterfactual"
+          }
+        },
+        "drift_counterfactual_stability": {
+          "type": [
+            "number",
+            "null"
+          ]
+        }
+      }
+    },
+    "calibrationExport": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "available",
+        "masked",
+        "schema_version",
+        "case_count",
+        "cases"
+      ],
+      "properties": {
+        "available": {
+          "type": "boolean"
+        },
+        "masked": {
+          "type": "boolean"
+        },
+        "schema_version": {
+          "type": "string"
+        },
+        "case_count": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "cases": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/calibrationExample"
+          }
+        }
+      }
+    },
+    "groupMetric": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "case_count",
+        "fail_count",
+        "fail_rate",
+        "false_accept_count",
+        "false_accept_rate",
+        "mean_recommendation_bias",
+        "mean_recommendation_loss",
+        "decision_score_total",
+        "total_score",
+        "editorial_forecast_counts",
+        "author_recommendation_counts",
+        "baseline_false_accept_rate",
+        "baseline_recommendation_bias",
+        "false_accept_drift",
+        "recommendation_bias_drift"
+      ],
+      "properties": {
+        "case_count": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "fail_count": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "fail_rate": {
+          "type": [
+            "number",
+            "null"
+          ]
+        },
+        "false_accept_count": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "false_accept_rate": {
+          "type": [
+            "number",
+            "null"
+          ]
+        },
+        "mean_recommendation_bias": {
+          "type": [
+            "number",
+            "null"
+          ]
+        },
+        "mean_recommendation_loss": {
+          "type": [
+            "number",
+            "null"
+          ]
+        },
+        "decision_score_total": {
+          "type": "number",
+          "minimum": 0
+        },
+        "total_score": {
+          "type": "number",
+          "minimum": 0
+        },
+        "editorial_forecast_counts": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "integer",
+            "minimum": 0
+          }
+        },
+        "author_recommendation_counts": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "integer",
+            "minimum": 0
+          }
+        },
+        "baseline_false_accept_rate": {
+          "type": [
+            "number",
+            "null"
+          ]
+        },
+        "baseline_recommendation_bias": {
+          "type": [
+            "number",
+            "null"
+          ]
+        },
+        "false_accept_drift": {
+          "type": [
+            "number",
+            "null"
+          ]
+        },
+        "recommendation_bias_drift": {
+          "type": [
+            "number",
+            "null"
+          ]
+        }
+      }
+    },
+    "driftFlag": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "group_by",
+        "group_key",
+        "current",
+        "baseline",
+        "drift",
+        "threshold"
+      ],
+      "properties": {
+        "group_by": {
+          "type": "string"
+        },
+        "group_key": {
+          "type": "string"
+        },
+        "current": {
+          "type": "number"
+        },
+        "baseline": {
+          "type": "number"
+        },
+        "drift": {
+          "type": "number"
+        },
+        "threshold": {
+          "type": "number"
+        },
+        "direction": {
+          "type": "string"
+        }
+      }
+    },
+    "categoryCorrelation": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "category",
+        "false_accept_drift",
+        "recommendation_bias_drift",
+        "score",
+        "case_ids"
+      ],
+      "properties": {
+        "category": {
+          "type": "string"
+        },
+        "false_accept_drift": {
+          "type": [
+            "number",
+            "null"
+          ]
+        },
+        "recommendation_bias_drift": {
+          "type": [
+            "number",
+            "null"
+          ]
+        },
+        "score": {
+          "type": "number",
+          "minimum": 0
+        },
+        "case_ids": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "errorClassCorrelation": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "error_class",
+        "current_count",
+        "baseline_mean",
+        "delta",
+        "categories"
+      ],
+      "properties": {
+        "error_class": {
+          "type": "string"
+        },
+        "current_count": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "baseline_mean": {
+          "type": "number",
+          "minimum": 0
+        },
+        "delta": {
+          "type": "number",
+          "minimum": 0
+        },
+        "categories": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "recentCodeChanges": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "available",
+        "base_commit",
+        "head_commit",
+        "files",
+        "surface_counts"
+      ],
+      "properties": {
+        "available": {
+          "type": "boolean"
+        },
+        "base_commit": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "head_commit": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "files": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "surface_counts": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "integer",
+            "minimum": 0
+          }
+        }
+      }
+    },
+    "likelySource": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "available",
+        "category",
+        "error_class",
+        "code_change_surface",
+        "confidence"
+      ],
+      "properties": {
+        "available": {
+          "type": "boolean"
+        },
+        "category": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "error_class": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "code_change_surface": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "confidence": {
+          "type": "string"
+        }
+      }
+    },
+    "driftAttribution": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "available",
+        "category_correlations",
+        "error_class_correlations",
+        "recent_code_changes",
+        "likely_source"
+      ],
+      "properties": {
+        "available": {
+          "type": "boolean"
+        },
+        "category_correlations": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/categoryCorrelation"
+          }
+        },
+        "error_class_correlations": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/errorClassCorrelation"
+          }
+        },
+        "recent_code_changes": {
+          "$ref": "#/$defs/recentCodeChanges"
+        },
+        "likely_source": {
+          "$ref": "#/$defs/likelySource"
+        },
+        "editorial_anomalies": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/editorialAnomalyDiagnostic"
+          }
+        },
+        "likely_cause": {
+          "$ref": "#/$defs/likelyCause"
+        },
+        "intervention_delta": {
+          "$ref": "#/$defs/interventionDelta"
+        }
+      }
+    },
+    "systemDiagnostics": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "baseline",
+        "by_category",
+        "by_stratum",
+        "by_gate_behavior",
+        "drift_flags",
+        "drift_attribution"
+      ],
+      "properties": {
+        "baseline": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "available",
+            "window_size",
+            "run_count"
+          ],
+          "properties": {
+            "available": {
+              "type": "boolean"
+            },
+            "window_size": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "run_count": {
+              "type": "integer",
+              "minimum": 0
+            }
+          }
+        },
+        "by_category": {
+          "type": "object",
+          "additionalProperties": {
+            "$ref": "#/$defs/groupMetric"
+          }
+        },
+        "by_stratum": {
+          "type": "object",
+          "additionalProperties": {
+            "$ref": "#/$defs/groupMetric"
+          }
+        },
+        "by_gate_behavior": {
+          "type": "object",
+          "additionalProperties": {
+            "$ref": "#/$defs/groupMetric"
+          }
+        },
+        "drift_flags": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "false_accept_rate",
+            "recommendation_bias"
+          ],
+          "properties": {
+            "false_accept_rate": {
+              "type": "array",
+              "items": {
+                "$ref": "#/$defs/driftFlag"
+              }
+            },
+            "recommendation_bias": {
+              "type": "array",
+              "items": {
+                "$ref": "#/$defs/driftFlag"
+              }
+            }
+          }
+        },
+        "drift_attribution": {
+          "$ref": "#/$defs/driftAttribution"
+        }
+      }
+    },
+    "regressionGovernor": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "available",
+        "evaluation_mode",
+        "window_size",
+        "run_count",
+        "fatal_error_count",
+        "core_gold_failure_classes"
+      ],
+      "properties": {
+        "available": {
+          "type": "boolean"
+        },
+        "evaluation_mode": {
+          "type": "string"
+        },
+        "window_size": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "run_count": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "fatal_error_count": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "current",
+            "baseline_last",
+            "baseline_mean",
+            "baseline_max"
+          ],
+          "properties": {
+            "current": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "baseline_last": {
+              "type": [
+                "integer",
+                "null"
+              ]
+            },
+            "baseline_mean": {
+              "type": [
+                "number",
+                "null"
+              ]
+            },
+            "baseline_max": {
+              "type": [
+                "integer",
+                "null"
+              ]
+            }
+          }
+        },
+        "core_gold_failure_classes": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "current",
+            "baseline",
+            "new"
+          ],
+          "properties": {
+            "current": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            },
+            "baseline": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            },
+            "new": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            }
+          }
+        }
+      }
+    },
+    "scientificScoreVector": {
+      "description": "Legacy vector derived from scientific_record.criteria.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "evidence_alignment",
+        "methodological_validity",
+        "reproducibility",
+        "falsifiability",
+        "baseline_comparison",
+        "total"
+      ],
+      "properties": {
+        "evidence_alignment": {
+          "type": [
+            "number",
+            "null"
+          ]
+        },
+        "methodological_validity": {
+          "type": [
+            "number",
+            "null"
+          ]
+        },
+        "reproducibility": {
+          "type": [
+            "number",
+            "null"
+          ]
+        },
+        "falsifiability": {
+          "type": [
+            "number",
+            "null"
+          ]
+        },
+        "baseline_comparison": {
+          "type": [
+            "number",
+            "null"
+          ]
+        },
+        "total": {
+          "type": [
+            "number",
+            "null"
+          ]
+        }
+      }
+    },
+    "nativeScientificScoreVector": {
+      "description": "Native scientific score surface computed directly from parsed manuscript evidence.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "claim_clarity",
+        "evidence_alignment",
+        "falsifiability",
+        "baseline_comparison",
+        "methodological_legibility"
+      ],
+      "properties": {
+        "claim_clarity": {
+          "type": [
+            "number",
+            "null"
+          ]
+        },
+        "evidence_alignment": {
+          "type": [
+            "number",
+            "null"
+          ]
+        },
+        "falsifiability": {
+          "type": [
+            "number",
+            "null"
+          ]
+        },
+        "baseline_comparison": {
+          "type": [
+            "number",
+            "null"
+          ]
+        },
+        "methodological_legibility": {
+          "type": [
+            "number",
+            "null"
+          ]
+        }
+      }
+    },
+    "editorialScoreVector": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "clarity",
+        "novelty_explicitness",
+        "structure_quality",
+        "rhetorical_density",
+        "total"
+      ],
+      "properties": {
+        "clarity": {
+          "type": [
+            "number",
+            "null"
+          ]
+        },
+        "novelty_explicitness": {
+          "type": [
+            "number",
+            "null"
+          ]
+        },
+        "structure_quality": {
+          "type": [
+            "number",
+            "null"
+          ]
+        },
+        "rhetorical_density": {
+          "type": [
+            "number",
+            "null"
+          ]
+        },
+        "total": {
+          "type": [
+            "number",
+            "null"
+          ]
+        }
+      }
+    },
+    "driftCounterfactual": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "feature",
+        "delta_residual",
+        "delta_loss"
+      ],
+      "properties": {
+        "feature": {
+          "type": "string"
+        },
+        "delta_residual": {
+          "type": "number"
+        },
+        "delta_loss": {
+          "type": "number"
+        }
+      }
+    },
+    "scoreVectorSummary": {
+      "type": "object",
+      "required": [
+        "case_count"
+      ],
+      "properties": {
+        "case_count": {
+          "type": "integer",
+          "minimum": 0
+        }
+      },
+      "additionalProperties": {
+        "type": [
+          "number",
+          "null"
+        ]
+      }
+    },
+    "editorialAnomalies": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "novelty_density",
+        "claim_to_evidence_ratio",
+        "rhetorical_intensity",
+        "triggered"
+      ],
+      "properties": {
+        "novelty_density": {
+          "type": [
+            "number",
+            "null"
+          ]
+        },
+        "claim_to_evidence_ratio": {
+          "type": [
+            "number",
+            "null"
+          ]
+        },
+        "rhetorical_intensity": {
+          "type": [
+            "number",
+            "null"
+          ]
+        },
+        "triggered": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "editorialAnomalyDiagnostic": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "trigger",
+        "count",
+        "case_ids"
+      ],
+      "properties": {
+        "trigger": {
+          "type": "string"
+        },
+        "count": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "case_ids": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "likelyCause": {
+      "type": [
+        "object",
+        "null"
+      ],
+      "additionalProperties": false,
+      "required": [
+        "category",
+        "error_class",
+        "code_change_surface"
+      ],
+      "properties": {
+        "category": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "error_class": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "code_change_surface": {
+          "type": [
+            "string",
+            "null"
+          ]
+        }
+      }
+    },
+    "interventionDelta": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "available",
+        "surface",
+        "baseline_pressure",
+        "pressure_without_surface",
+        "delta"
+      ],
+      "properties": {
+        "available": {
+          "type": "boolean"
+        },
+        "surface": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "baseline_pressure": {
+          "type": "number"
+        },
+        "pressure_without_surface": {
+          "type": "number"
+        },
+        "delta": {
+          "type": "number"
+        }
+      }
+    }
+  }
+}

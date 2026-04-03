@@ -1,5 +1,13 @@
 from __future__ import annotations
 
+"""Run the governed APR audit pipeline from schema-bound input to schema-bound output.
+
+APR accepts only payloads that satisfy the active input schema, but schema
+validity is not acceptance. Downstream layers still reject semantically
+unassessable, unsupported, or governance-blocked manuscripts before any
+canonical record is emitted.
+"""
+
 from typing import Any
 
 from jsonschema import validate
@@ -69,6 +77,9 @@ def _decision_from_states(
 
 
 def run_audit(payload: dict[str, Any], *, pack_paths: list[str] | None = None) -> dict[str, Any]:
+    # Input schema validation protects the contract boundary before APR applies
+    # its own normalization rules. This prevents "cleanup" from laundering
+    # structurally invalid payloads into apparently valid audit inputs.
     validate(instance=payload, schema=load_audit_input_schema())
     manifest = load_contract_manifest()
     policy = load_policy_layer()
@@ -92,6 +103,9 @@ def run_audit(payload: dict[str, Any], *, pack_paths: list[str] | None = None) -
     rehabilitation = build_rehabilitation_plan(normalized, classification, reviewability, scientific_record, venue, integrity, transparency)
     processing_states.append("REHABILITATION_COMPUTED")
 
+    # Everything above this point is semantic enforcement. A payload can satisfy
+    # the input schema and still be downgraded to NON_REVIEWABLE, blocked on
+    # scientific-record grounds, or forced to human escalation.
     core_record = {
         "contract_version": manifest["contract"]["version"],
         "policy_layer_version": policy["policy_layer"]["version"],
@@ -141,5 +155,7 @@ def run_audit(payload: dict[str, Any], *, pack_paths: list[str] | None = None) -
         },
     ).as_dict()
 
+    # Output schema validation closes the pipeline by proving that semantic
+    # enforcement still serialized to the locked canonical contract.
     validate(instance=record, schema=load_canonical_record_schema())
     return record

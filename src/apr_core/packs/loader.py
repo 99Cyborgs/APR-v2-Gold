@@ -1,5 +1,13 @@
 from __future__ import annotations
 
+"""Load and constrain external advisory packs before their output enters APR.
+
+Packs are outside the locked APR contract surface. They are admitted only after
+manifest, API-version, domain, and output-shape normalization so provider-like
+extensions cannot create false confidence or silently broaden the canonical
+record.
+"""
+
 import importlib
 import sys
 from pathlib import Path
@@ -51,6 +59,9 @@ def load_pack_from_path(path: str | Path) -> PackSpec:
         spec = PackSpec(**built)
     else:
         raise ValueError("pack builder must return PackSpec or a compatible dict")
+    # Manifest metadata overwrites builder-supplied identity fields so APR's
+    # external trust boundary is pinned to the declared pack contract, not to
+    # arbitrary runtime objects returned by pack code.
     spec.pack_id = str(manifest["pack_id"])
     spec.version = str(manifest["version"])
     spec.api_version = int(manifest["api_version"])
@@ -108,6 +119,8 @@ def _normalize_fatal_gates(items: list[dict[str, Any]] | None) -> list[dict[str,
 
 def _normalize_result(spec: PackSpec, result: dict[str, Any]) -> dict[str, Any]:
     applicability = "not_applicable" if result.get("status") == "not_applicable" else "applicable"
+    # APR never trusts raw pack output as canonical. Normalization constrains
+    # extension results to additive advisory fields and explicit gate semantics.
     return {
         "pack_id": spec.pack_id,
         "display_name": spec.display_name,
@@ -172,6 +185,8 @@ def execute_packs(
             any_pack_requested_human_escalation = any_pack_requested_human_escalation or normalized["human_escalation_required"]
             results.append(normalized)
         except Exception as exc:
+            # Pack failures are recorded, not masked. APR keeps the core audit
+            # assessable instead of trusting partial extension output.
             failures.append(_failed_pack(path, exc))
 
     return {

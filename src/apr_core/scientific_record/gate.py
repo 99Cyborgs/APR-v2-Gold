@@ -1,5 +1,13 @@
 from __future__ import annotations
 
+"""Judge scientific-record adequacy after reviewability has been established.
+
+This module is a gate, not a scoring surface. It separates fatal defects from
+repairable weaknesses so APR can distinguish manuscripts that should not be sent
+out at all from manuscripts that remain assessable but require substantive
+repair before submission.
+"""
+
 from typing import Any
 
 from apr_core.anchors import dedupe_anchors, first_anchor_from_fields
@@ -52,6 +60,9 @@ def assess_scientific_record(
 
     criteria: dict[str, dict[str, Any]] = {}
 
+    # Reviewability is a prerequisite here. Scientific-record status should
+    # never be read as trust in manuscripts whose core claim is still
+    # unrecoverable or method surface is missing.
     if reviewability["checks"]["recoverable_central_claim"] == "fail" or confidence < 0.4:
         criteria["problem_definition_and_claim_clarity"] = _criterion(
             "fail",
@@ -279,6 +290,9 @@ def assess_scientific_record(
                 }
             )
 
+    # Fatal failures represent states APR treats as non-sendable. Borderline and
+    # non-fatal failures remain part of the scientific record because they are
+    # repair targets, not proof that the manuscript is unassessable.
     if fatal_failures:
         status = "fatal_fail"
     elif any(detail["status"] == "fail" for detail in criteria.values()):

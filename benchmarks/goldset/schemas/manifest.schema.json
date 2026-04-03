@@ -1,0 +1,238 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://apr-v2-gold/benchmarks/goldset/schemas/manifest.schema.json",
+  "title": "APR v2 Goldset Manifest",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "manifest_version",
+    "contract_version",
+    "case_root",
+    "strata",
+    "cases"
+  ],
+  "properties": {
+    "manifest_version": {
+      "type": "string"
+    },
+    "contract_version": {
+      "type": "string"
+    },
+    "case_root": {
+      "type": "string",
+      "minLength": 1
+    },
+    "strata": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "name",
+          "description",
+          "default_gate_behavior",
+          "include_in_regression_gate"
+        ],
+        "properties": {
+          "name": {
+            "type": "string",
+            "minLength": 1
+          },
+          "description": {
+            "type": "string"
+          },
+          "default_gate_behavior": {
+            "type": "string",
+            "enum": [
+              "hard",
+              "monitor",
+              "exclude"
+            ]
+          },
+          "include_in_regression_gate": {
+            "type": "boolean"
+          }
+        }
+      }
+    },
+    "cases": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "case_id",
+          "stratum",
+          "partition",
+          "category",
+          "case_state",
+          "gate_behavior",
+          "pack_paths",
+          "required_nonempty_paths",
+          "rationale",
+          "tags",
+          "ambiguity_class",
+          "expected"
+        ],
+        "properties": {
+          "case_id": {
+            "type": "string",
+            "minLength": 1
+          },
+          "stratum": {
+            "type": "string",
+            "minLength": 1
+          },
+          "partition": {
+            "type": "string",
+            "minLength": 1
+          },
+          "category": {
+            "type": "string",
+            "minLength": 1
+          },
+          "case_state": {
+            "type": "string",
+            "enum": [
+              "active",
+              "scaffold"
+            ]
+          },
+          "gate_behavior": {
+            "type": "string",
+            "enum": [
+              "hard",
+              "monitor",
+              "exclude"
+            ]
+          },
+          "input": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "pack_paths": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "required_nonempty_paths": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "minLength": 1
+            }
+          },
+          "rationale": {
+            "type": "string"
+          },
+          "tags": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "minLength": 1
+            }
+          },
+          "ambiguity_class": {
+            "type": "string",
+            "minLength": 1
+          },
+          "central_claim": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "claim_type": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "expected_decision": {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+              "recommendation": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "recommendation_band": {
+                "type": [
+                  "string",
+                  "null"
+                ],
+                "enum": [
+                  "fatal_block",
+                  "non_reviewable",
+                  "repair_required",
+                  "viable_with_reroute",
+                  "preprint_only",
+                  "cautionary_viable",
+                  "viable_journal",
+                  null
+                ]
+              },
+              "human_escalation_required": {
+                "type": [
+                  "boolean",
+                  "null"
+                ]
+              }
+            }
+          },
+          "expected": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "exact"
+            ],
+            "properties": {
+              "exact": {
+                "type": "object",
+                "propertyNames": {
+                  "enum": [
+                    "parsing.central_claim",
+                    "classification.article_type",
+                    "classification.claim_type",
+                    "classification.domain_module",
+                    "classification.outlet_profile",
+                    "reviewability.status",
+                    "scientific_record.status",
+                    "integrity.status",
+                    "venue.routing_state",
+                    "decision.recommendation",
+                    "decision.human_escalation_required"
+                  ]
+                },
+                "additionalProperties": {
+                  "type": [
+                    "string",
+                    "boolean",
+                    "number"
+                  ]
+                }
+              },
+              "recommendation_band": {
+                "type": "string",
+                "enum": [
+                  "fatal_block",
+                  "non_reviewable",
+                  "repair_required",
+                  "viable_with_reroute",
+                  "preprint_only",
+                  "cautionary_viable",
+                  "viable_journal"
+                ]
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}
