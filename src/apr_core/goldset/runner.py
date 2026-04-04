@@ -21,6 +21,8 @@ from typing import Any
 import yaml
 from jsonschema import Draft202012Validator, validate
 
+from apr_core.goldset.governance import governance_router
+from apr_core.goldset.governance import surface_contract as governance_surface_contract
 from apr_core.pipeline import run_audit
 from apr_core.utils import get_by_path, git_output, is_nonempty, read_json, repo_root, utc_now_iso
 
@@ -484,6 +486,20 @@ def default_goldset_governance_config() -> dict[str, Any]:
             "perturbations": DEFAULT_COUNTERFACTUAL_PERTURBATIONS,
             "jitter": DEFAULT_COUNTERFACTUAL_JITTER,
         },
+        "leakage_guard": {
+            "enabled": False,
+            "epsilon": 1.0,
+            "budget_cap": 8,
+        },
+        "attribution_identifiability": {
+            "enabled": False,
+        },
+        "invariance_trace": {
+            "enabled": False,
+        },
+        "surface_contract": {
+            "enabled": False,
+        },
         "calibration": {
             "extended_export": False,
         },
@@ -519,6 +535,10 @@ def _resolve_goldset_governance_config(
     export_calibration_extended: bool | None = None,
     drift_intervention: bool | None = None,
     drift_counterfactuals: bool | None = None,
+    leakage_guard: bool | None = None,
+    attribution_identifiability: bool | None = None,
+    invariance_trace: bool | None = None,
+    strict_surface_contract: bool | None = None,
 ) -> dict[str, Any]:
     config = default_goldset_governance_config()
     # CLI overrides are constrained through one governance object so benchmark
@@ -566,6 +586,17 @@ def _resolve_goldset_governance_config(
         config["drift_intervention"] = {**config["drift_intervention"], "enabled": drift_intervention}
     if drift_counterfactuals is not None:
         config["drift_counterfactuals"] = {**config["drift_counterfactuals"], "enabled": drift_counterfactuals}
+    if leakage_guard is not None:
+        config["leakage_guard"] = {**config["leakage_guard"], "enabled": leakage_guard}
+    if attribution_identifiability is not None:
+        config["attribution_identifiability"] = {
+            **config["attribution_identifiability"],
+            "enabled": attribution_identifiability,
+        }
+    if invariance_trace is not None:
+        config["invariance_trace"] = {**config["invariance_trace"], "enabled": invariance_trace}
+    if strict_surface_contract is not None:
+        config["surface_contract"] = {**config["surface_contract"], "enabled": strict_surface_contract}
     config["severity_weights"] = _effective_severity_weights(config["fatal_weight_scale"])
     return config
 
@@ -618,6 +649,12 @@ def _mean(values: list[float | int]) -> float | None:
     if not values:
         return None
     return _rounded(sum(values) / len(values))
+
+
+def _ratio(numerator: int, denominator: int) -> float:
+    if denominator <= 0:
+        return 1.0
+    return float(_rounded(numerator / denominator))
 
 
 def _canonicalize_weights(raw_weights: dict[str, float], aliases: dict[str, str]) -> dict[str, float]:
@@ -950,6 +987,24 @@ def _counterfactual_analysis(case: dict[str, Any], governance: dict[str, Any]) -
 
 def _case_counterfactuals(case: dict[str, Any], governance: dict[str, Any]) -> list[dict[str, Any]]:
     return _counterfactual_analysis(case, governance)["counterfactuals"]
+
+
+def _loss_band_bounds(loss_band: str | None) -> tuple[float, float | None]:
+    if loss_band == "low":
+        return (0.0, LOSS_BAND_THRESHOLDS["low"])
+    if loss_band == "medium":
+        return (LOSS_BAND_THRESHOLDS["low"], LOSS_BAND_THRESHOLDS["medium"])
+    if loss_band == "high":
+        return (LOSS_BAND_THRESHOLDS["medium"], None)
+    return (0.0, None)
+
+
+def _clamp_to_loss_band(value: float, loss_band: str | None) -> float:
+    lower, upper = _loss_band_bounds(loss_band)
+    clamped = max(lower, value)
+    if upper is not None:
+        clamped = min(clamped, upper - 1e-6)
+    return float(_rounded(clamped))
 
 
 def _scientific_score(record: dict[str, Any]) -> ScientificScore:
@@ -1658,7 +1713,9 @@ def _build_case_decision_metrics(
     error_classes: list[str],
     governance: dict[str, Any],
     editorial_first_pass: dict[str, Any],
+    case_history: list[dict[str, Any]] | None = None,
 ) -> dict[str, Any]:
+    case_history = case_history or []
     actual_recommendation = observed.get("decision.recommendation")
     expected_decision = case["expected_decision"]
     expected_band = expected_decision.get("recommendation_band") or _recommendation_band(expected_decision.get("recommendation"))
@@ -1708,11 +1765,13 @@ def _build_case_decision_metrics(
     exported_editorial_penalty = _quantize_loss_output(raw_editorial_penalty, governance)
     exported_total_score = _quantize_loss_output(raw_total_score, governance)
     loss_band = _loss_band(exported_scientific_loss)
+    scientific_surface_bundle = governance_surface_contract.build_scientific_surface_bundle(
+        legacy_surface=legacy_scientific_score_vector,
+        native_surface=scientific_score_vector,
+    )
     case_metrics = {
         "scientific_score": legacy_scientific_score_vector,
-        "scientific_score_vector": scientific_score_vector,
-        "scientific_score_vector_legacy": legacy_scientific_score_vector,
-        "scientific_score_vector_native": scientific_score_vector,
+        **scientific_surface_bundle,
         "editorial_score": {**editorial_score_vector, "total": editorial_score_total},
         "scientific_recommendation": actual_recommendation,
         "scientific_recommendation_band": actual_band,
@@ -1738,6 +1797,14 @@ def _build_case_decision_metrics(
     case_metrics["drift_counterfactual"] = counterfactuals[0] if counterfactuals else None
     case_metrics["drift_counterfactuals"] = counterfactuals
     case_metrics["drift_counterfactual_stability"] = counterfactual_analysis["stability"]
+    surface_contract = governance_router.validate_scoring_surface_contract(
+        legacy_scientific_score_vector,
+        scientific_score_vector,
+        governance,
+        payload_input=payload,
+    )
+    if surface_contract is not None:
+        case_metrics["surface_contract"] = surface_contract
     return case_metrics
 
 
@@ -1772,9 +1839,12 @@ def _redact_holdout_result(result: dict[str, Any]) -> dict[str, Any]:
         "baseline_comparison": None,
         "total": None,
     }
-    redacted["scientific_score_vector"] = _masked_scientific_score_vector()
-    redacted["scientific_score_vector_legacy"] = _masked_legacy_scientific_score_vector()
-    redacted["scientific_score_vector_native"] = _masked_scientific_score_vector()
+    redacted.update(
+        governance_surface_contract.build_scientific_surface_bundle(
+            legacy_surface=_masked_legacy_scientific_score_vector(),
+            native_surface=_masked_scientific_score_vector(),
+        )
+    )
     redacted["editorial_score"] = {
         "clarity": None,
         "novelty_explicitness": None,
@@ -1804,6 +1874,31 @@ def _redact_holdout_result(result: dict[str, Any]) -> dict[str, Any]:
         "rhetorical_intensity": None,
         "triggered": [],
     }
+    if "leakage_guard" in redacted:
+        redacted["leakage_guard"] = {
+            "rank_jitter_applied": bool(redacted["leakage_guard"].get("rank_jitter_applied")),
+            "noise_scale": None,
+            "query_budget": redacted["leakage_guard"].get("query_budget", 0),
+            "epsilon_budget": None,
+            "budget_used": redacted["leakage_guard"].get("budget_used", 0),
+            "governance_version": redacted["leakage_guard"].get("governance_version"),
+        }
+    if "counterfactual_extended" in redacted:
+        redacted["counterfactual_extended"] = {
+            "stability": None,
+            "identifiability": redacted["counterfactual_extended"].get("identifiability"),
+            "identifiability_status": redacted["counterfactual_extended"].get("identifiability_status"),
+            "interaction_strength": None,
+            "conditional_importance": {},
+            "interaction_matrix": {},
+            "attribution_rank": 0,
+        }
+    if "invariance_trace" in redacted:
+        redacted["invariance_trace"] = {
+            "trace_hash": None,
+            "drift_detected": bool(redacted["invariance_trace"].get("drift_detected")),
+            "drift_score": None,
+        }
     redacted["expected_redacted"] = True
     return redacted
 
@@ -1862,6 +1957,7 @@ def _evaluate_case(
     extra_pack_paths: list[str] | None,
     evaluation_mode: str,
     governance: dict[str, Any],
+    case_history: list[dict[str, Any]],
 ) -> dict[str, Any]:
     _holdout_runtime_guard(case, evaluation_mode)
 
@@ -1890,9 +1986,10 @@ def _evaluate_case(
             "scientific_recommendation_band": None,
             "decision_confidence": None,
             "scientific_score": {**ScientificScore(0.0, 0.0, 0.0, 0.0, 0.0).as_dict(), "total": 0.0},
-            "scientific_score_vector": _empty_scientific_score_vector(),
-            "scientific_score_vector_legacy": {**ScientificScore(0.0, 0.0, 0.0, 0.0, 0.0).as_dict(), "total": 0.0},
-            "scientific_score_vector_native": _empty_scientific_score_vector(),
+            **governance_surface_contract.build_scientific_surface_bundle(
+                legacy_surface={**ScientificScore(0.0, 0.0, 0.0, 0.0, 0.0).as_dict(), "total": 0.0},
+                native_surface=_empty_scientific_score_vector(),
+            ),
             "editorial_score": {**EditorialScore(0.0, 0.0, 0.0, 0.0).as_dict(), "total": 0.0},
             "scientific_loss": None,
             "editorial_penalty": None,
@@ -1924,6 +2021,7 @@ def _evaluate_case(
     payload = read_json(case_root / case["input"])
     case_pack_paths = [str((manifest_file.parent / path).resolve()) for path in case.get("pack_paths", [])]
     merged_pack_paths = [*case_pack_paths, *(extra_pack_paths or [])]
+    governance_router.validate_input_surface_contract(payload, governance)
     record = run_audit(payload, pack_paths=merged_pack_paths)
 
     mismatches = _compare_exact_expectations(case, record)
@@ -1940,6 +2038,7 @@ def _evaluate_case(
         error_classes,
         governance,
         editorial_first_pass,
+        case_history,
     )
 
     result = {
@@ -1965,7 +2064,12 @@ def _evaluate_case(
         "editorial_first_pass": editorial_first_pass,
         **decision_metrics,
     }
-    return result
+    return governance_router.apply_case_governance(
+        result,
+        observed=observed,
+        governance=governance,
+        case_history=case_history,
+    )
 
 
 def _load_ledger_entries(ledger_path: Path | None) -> list[dict[str, Any]]:
@@ -1982,6 +2086,14 @@ def _load_ledger_entries(ledger_path: Path | None) -> list[dict[str, Any]]:
         validate(instance=entry, schema=schema)
         entries.append(entry)
     return entries
+
+
+def _case_histories(entries: list[dict[str, Any]]) -> dict[str, list[dict[str, Any]]]:
+    history: dict[str, list[dict[str, Any]]] = {}
+    for entry in entries:
+        for outcome in entry.get("case_outcomes", []):
+            history.setdefault(outcome["case_id"], []).append(outcome)
+    return history
 
 
 def _ledger_entry_evaluation_mode(entry: dict[str, Any]) -> str:
@@ -2277,7 +2389,11 @@ def _normalize_historical_case_outcome(
         "baseline_comparison": None,
         "total": None,
     }
-    scientific_score_vector = outcome.get("scientific_score_vector") or _masked_scientific_score_vector()
+    scientific_surface_bundle = governance_surface_contract.build_scientific_surface_bundle(
+        legacy_surface=scientific_score,
+        native_surface=outcome.get("scientific_score_vector_native") or outcome.get("scientific_score_vector") or _masked_scientific_score_vector(),
+        alias_surface=outcome.get("scientific_score_vector"),
+    )
     editorial_score = outcome.get("editorial_score") or {
         "clarity": None,
         "novelty_explicitness": None,
@@ -2319,8 +2435,10 @@ def _normalize_historical_case_outcome(
         "triggered": [],
     }
     drift_counterfactual = outcome.get("drift_counterfactual")
+    drift_counterfactuals = outcome.get("drift_counterfactuals", [])
+    drift_counterfactual_stability = outcome.get("drift_counterfactual_stability")
 
-    return {
+    normalized = {
         "case_id": outcome["case_id"],
         "stratum": outcome.get("stratum", case.get("stratum")),
         "partition": outcome.get("partition", case.get("partition")),
@@ -2335,7 +2453,7 @@ def _normalize_historical_case_outcome(
         "observed": outcome.get("observed", {}),
         "expected_decision": expected_decision,
         "scientific_score": scientific_score,
-        "scientific_score_vector": scientific_score_vector,
+        **scientific_surface_bundle,
         "editorial_score": editorial_score,
         "scientific_loss": scientific_loss,
         "editorial_penalty": editorial_penalty,
@@ -2354,7 +2472,13 @@ def _normalize_historical_case_outcome(
         "editorial_first_pass": editorial_first_pass,
         "editorial_anomalies": editorial_anomalies,
         "drift_counterfactual": drift_counterfactual,
+        "drift_counterfactuals": drift_counterfactuals,
+        "drift_counterfactual_stability": drift_counterfactual_stability,
     }
+    for key in ("leakage_guard", "counterfactual_extended", "invariance_trace", "surface_contract"):
+        if key in outcome:
+            normalized[key] = outcome[key]
+    return normalized
 
 
 def _historical_case_outcomes(
@@ -2936,6 +3060,133 @@ def _build_regression_governor(
     }
 
 
+def _leakage_resilience_score(case_results: list[dict[str, Any]], governance: dict[str, Any]) -> float:
+    if not governance["leakage_guard"]["enabled"]:
+        return 0.0
+    budget_cap = max(1, int(governance["leakage_guard"].get("budget_cap", 1)))
+    scores: list[float] = []
+    for case in case_results:
+        if case["case_state"] != "active":
+            continue
+        layer = case.get("leakage_guard")
+        if not layer:
+            continue
+        epsilon_budget = float(layer.get("epsilon_budget") or 0.0)
+        noise_scale = float(layer.get("noise_scale") or 0.0)
+        budget_used = min(int(layer.get("budget_used") or 0), budget_cap)
+        budget_pressure = min(budget_used / float(budget_cap), 1.0)
+        if epsilon_budget > 0:
+            noise_cover = min(noise_scale / epsilon_budget, 1.0)
+        else:
+            noise_cover = 1.0 if int(layer.get("query_budget") or 0) == 0 else 0.0
+        scores.append(float(_rounded((noise_cover * 0.6) + (budget_pressure * 0.4))))
+    return float(_mean(scores) or 0.0)
+
+
+def _attribution_stability_score(case_results: list[dict[str, Any]], governance: dict[str, Any]) -> float:
+    if not governance["attribution_identifiability"]["enabled"]:
+        return 0.0
+    scores: list[float] = []
+    identifiability_weight = {
+        "unique": 1.0,
+        "correlated": 0.5,
+        "degenerate": 0.0,
+    }
+    for case in case_results:
+        if case["case_state"] != "active":
+            continue
+        extended = case.get("counterfactual_extended")
+        if not extended:
+            continue
+        stability = float(extended.get("stability") or 0.0)
+        status = str(extended.get("identifiability_status") or extended.get("identifiability") or "degenerate")
+        scores.append(float(_rounded((stability + identifiability_weight.get(status, 0.0)) / 2.0)))
+    return float(_mean(scores) or 0.0)
+
+
+def _case_semantic_change_from_prior(case: dict[str, Any], previous: dict[str, Any] | None) -> bool:
+    if previous is None:
+        return False
+    semantic_fields = (
+        "observed",
+        "error_classes",
+        "scientific_score",
+        "scientific_score_vector",
+        "scientific_score_vector_legacy",
+        "scientific_score_vector_native",
+        "editorial_score",
+        "decision_score",
+        "recommendation_loss",
+        "scientific_loss",
+        "editorial_penalty",
+        "total_loss",
+        "boundary_margin",
+        "decision_consistency_status",
+        "fatal_override",
+    )
+    return any(previous.get(field) != case.get(field) for field in semantic_fields)
+
+
+def _build_invariance_metrics(case_results: list[dict[str, Any]], governance: dict[str, Any], prior_entry: dict[str, Any] | None) -> tuple[float, float]:
+    if not governance["invariance_trace"]["enabled"]:
+        return (0.0, 0.0)
+    if prior_entry is None:
+        return (1.0, 1.0)
+    previous_cases = _case_outcome_index(prior_entry.get("case_outcomes", []))
+    true_positive = false_positive = false_negative = 0
+    for case in case_results:
+        if case["case_state"] != "active":
+            continue
+        trace = case.get("invariance_trace")
+        if not trace:
+            continue
+        previous = previous_cases.get(case["case_id"])
+        if previous is None:
+            continue
+        public_outputs_same = all(
+            previous.get(field) == case.get(field)
+            for field in ("decision_recommendation", "loss_band", "status")
+        )
+        expected_positive = public_outputs_same and _case_semantic_change_from_prior(case, previous)
+        predicted_positive = bool(trace.get("drift_detected"))
+        if predicted_positive and expected_positive:
+            true_positive += 1
+        elif predicted_positive and not expected_positive:
+            false_positive += 1
+        elif expected_positive and not predicted_positive:
+            false_negative += 1
+    precision = 1.0 if (true_positive + false_positive) == 0 else _ratio(true_positive, true_positive + false_positive)
+    recall = 1.0 if (true_positive + false_negative) == 0 else _ratio(true_positive, true_positive + false_negative)
+    return (precision, recall)
+
+
+def _surface_contract_violations(case_results: list[dict[str, Any]], governance: dict[str, Any]) -> int:
+    if not governance["surface_contract"]["enabled"]:
+        return 0
+    return sum(
+        1
+        for case in case_results
+        if case["case_state"] == "active" and bool((case.get("surface_contract") or {}).get("mixed_usage_violation"))
+    )
+
+
+def _build_governance_report(
+    case_results: list[dict[str, Any]],
+    governance: dict[str, Any],
+    prior_entry: dict[str, Any] | None,
+) -> dict[str, Any]:
+    invariance_precision, invariance_recall = _build_invariance_metrics(case_results, governance, prior_entry)
+    return governance_router.build_governance_report(
+        case_results,
+        governance,
+        leakage_resilience_score=_leakage_resilience_score(case_results, governance),
+        attribution_stability_score=_attribution_stability_score(case_results, governance),
+        invariance_precision=invariance_precision,
+        invariance_recall=invariance_recall,
+        surface_contract_violations=_surface_contract_violations(case_results, governance),
+    )
+
+
 def _new_gate_failure(
     gate_id: str,
     description: str,
@@ -3200,9 +3451,14 @@ def _build_calibration_export(case_results: list[dict[str, Any]], governance: di
                     "loss": case["scientific_loss"],
                     "boundary_margin": case["boundary_margin"],
                     "calibration_extended": {
-                        "scientific_vector": case["scientific_score_vector"],
-                        "scientific_vector_legacy": case["scientific_score_vector_legacy"],
-                        "scientific_vector_native": case["scientific_score_vector_native"],
+                        **governance_surface_contract.build_scientific_surface_bundle(
+                            legacy_surface=case["scientific_score_vector_legacy"],
+                            native_surface=case["scientific_score_vector_native"],
+                            alias_surface=case["scientific_score_vector"],
+                            alias_key="scientific_vector",
+                            legacy_key="scientific_vector_legacy",
+                            native_key="scientific_vector_native",
+                        ),
                         "editorial_vector": case["editorial_score"],
                         "decision_margin": case["boundary_margin"],
                         "loss_band": case.get("loss_band"),
@@ -3210,6 +3466,7 @@ def _build_calibration_export(case_results: list[dict[str, Any]], governance: di
                         "counterfactuals": case.get("drift_counterfactuals", _case_counterfactuals(case, governance)),
                         "drift_counterfactual": case.get("drift_counterfactuals", _case_counterfactuals(case, governance)),
                         "drift_counterfactual_stability": case.get("drift_counterfactual_stability"),
+                        **governance_router.export_governance_fields(case),
                     },
                 }
                 if extended
@@ -3322,6 +3579,7 @@ def _build_ledger_entry(
         "editorial_first_pass_score": summary["editorial_first_pass_score"],
         "editorial_plausibility_flags": summary["editorial_plausibility_flags"],
         "editorial_anomalies": summary["editorial_anomalies"],
+        "governance_report": summary["governance_report"],
         "calibration_export": summary["calibration_export"],
         "system_diagnostics": summary["system_diagnostics"],
         "regression_governor": summary["regression_governor"],
@@ -3368,6 +3626,7 @@ def _build_ledger_entry(
                 "editorial_plausibility_flags": case["editorial_plausibility_flags"],
                 "editorial_first_pass": case["editorial_first_pass"],
                 "editorial_anomalies": case["editorial_anomalies"],
+                **governance_router.export_governance_fields(case),
             }
             for case in summary["cases"]
             if case["case_state"] == "active"
@@ -3411,6 +3670,10 @@ def run_goldset_manifest(
     holdout_blindness_level: str | None = None,
     drift_intervention: bool | None = None,
     drift_counterfactuals: bool | None = None,
+    leakage_guard: bool | None = None,
+    attribution_identifiability: bool | None = None,
+    invariance_trace: bool | None = None,
+    strict_surface_contract: bool | None = None,
 ) -> dict[str, Any]:
     # Development and blind-holdout modes share evaluation machinery but not the
     # same public exposure rules. The mode split exists to prevent benchmark
@@ -3430,6 +3693,10 @@ def run_goldset_manifest(
         export_calibration_extended=export_calibration_extended,
         drift_intervention=drift_intervention,
         drift_counterfactuals=drift_counterfactuals,
+        leakage_guard=leakage_guard,
+        attribution_identifiability=attribution_identifiability,
+        invariance_trace=invariance_trace,
+        strict_surface_contract=strict_surface_contract,
     )
     git_metadata = _current_git_metadata()
     manifest_case_index = _case_outcome_index(manifest["cases"])
@@ -3438,6 +3705,7 @@ def run_goldset_manifest(
     selected_cases, holdout = _select_cases_for_run(manifest, holdout_eval=holdout_eval)
 
     ledger_entries = _load_ledger_entries(Path(ledger_path) if ledger_path else None)
+    case_histories = _case_histories(ledger_entries)
     comparable_entries = [entry for entry in ledger_entries if _ledger_entry_evaluation_mode(entry) == evaluation_mode]
     prior_entry = comparable_entries[-1] if comparable_entries else None
     baseline_window = governance["baseline_window"]
@@ -3456,6 +3724,7 @@ def run_goldset_manifest(
             extra_pack_paths=extra_pack_paths,
             evaluation_mode=evaluation_mode,
             governance=governance,
+            case_history=case_histories.get(case["case_id"], []),
         )
         case_results.append(result)
 
@@ -3508,6 +3777,7 @@ def run_goldset_manifest(
         baseline_window=baseline_window,
         governance=governance,
     )
+    governance_report = _build_governance_report(case_results, governance, prior_entry)
     gates = _evaluate_gates(case_results, case_deltas, prior_entry, regression_governor)
     summary = {
         "manifest_version": manifest["manifest_version"],
@@ -3533,6 +3803,7 @@ def run_goldset_manifest(
         "editorial_first_pass_score": editorial_first_pass_score,
         "editorial_plausibility_flags": editorial_plausibility_flags,
         "editorial_anomalies": editorial_anomalies,
+        "governance_report": governance_report,
         "cases": case_results,
         "calibration_export": _build_calibration_export(case_results, governance),
         "system_diagnostics": system_diagnostics,

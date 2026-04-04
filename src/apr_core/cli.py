@@ -162,9 +162,15 @@ def cmd_goldset(args: argparse.Namespace) -> int:
         holdout_blindness_level=args.holdout_blindness_level,
         drift_intervention=args.drift_intervention == "on",
         drift_counterfactuals=args.drift_counterfactuals if args.drift_counterfactuals else None,
+        leakage_guard=args.leakage_guard if args.leakage_guard else None,
+        attribution_identifiability=args.attribution_identifiability if args.attribution_identifiability else None,
+        invariance_trace=args.invariance_trace if args.invariance_trace else None,
+        strict_surface_contract=args.strict_surface_contract if args.strict_surface_contract else None,
     )
     if args.output:
         write_json(args.output, summary)
+        governance_report_path = Path(args.output).with_name("governance_report.json")
+        write_json(governance_report_path, summary["governance_report"])
     else:
         print(json.dumps(summary, indent=2))
     return 0 if summary["gates"]["status"] == "pass" else 1
@@ -256,6 +262,26 @@ def build_parser() -> argparse.ArgumentParser:
         "--export-calibration-extended",
         action="store_true",
         help="Include scientific/editorial score vectors and boundary metadata in calibration export records.",
+    )
+    goldset.add_argument(
+        "--leakage-guard",
+        action="store_true",
+        help="Emit additive leakage hardening diagnostics without altering decision classes or loss bands.",
+    )
+    goldset.add_argument(
+        "--attribution-identifiability",
+        action="store_true",
+        help="Emit additive attribution identifiability diagnostics alongside counterfactual summaries.",
+    )
+    goldset.add_argument(
+        "--invariance-trace",
+        action="store_true",
+        help="Emit additive decision-trace hashes and silent-drift warnings.",
+    )
+    goldset.add_argument(
+        "--strict-surface-contract",
+        action="store_true",
+        help="Validate legacy/native score namespace exclusivity inside scoring while preserving both exports.",
     )
     goldset.add_argument(
         "--holdout-blindness-level",

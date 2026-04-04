@@ -19,6 +19,7 @@
     "partitions",
     "error_class_counts",
     "governance",
+    "governance_report",
     "cases",
     "calibration_export",
     "case_deltas",
@@ -93,6 +94,9 @@
     },
     "governance": {
       "$ref": "#/$defs/governance"
+    },
+    "governance_report": {
+      "$ref": "#/$defs/governanceReport"
     },
     "decision_algebra": {
       "$ref": "#/$defs/decisionAlgebra"
@@ -205,6 +209,317 @@
     }
   },
   "$defs": {
+    "governanceReport": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "leakage_resilience_score",
+        "attribution_stability_score",
+        "invariance_precision",
+        "invariance_recall",
+        "surface_contract_violations",
+        "enabled_layers",
+        "layer_modes",
+        "contract_status",
+        "warning_mode",
+        "reproducibility_tiers",
+        "layers"
+      ],
+      "properties": {
+        "leakage_resilience_score": {
+          "type": "number",
+          "minimum": 0
+        },
+        "attribution_stability_score": {
+          "type": "number",
+          "minimum": 0
+        },
+        "invariance_precision": {
+          "type": "number",
+          "minimum": 0
+        },
+        "invariance_recall": {
+          "type": "number",
+          "minimum": 0
+        },
+        "surface_contract_violations": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "enabled_layers": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "layer_modes": {
+          "$ref": "#/$defs/governanceLayerModes"
+        },
+        "contract_status": {
+          "$ref": "#/$defs/governanceContractStatus"
+        },
+        "warning_mode": {
+          "$ref": "#/$defs/governanceWarningMode"
+        },
+        "reproducibility_tiers": {
+          "$ref": "#/$defs/governanceLayerModes"
+        },
+        "layers": {
+          "$ref": "#/$defs/governanceLayers"
+        }
+      }
+    },
+    "reasonCodes": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "governanceLayerModes": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "leakage_guard",
+        "attribution_identifiability",
+        "invariance_trace",
+        "surface_contract"
+      ],
+      "properties": {
+        "leakage_guard": {
+          "type": "string"
+        },
+        "attribution_identifiability": {
+          "type": "string"
+        },
+        "invariance_trace": {
+          "type": "string"
+        },
+        "surface_contract": {
+          "type": "string"
+        }
+      }
+    },
+    "governanceContractStatus": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "status",
+        "hard_fail_reason_codes",
+        "soft_warning_reason_codes"
+      ],
+      "properties": {
+        "status": {
+          "type": "string"
+        },
+        "hard_fail_reason_codes": {
+          "$ref": "#/$defs/reasonCodes"
+        },
+        "soft_warning_reason_codes": {
+          "$ref": "#/$defs/reasonCodes"
+        }
+      }
+    },
+    "governanceWarningMode": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "active",
+        "layers",
+        "reason_codes"
+      ],
+      "properties": {
+        "active": {
+          "type": "boolean"
+        },
+        "layers": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "reason_codes": {
+          "$ref": "#/$defs/reasonCodes"
+        }
+      }
+    },
+    "governanceLayerReport": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "enabled",
+        "enforcement_mode",
+        "reproducibility_tier",
+        "warning_mode_active",
+        "hard_fail_reason_codes",
+        "soft_warning_reason_codes",
+        "observed_case_count",
+        "status"
+      ],
+      "properties": {
+        "enabled": {
+          "type": "boolean"
+        },
+        "enforcement_mode": {
+          "type": "string"
+        },
+        "reproducibility_tier": {
+          "type": "string"
+        },
+        "warning_mode_active": {
+          "type": "boolean"
+        },
+        "hard_fail_reason_codes": {
+          "$ref": "#/$defs/reasonCodes"
+        },
+        "soft_warning_reason_codes": {
+          "$ref": "#/$defs/reasonCodes"
+        },
+        "observed_case_count": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "status": {
+          "type": "string"
+        },
+        "budget_cap": {
+          "type": [
+            "integer",
+            "null"
+          ],
+          "minimum": 0
+        },
+        "query_budget_remaining_min": {
+          "type": [
+            "integer",
+            "null"
+          ],
+          "minimum": 0
+        },
+        "query_budget_remaining_max": {
+          "type": [
+            "integer",
+            "null"
+          ],
+          "minimum": 0
+        },
+        "budget_used_max": {
+          "type": [
+            "integer",
+            "null"
+          ],
+          "minimum": 0
+        },
+        "epsilon_budget_max": {
+          "type": [
+            "number",
+            "null"
+          ],
+          "minimum": 0
+        },
+        "exhausted_case_count": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "exhausted_case_ids": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "rank_jitter_case_ids": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "identifiability_status_counts": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "integer",
+            "minimum": 0
+          }
+        },
+        "non_unique_case_ids": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "drift_case_ids": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "drift_case_count": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "drift_score_max": {
+          "type": [
+            "number",
+            "null"
+          ],
+          "minimum": 0
+        },
+        "precision": {
+          "type": [
+            "number",
+            "null"
+          ],
+          "minimum": 0
+        },
+        "recall": {
+          "type": [
+            "number",
+            "null"
+          ],
+          "minimum": 0
+        },
+        "legacy_present_case_count": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "native_present_case_count": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "violation_case_count": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "violation_case_ids": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "governanceLayers": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "leakage_guard",
+        "attribution_identifiability",
+        "invariance_trace",
+        "surface_contract"
+      ],
+      "properties": {
+        "leakage_guard": {
+          "$ref": "#/$defs/governanceLayerReport"
+        },
+        "attribution_identifiability": {
+          "$ref": "#/$defs/governanceLayerReport"
+        },
+        "invariance_trace": {
+          "$ref": "#/$defs/governanceLayerReport"
+        },
+        "surface_contract": {
+          "$ref": "#/$defs/governanceLayerReport"
+        }
+      }
+    },
     "stats": {
       "type": "object",
       "additionalProperties": false,
@@ -589,6 +904,18 @@
             "number",
             "null"
           ]
+        },
+        "leakage_guard": {
+          "$ref": "#/$defs/leakageGuard"
+        },
+        "counterfactual_extended": {
+          "$ref": "#/$defs/counterfactualExtended"
+        },
+        "invariance_trace": {
+          "$ref": "#/$defs/invarianceTrace"
+        },
+        "surface_contract": {
+          "$ref": "#/$defs/surfaceContract"
         },
         "editorial_anomalies": {
           "$ref": "#/$defs/editorialAnomalies"
@@ -1256,6 +1583,62 @@
             "enabled"
           ]
         },
+        "leakage_guard": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "enabled": {
+              "type": "boolean"
+            },
+            "epsilon": {
+              "type": "number",
+              "minimum": 0
+            },
+            "budget_cap": {
+              "type": "integer",
+              "minimum": 1
+            }
+          },
+          "required": [
+            "enabled"
+          ]
+        },
+        "attribution_identifiability": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "enabled": {
+              "type": "boolean"
+            }
+          },
+          "required": [
+            "enabled"
+          ]
+        },
+        "invariance_trace": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "enabled": {
+              "type": "boolean"
+            }
+          },
+          "required": [
+            "enabled"
+          ]
+        },
+        "surface_contract": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "enabled": {
+              "type": "boolean"
+            }
+          },
+          "required": [
+            "enabled"
+          ]
+        },
         "holdout_blindness": {
           "type": "object",
           "additionalProperties": false,
@@ -1447,6 +1830,18 @@
             "number",
             "null"
           ]
+        },
+        "leakage_guard": {
+          "$ref": "#/$defs/leakageGuard"
+        },
+        "counterfactual_extended": {
+          "$ref": "#/$defs/counterfactualExtended"
+        },
+        "invariance_trace": {
+          "$ref": "#/$defs/invarianceTrace"
+        },
+        "surface_contract": {
+          "$ref": "#/$defs/surfaceContract"
         }
       }
     },
@@ -2143,6 +2538,165 @@
         },
         "delta_loss": {
           "type": "number"
+        }
+      }
+    },
+    "leakageGuard": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "rank_jitter_applied",
+        "noise_scale",
+        "query_budget"
+      ],
+      "properties": {
+        "rank_jitter_applied": {
+          "type": "boolean"
+        },
+        "noise_scale": {
+          "type": [
+            "number",
+            "null"
+          ]
+        },
+        "query_budget": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "epsilon_budget": {
+          "type": [
+            "number",
+            "null"
+          ]
+        },
+        "budget_used": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "governance_version": {
+          "type": [
+            "string",
+            "null"
+          ]
+        }
+      }
+    },
+    "counterfactualExtended": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "stability",
+        "identifiability",
+        "interaction_strength"
+      ],
+      "properties": {
+        "stability": {
+          "type": [
+            "number",
+            "null"
+          ]
+        },
+        "identifiability": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "identifiability_status": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "interaction_strength": {
+          "type": [
+            "number",
+            "null"
+          ]
+        },
+        "conditional_importance": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "number"
+          }
+        },
+        "interaction_matrix": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "object",
+            "additionalProperties": {
+              "type": "number"
+            }
+          }
+        },
+        "attribution_rank": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "warning": {
+          "type": "string"
+        }
+      }
+    },
+    "invarianceTrace": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "trace_hash",
+        "drift_detected",
+        "drift_score"
+      ],
+      "properties": {
+        "trace_hash": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "drift_detected": {
+          "type": "boolean"
+        },
+        "drift_score": {
+          "type": [
+            "number",
+            "null"
+          ]
+        }
+      }
+    },
+    "surfaceContract": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "legacy_present",
+        "native_present",
+        "mixed_usage_violation",
+        "reason_codes",
+        "status",
+        "enforcement_mode",
+        "warning_mode_active"
+      ],
+      "properties": {
+        "legacy_present": {
+          "type": "boolean"
+        },
+        "native_present": {
+          "type": "boolean"
+        },
+        "mixed_usage_violation": {
+          "type": "boolean"
+        },
+        "reason_codes": {
+          "$ref": "#/$defs/reasonCodes"
+        },
+        "status": {
+          "type": "string"
+        },
+        "enforcement_mode": {
+          "type": "string"
+        },
+        "warning_mode_active": {
+          "type": "boolean"
         }
       }
     },

@@ -64,8 +64,13 @@ def test_audit_render_goldset_and_packs_cli_smoke(tmp_path: Path):
     assert goldset_path.exists()
     assert ledger_path.exists()
     goldset_summary = json.loads(goldset_path.read_text(encoding="utf-8"))
+    governance_report = json.loads((tmp_path / "governance_report.json").read_text(encoding="utf-8"))
+    ledger_entry = json.loads(ledger_path.read_text(encoding="utf-8").splitlines()[-1])
     assert goldset_summary["governance"]["baseline_window"] == 3
     assert goldset_summary["governance"]["fatal_weight_scale"] == 1.5
+    assert governance_report == goldset_summary["governance_report"]
+    assert ledger_entry["governance_report"] == goldset_summary["governance_report"]
+    assert ledger_entry["case_outcomes"][0]["decision_recommendation"] == goldset_summary["cases"][0]["decision_recommendation"]
 
     packs = _run("packs", "--pack-path", "fixtures/external_packs/apr-pack-physics")
     assert packs.returncode == 0, packs.stderr or packs.stdout
@@ -108,6 +113,10 @@ def test_goldset_extended_plane_flags_cli_smoke(tmp_path: Path):
         "--separate-planes",
         "--drift-counterfactuals",
         "--export-calibration-extended",
+        "--leakage-guard",
+        "--attribution-identifiability",
+        "--invariance-trace",
+        "--strict-surface-contract",
         "--holdout-blindness-level",
         "moderate",
         "--drift-intervention",
@@ -125,10 +134,19 @@ def test_goldset_extended_plane_flags_cli_smoke(tmp_path: Path):
     assert summary["governance"]["drift_counterfactuals"]["enabled"] is True
     assert summary["governance"]["holdout_blindness"]["level"] == "moderate"
     assert summary["governance"]["drift_intervention"]["enabled"] is True
+    assert summary["governance"]["leakage_guard"]["enabled"] is True
+    assert summary["governance"]["attribution_identifiability"]["enabled"] is True
+    assert summary["governance"]["invariance_trace"]["enabled"] is True
+    assert summary["governance"]["surface_contract"]["enabled"] is True
     assert first_case["scientific_score"]["total"] is not None
     assert first_case["scientific_score_vector"]["claim_clarity"] is not None
     assert first_case["editorial_score"]["total"] is not None
     assert first_case["loss_band"] in {"low", "medium", "high"}
+    assert first_case["leakage_guard"]["query_budget"] >= 1
+    assert first_case["counterfactual_extended"]["identifiability"] in {"unique", "degenerate", "correlated"}
+    assert first_case["invariance_trace"]["trace_hash"] is not None
+    assert first_case["surface_contract"]["mixed_usage_violation"] is False
     assert first_calibration_case["scientific_score_vector"]["total"] is not None
     assert first_calibration_case["editorial_score_vector"]["total"] is not None
     assert first_calibration_case["calibration_extended"]["scientific_vector"]["claim_clarity"] is not None
+    assert first_calibration_case["calibration_extended"]["surface_contract"]["mixed_usage_violation"] is False
