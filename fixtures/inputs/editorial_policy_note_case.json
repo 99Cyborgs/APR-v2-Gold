@@ -1,0 +1,31 @@
+{
+  "audit_mode": "full",
+  "manuscript_id": "editorial-note-001",
+  "title": "Editorial on calibration discipline in small-satellite benchmarking",
+  "abstract": "This editorial argues that calibration discipline in small-satellite benchmarking should be treated as a publication threshold rather than a post-hoc optimization. The note frames one scoped policy claim and points to the benchmark and reporting surfaces that make the argument assessable.",
+  "manuscript_text": "This editorial argues that small-satellite benchmarking should state one scoped claim, one visible comparator, and one failure boundary before publication. The note does not present a new experiment, but it cites current benchmark practice, identifies a concrete policy gap, and explains why broad claims without calibration discipline should be rejected.",
+  "figures_and_captions": [
+    "Figure 1. Editorial framework for scoped claims, comparators, and failure boundaries."
+  ],
+  "tables": [
+    "Table 1. Publication-surface checklist for calibration discipline in benchmarking manuscripts."
+  ],
+  "references": [
+    "Ref1 benchmark reporting practice for aerospace methods papers.",
+    "Ref2 calibration governance in engineering benchmarks."
+  ],
+  "supplement_or_appendix": "Appendix A records the cited publication-surface checklist terms.",
+  "target_venue": "Aerospace Editorial Forum",
+  "target_audience": "editors and methods reviewers",
+  "outlet_profile_hint": "specialist_research_journal",
+  "declared_article_type": "editorial_or_opinion",
+  "data_availability": null,
+  "code_availability": null,
+  "materials_availability": null,
+  "ethics_and_disclosures": "The authors declare no competing interests.",
+  "reporting_checklist": null,
+  "prior_reviews": null,
+  "author_response_to_reviews": null,
+  "reviewer_notes": null,
+  "external_constraints": null
+}

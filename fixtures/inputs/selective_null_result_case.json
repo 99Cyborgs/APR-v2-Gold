@@ -1,0 +1,32 @@
+{
+  "audit_mode": "full",
+  "manuscript_id": "selective-null-001",
+  "title": "No detectable exomoon timing signal in a reprocessed transit archive",
+  "abstract": "We constrain a proposed exomoon timing signal in a reprocessed transit archive and show that the effect does not persist under a preregistered null-analysis workflow. Figure 1 shows the constrained timing residuals, Table 1 reports the upper-bound intervals, and the discussion states the archive-noise regime where the null conclusion should not be overgeneralized. Data and code are publicly archived.",
+  "manuscript_text": "We reprocess the transit archive with the preregistered null-analysis workflow, evaluate the residual timing structure against the reported exomoon claim, and recover no stable signal above the stated upper bound. Figure 1 shows the constrained timing residuals for the reprocessed archive, and Table 1 reports the upper-bound intervals and sensitivity checks. The manuscript positions the result against the prior exomoon report, states the archive-noise regime where the null conclusion should not be overgeneralized, and keeps the claim limited to the studied archive and workflow.",
+  "figures_and_captions": [
+    "Figure 1. Constrained timing residuals from the reprocessed transit archive under the preregistered null-analysis workflow."
+  ],
+  "tables": [
+    "Table 1. Upper-bound intervals and sensitivity checks for the proposed exomoon timing signal."
+  ],
+  "references": [
+    "Ref1 proposed exomoon timing signal report.",
+    "Ref2 preregistered null-analysis workflow for transit archives.",
+    "Ref3 upper-bound estimation for timing residuals."
+  ],
+  "supplement_or_appendix": "Appendix A lists the reprocessing configuration, residual diagnostics, and sensitivity-check definitions.",
+  "target_venue": "Nature Astronomy",
+  "target_audience": "broad astronomy readership",
+  "outlet_profile_hint": null,
+  "declared_article_type": "constraint_or_null_result",
+  "data_availability": "Reprocessed transit identifiers and residual tables are publicly archived.",
+  "code_availability": "The null-analysis workflow and sensitivity-check scripts are publicly archived.",
+  "materials_availability": "No additional materials are required beyond the archived workflow and tables.",
+  "ethics_and_disclosures": "The authors declare no competing interests.",
+  "reporting_checklist": null,
+  "prior_reviews": null,
+  "author_response_to_reviews": null,
+  "reviewer_notes": null,
+  "external_constraints": null
+}

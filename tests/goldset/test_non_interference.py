@@ -52,7 +52,7 @@ def _calibration_bins(summary: dict[str, object]) -> dict[str, object]:
 
 def test_governance_flags_do_not_change_decisions_rankings_or_bins():
     baseline = run_goldset_manifest(
-        ROOT / "benchmarks" / "goldset" / "manifest.yaml",
+        ROOT / "benchmarks" / "goldset_dev" / "manifest.yaml",
         export_calibration_extended=True,
     )
     baseline_decisions = _case_decisions(baseline)
@@ -62,7 +62,7 @@ def test_governance_flags_do_not_change_decisions_rankings_or_bins():
 
     for enabled_values in itertools.product((False, True), repeat=len(FLAG_NAMES)):
         summary = run_goldset_manifest(
-            ROOT / "benchmarks" / "goldset" / "manifest.yaml",
+            ROOT / "benchmarks" / "goldset_dev" / "manifest.yaml",
             export_calibration_extended=True,
             **dict(zip(FLAG_NAMES, enabled_values, strict=False)),
         )

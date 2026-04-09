@@ -9,6 +9,11 @@
 
 ## Next safe extensions
 
+- Calibration Hardening Phase
+- holdout isolation
+- output surface freezing
+- adversarial robustness
+- editorial simulation alignment
 - expand gold-set volume and holdout coverage
 - refine outlet-profile calibration against reviewed cases
 - add new packs with pack-specific gold-set partitions

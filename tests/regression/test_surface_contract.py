@@ -30,7 +30,7 @@ def test_surface_contract_rejects_mixed_scoring_usage():
 
 def test_surface_contract_emits_runtime_namespace_status():
     summary = run_goldset_manifest(
-        ROOT / "benchmarks" / "goldset" / "manifest.yaml",
+        ROOT / "benchmarks" / "goldset_dev" / "manifest.yaml",
         strict_surface_contract=True,
     )
     case = next(item for item in summary["cases"] if item["case_id"] == "reviewable_sound_paper")

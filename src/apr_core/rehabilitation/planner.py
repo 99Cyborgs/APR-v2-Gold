@@ -42,6 +42,10 @@ def build_rehabilitation_plan(
     classification: dict[str, Any],
     reviewability: dict[str, Any],
     scientific_record: dict[str, Any],
+    structural_integrity: dict[str, Any],
+    claim_evidence_calibration: dict[str, Any],
+    adversarial_resilience: dict[str, Any],
+    editorial_first_pass: dict[str, Any],
     venue: dict[str, Any],
     integrity: dict[str, Any],
     transparency: dict[str, Any],
@@ -60,6 +64,20 @@ def build_rehabilitation_plan(
             "Reduce the manuscript to one reviewable unit with one explicit central claim.",
             "Expose a reconstructable method, model, or protocol surface.",
             "Add at least one decisive support object and a minimal reference layer.",
+        ]
+    elif structural_integrity["status"] == "non_reviewable":
+        development_track = "research_spine_rebuild"
+        next_actions = [
+            "Rebuild the manuscript around one object of study, one question, one method, and one decisive result.",
+            "Add an explicit comparator and one uncertainty or failure-condition statement.",
+            "Retain only one publishable unit until the research spine is coherent.",
+        ]
+    elif structural_integrity["status"] == "rebuild_required":
+        development_track = "research_spine_completion"
+        next_actions = [
+            "Fill the missing research-spine elements before submission or venue targeting.",
+            "Make the comparator, uncertainty, and failure-condition surfaces explicit in the abstract and body.",
+            "Collapse extra claims until one structurally coherent publishable unit remains.",
         ]
     elif scientific_record["status"] in {"fatal_fail", "repairable_fail"}:
         development_track = "scientific_record_repair"
@@ -95,6 +113,12 @@ def build_rehabilitation_plan(
 
     if transparency["status"] == "incomplete":
         next_actions.append("Complete the missing data, code, or materials statements before external circulation.")
+    if claim_evidence_calibration["status"] in {"watch", "fail", "fatal"}:
+        next_actions.append("Reduce claim scope or expand the evidence package until claim magnitude and support are calibrated.")
+    if adversarial_resilience["flag_count"] >= 3:
+        next_actions.append("Remove rhetorical inflation, add explicit baselines, and avoid simulation-only proof framing.")
+    if editorial_first_pass["desk_reject_probability"] >= 0.75:
+        next_actions.append("Rewrite the title and abstract around the exact gap, decisive object, and bounded claim before submission.")
 
     deduped_actions = []
     seen = set()

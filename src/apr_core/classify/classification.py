@@ -77,6 +77,15 @@ def _claim_type(article_type: str, text: str) -> str:
 def _outlet_profile(payload: dict[str, Any], text: str) -> str:
     hint = (payload.get("outlet_profile_hint") or "").lower()
     venue = (payload.get("target_venue") or "").lower()
+    if hint in {
+        "preprint_screen",
+        "soundness_first_journal",
+        "nature_selective",
+        "aps_selective",
+        "review_only_venue",
+        "specialist_research_journal",
+    }:
+        return hint
     combined = f"{hint} {venue}"
     if "preprint" in combined or "arxiv" in combined:
         return "preprint_screen"

@@ -44,6 +44,9 @@ def assess_scientific_record(
     reviewability: dict[str, Any],
     transparency: dict[str, Any],
     integrity: dict[str, Any],
+    structural_integrity: dict[str, Any],
+    claim_evidence_calibration: dict[str, Any],
+    adversarial_resilience: dict[str, Any],
 ) -> dict[str, Any]:
     central_anchor = parsing.get("central_claim_anchor") or first_anchor_from_fields(payload, ["title", "abstract"])
     method_anchor = parsing.get("first_hard_object") or first_anchor_from_fields(payload, ["manuscript_text", "supplement_or_appendix", "abstract"])
@@ -86,6 +89,31 @@ def assess_scientific_record(
             "A central claim is recoverable and stable enough for downstream assessment.",
             None,
             [central_anchor],
+        )
+
+    if structural_integrity["status"] == "non_reviewable":
+        criteria["structural_integrity"] = _criterion(
+            "fail",
+            "fatal",
+            "The manuscript lacks a minimally coherent research spine, so editorial review would be speculative rather than assessable.",
+            "Rebuild the paper around one object of study, one question, one method, one result, and explicit comparator and uncertainty surfaces.",
+            structural_integrity["evidence_anchors"],
+        )
+    elif structural_integrity["status"] == "rebuild_required":
+        criteria["structural_integrity"] = _criterion(
+            "fail",
+            "major",
+            "The manuscript has some research-spine elements, but the current structure is still too incomplete for confident editorial simulation.",
+            "Add the missing research-spine elements and make the result/comparator/uncertainty chain explicit.",
+            structural_integrity["evidence_anchors"],
+        )
+    else:
+        criteria["structural_integrity"] = _criterion(
+            "pass",
+            "none",
+            "A minimally coherent research spine is visible for editorial and scientific assessment.",
+            None,
+            structural_integrity["evidence_anchors"],
         )
 
     if reviewability["checks"]["assessable_method_model_or_protocol"] == "fail":
@@ -152,6 +180,39 @@ def assess_scientific_record(
             "The visible support chain is minimally commensurate with the claim as stated.",
             None,
             [central_anchor, support_anchor],
+        )
+
+    if claim_evidence_calibration["status"] == "fatal":
+        criteria["claim_evidence_calibration"] = _criterion(
+            "fail",
+            "fatal",
+            "The magnitude of the main claim substantially outruns the visible evidence package.",
+            "Narrow the central claim or expand the decisive evidence package until claim burden and support are commensurate.",
+            claim_evidence_calibration["evidence_anchors"],
+        )
+    elif claim_evidence_calibration["status"] == "fail":
+        criteria["claim_evidence_calibration"] = _criterion(
+            "fail",
+            "major",
+            "The claim burden is materially larger than the visible evidence package can currently support.",
+            "Reduce scope or add stronger comparative evidence, uncertainty accounting, and decisive support objects.",
+            claim_evidence_calibration["evidence_anchors"],
+        )
+    elif claim_evidence_calibration["status"] == "watch":
+        criteria["claim_evidence_calibration"] = _criterion(
+            "borderline",
+            "moderate",
+            "The claim and evidence are close to aligned, but the margin is thin enough to create desk-reject risk.",
+            "Add one cleaner comparator or limit statement to reduce overclaim risk.",
+            claim_evidence_calibration["evidence_anchors"],
+        )
+    else:
+        criteria["claim_evidence_calibration"] = _criterion(
+            "pass",
+            "none",
+            "Claim magnitude and visible evidence are calibrated at the current threshold.",
+            None,
+            claim_evidence_calibration["evidence_anchors"],
         )
 
     if classification["article_type"] in {"review", "systematic_review"} and ref_count < 5:
@@ -261,16 +322,52 @@ def assess_scientific_record(
             [integrity_anchor],
         )
 
+    if adversarial_resilience["status"] == "blocked":
+        criteria["adversarial_resilience"] = _criterion(
+            "fail",
+            "major",
+            "The manuscript exhibits multiple polished-invalid patterns that make the current framing unsafe to send out.",
+            "Remove rhetorical inflation, add concrete comparators, and replace simulation-only proof claims with auditable evidence.",
+            adversarial_resilience["evidence_anchors"],
+        )
+    elif adversarial_resilience["status"] == "downgraded":
+        criteria["adversarial_resilience"] = _criterion(
+            "borderline",
+            "major",
+            "Adversarial presentation patterns are present strongly enough to reduce confidence even if some core scientific surfaces are visible.",
+            "Reduce rhetorical scope and make the evidence chain more explicit and comparator-grounded.",
+            adversarial_resilience["evidence_anchors"],
+        )
+    elif adversarial_resilience["status"] == "watch":
+        criteria["adversarial_resilience"] = _criterion(
+            "borderline",
+            "moderate",
+            "Some adversarial presentation patterns are present and should be corrected before external submission.",
+            "Tighten scope claims and make novelty and comparator logic explicit.",
+            adversarial_resilience["evidence_anchors"],
+        )
+    else:
+        criteria["adversarial_resilience"] = _criterion(
+            "pass",
+            "none",
+            "No concentrated adversarial presentation pattern is visible at the current threshold.",
+            None,
+            adversarial_resilience["evidence_anchors"],
+        )
+
     fatal_failures: list[str] = []
     repairable_failures: list[str] = []
     major_concerns: list[dict[str, Any]] = []
     name_map = {
         "problem_definition_and_claim_clarity": "unrecoverable_or_unstable_central_claim",
+        "structural_integrity": "structural_integrity_below_editorial_threshold",
         "methodological_legibility": "no_assessable_method_model_or_protocol",
         "evidence_to_claim_alignment": "fundamental_evidence_to_claim_mismatch",
+        "claim_evidence_calibration": "claim_evidence_calibration_failure",
         "literature_positioning": "literature_positioning_underpowered",
         "transparency_and_reporting_readiness": "transparency_or_reporting_incomplete",
         "integrity_and_policy_readiness": "integrity_or_policy_blocker",
+        "adversarial_resilience": "adversarial_resilience_triggered",
     }
     for criterion_name, detail in criteria.items():
         if detail["status"] == "fail" and detail["severity"] == "fatal":

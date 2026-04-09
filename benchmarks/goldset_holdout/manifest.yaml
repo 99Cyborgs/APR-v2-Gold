@@ -1,0 +1,109 @@
+manifest_version: 4.0.0
+contract_version: 2.1.0
+case_root: ../../fixtures/inputs
+strata:
+  - name: core_gold
+    description: Holdout cases that still express core audit doctrine, but are excluded from development tuning.
+    default_gate_behavior: hard
+    include_in_regression_gate: false
+  - name: stress_gold
+    description: Holdout stress cases recorded for drift visibility only.
+    default_gate_behavior: monitor
+    include_in_regression_gate: false
+cases:
+  - case_id: holdout_polished_invalid_simulation
+    split: holdout
+    stratum: core_gold
+    partition: holdout_adversarial
+    category: polished_invalid_holdout
+    case_state: active
+    gate_behavior: hard
+    input: holdout_polished_invalid_simulation.json
+    pack_paths: []
+    expected:
+      exact:
+        parsing.central_claim: In a toy simulation with 14 tuned parameters and three learning-rate schedules, the stack appears transformative for future space operations.
+        classification.article_type: methods_or_tools
+        classification.claim_type: benchmark_claim
+        classification.domain_module: theory_physics_or_applied_math
+        classification.outlet_profile: nature_selective
+        reviewability.status: pass
+        scientific_record.status: fatal_fail
+        venue.routing_state: blocked_by_scientific_record
+        decision.recommendation: NON_REVIEWABLE
+        decision.human_escalation_required: false
+    required_nonempty_paths:
+      - parsing.central_claim_anchor
+      - claim_evidence_calibration.evidence_anchors
+      - adversarial_resilience.evidence_anchors
+    rationale: Hidden polished-invalid simulation case used to monitor overclaim and adversarial-resilience drift separately from development tuning.
+    tags:
+      - holdout
+      - adversarial
+      - polished_invalid
+    ambiguity_class: none
+
+  - case_id: holdout_specialist_radiation_case
+    split: holdout
+    stratum: stress_gold
+    partition: holdout_viability
+    category: specialist_retargeted_holdout
+    case_state: active
+    gate_behavior: monitor
+    input: holdout_specialist_radiation_case.json
+    pack_paths: []
+    expected:
+      exact:
+        parsing.central_claim: We present a shielding update for one CubeSat power-control board and show a 12% reduction in latch-up events relative to the current baseline under proton irradiation.
+        classification.article_type: methods_or_tools
+        classification.claim_type: benchmark_claim
+        classification.domain_module: methods_or_tools
+        classification.outlet_profile: nature_selective
+        reviewability.status: pass
+        scientific_record.status: pass
+        venue.routing_state: retarget_specialist
+        decision.recommendation: RETARGET_SPECIALIST
+        decision.human_escalation_required: false
+    required_nonempty_paths:
+      - parsing.central_claim_anchor
+      - editorial_first_pass.evidence_anchors
+      - rehabilitation.next_actions_ranked
+    rationale: Hidden specialist-viable case that checks the separation between scientific validity and venue mismatch under holdout conditions.
+    tags:
+      - holdout
+      - specialist_viable
+      - routing
+    ambiguity_class: none
+
+  - case_id: holdout_systematic_review_case
+    split: holdout
+    stratum: stress_gold
+    partition: holdout_review_profile
+    category: review_only_holdout
+    case_state: active
+    gate_behavior: monitor
+    input: holdout_systematic_review_case.json
+    pack_paths: []
+    expected:
+      exact:
+        parsing.central_claim: We systematically review onboard fault-detection benchmark studies for small satellites and show that dataset reporting, comparator choice, and failure-boundary disclosure are inconsistent across the current literature.
+        classification.article_type: systematic_review
+        classification.claim_type: synthesis_claim
+        classification.domain_module: review_synthesis
+        classification.outlet_profile: review_only_venue
+        reviewability.status: pass
+        scientific_record.status: pass
+        venue.routing_state: plausible_send_out
+        decision.recommendation: PLAUSIBLE_SEND_OUT
+        decision.human_escalation_required: false
+    required_nonempty_paths:
+      - parsing.central_claim_anchor
+      - scientific_record.criteria.literature_positioning.evidence_anchors
+      - venue.evidence_anchors
+      - editorial_first_pass.evidence_anchors
+    rationale: Hidden review-synthesis case that exercises the review-only outlet profile without leaking tuning signals into the development split.
+    tags:
+      - holdout
+      - review_only
+      - synthesis
+    ambiguity_class: none

@@ -10,6 +10,7 @@ decision policy.
 
 import argparse
 import json
+import sys
 from pathlib import Path
 
 from jsonschema import Draft202012Validator, validate
@@ -52,6 +53,22 @@ def _non_negative_float(value: str) -> float:
     return parsed
 
 
+def _default_dev_manifest() -> str:
+    return str(repo_root() / "benchmarks" / "goldset_dev" / "manifest.yaml")
+
+
+def _default_holdout_manifest() -> str:
+    return str(repo_root() / "benchmarks" / "goldset_holdout" / "manifest.yaml")
+
+
+def _apply_profile_override(payload: dict[str, object], profile: str | None) -> dict[str, object]:
+    if not profile:
+        return payload
+    overridden = dict(payload)
+    overridden["outlet_profile_hint"] = profile
+    return overridden
+
+
 def cmd_doctor(_: argparse.Namespace) -> int:
     root = repo_root()
     manifest = load_contract_manifest()
@@ -61,7 +78,8 @@ def cmd_doctor(_: argparse.Namespace) -> int:
     Draft202012Validator.check_schema(load_goldset_manifest_schema())
     Draft202012Validator.check_schema(load_goldset_summary_schema())
     Draft202012Validator.check_schema(load_goldset_ledger_entry_schema())
-    load_goldset_manifest()
+    load_goldset_manifest(_default_dev_manifest())
+    load_goldset_manifest(_default_holdout_manifest())
 
     required_paths = [
         root / "contracts" / "active" / "manifest.yaml",
@@ -74,7 +92,8 @@ def cmd_doctor(_: argparse.Namespace) -> int:
         root / "docs" / "CANONICAL_AUDIT_RECORD.md",
         root / "docs" / "GOLDSET_CASE_SCHEMA.md",
         root / "docs" / "SPEC_IMPLEMENTATION_MATRIX.md",
-        root / "benchmarks" / "goldset" / "manifest.yaml",
+        root / "benchmarks" / "goldset_dev" / "manifest.yaml",
+        root / "benchmarks" / "goldset_holdout" / "manifest.yaml",
         root / "benchmarks" / "goldset" / "schemas" / "manifest.schema.json",
         root / "benchmarks" / "goldset" / "schemas" / "summary.schema.json",
         root / "benchmarks" / "goldset" / "schemas" / "ledger_entry.schema.json",
@@ -116,13 +135,17 @@ def cmd_doctor(_: argparse.Namespace) -> int:
 
 
 def cmd_audit(args: argparse.Namespace) -> int:
-    payload = read_json(args.input)
+    payload = _apply_profile_override(read_json(args.input), args.profile)
     record = run_audit(payload, pack_paths=args.pack_path or [])
     if args.output:
         write_json(args.output, record)
     else:
         print(json.dumps(record, indent=2))
     return 0
+
+
+def cmd_review(args: argparse.Namespace) -> int:
+    return cmd_audit(args)
 
 
 def cmd_render(args: argparse.Namespace) -> int:
@@ -137,21 +160,23 @@ def cmd_render(args: argparse.Namespace) -> int:
 
 
 def cmd_goldset(args: argparse.Namespace) -> int:
+    holdout_requested = bool(getattr(args, "holdout", False) or getattr(args, "holdout_eval", False))
+    manifest_path = args.manifest or (_default_holdout_manifest() if holdout_requested else _default_dev_manifest())
     if args.no_ledger:
         ledger_path = None
     elif args.ledger_path:
         ledger_path = args.ledger_path
-    elif args.holdout_eval:
+    elif holdout_requested:
         ledger_path = str(default_holdout_calibration_ledger_path())
     else:
         ledger_path = str(default_calibration_ledger_path())
     summary = run_goldset_manifest(
-        args.manifest,
+        manifest_path,
         extra_pack_paths=args.pack_path or [],
         ledger_path=ledger_path,
         notes=args.notes,
         operator=args.operator,
-        holdout_eval=args.holdout_eval,
+        holdout_eval=holdout_requested,
         ledger_baseline_window=args.baseline_window,
         regression_threshold=args.regression_threshold,
         fatal_weight_scale=args.fatal_weight_scale,
@@ -190,11 +215,21 @@ def build_parser() -> argparse.ArgumentParser:
     doctor = subparsers.add_parser("doctor", help="Validate repo, contracts, and local runtime wiring.")
     doctor.set_defaults(func=cmd_doctor)
 
+    outlet_profiles = load_policy_layer()["policy_layer"]["outlet_profiles"]
+
     audit = subparsers.add_parser("audit", help="Audit a manuscript package and emit canonical JSON.")
     audit.add_argument("input", help="Path to the normalized manuscript package JSON.")
     audit.add_argument("--output", help="Optional output path for canonical JSON.")
     audit.add_argument("--pack-path", action="append", default=[], help="Explicit external pack path. Repeatable.")
+    audit.add_argument("--profile", choices=outlet_profiles, help="Override the outlet profile hint for this run.")
     audit.set_defaults(func=cmd_audit)
+
+    review = subparsers.add_parser("review", help="Alias of audit with editorial-profile override support.")
+    review.add_argument("input", help="Path to the normalized manuscript package JSON.")
+    review.add_argument("--output", help="Optional output path for canonical JSON.")
+    review.add_argument("--pack-path", action="append", default=[], help="Explicit external pack path. Repeatable.")
+    review.add_argument("--profile", choices=outlet_profiles, help="Override the outlet profile hint for this run.")
+    review.set_defaults(func=cmd_review)
 
     render = subparsers.add_parser("render", help="Render markdown from a canonical record only.")
     render.add_argument("input", help="Path to a canonical audit record JSON file.")
@@ -204,21 +239,26 @@ def build_parser() -> argparse.ArgumentParser:
     goldset = subparsers.add_parser("goldset", help="Run the benchmark harness.")
     goldset.add_argument(
         "--manifest",
-        default=str(repo_root() / "benchmarks" / "goldset" / "manifest.yaml"),
-        help="Path to the gold-set manifest.",
+        default=None,
+        help="Optional explicit manifest path. Defaults to the dev manifest, or the holdout manifest when --holdout is set.",
     )
     goldset.add_argument("--output", help="Optional output path for the summary JSON.")
     goldset.add_argument("--pack-path", action="append", default=[], help="Extra pack path to apply to every case.")
     # These flags alter benchmark governance or disclosure surfaces; they are
     # not cosmetic toggles for the same public artifact.
     goldset.add_argument(
+        "--holdout",
+        action="store_true",
+        help="Run holdout-only blind evaluation using the holdout manifest by default.",
+    )
+    goldset.add_argument(
         "--holdout-eval",
         action="store_true",
-        help="Run blind holdout evaluation only. Holdout expectations are redacted from output surfaces.",
+        help="Backward-compatible alias for --holdout.",
     )
     goldset.add_argument(
         "--ledger-path",
-        help="Optional JSONL calibration ledger path. Defaults to the development ledger, or the holdout ledger when --holdout-eval is set.",
+        help="Optional JSONL calibration ledger path. Defaults to the development ledger, or the holdout ledger when --holdout is set.",
     )
     goldset.add_argument(
         "--baseline-window",
@@ -310,6 +350,22 @@ def main(argv: list[str] | None = None) -> int:
     parser = build_parser()
     args = parser.parse_args(argv)
     return args.func(args)
+
+
+def review_entry_main() -> int:
+    return main(["review", *sys.argv[1:]])
+
+
+def goldset_entry_main() -> int:
+    return main(["goldset", *sys.argv[1:]])
+
+
+def holdout_entry_main() -> int:
+    return main(["goldset", "--holdout", *sys.argv[1:]])
+
+
+def doctor_entry_main() -> int:
+    return main(["doctor", *sys.argv[1:]])
 
 
 if __name__ == "__main__":

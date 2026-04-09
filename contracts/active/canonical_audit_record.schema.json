@@ -15,8 +15,12 @@
     "reviewability",
     "transparency",
     "integrity",
+    "structural_integrity",
+    "claim_evidence_calibration",
+    "adversarial_resilience",
     "scientific_record",
     "venue",
+    "editorial_first_pass",
     "rehabilitation",
     "pack_execution",
     "pack_results",
@@ -25,8 +29,8 @@
     "rendering"
   ],
   "properties": {
-    "contract_version": { "const": "2.0.0" },
-    "policy_layer_version": { "const": "2.0.0" },
+    "contract_version": { "const": "2.1.0" },
+    "policy_layer_version": { "const": "2.1.0" },
     "audit_mode": { "type": "string", "enum": ["triage", "full"] },
     "metadata": {
       "type": "object",
@@ -181,6 +185,75 @@
         "evidence_anchors": { "type": "array", "items": { "$ref": "#/$defs/anchor" } }
       }
     },
+    "structural_integrity": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "status",
+        "research_spine_score_8",
+        "research_spine_signals",
+        "missing_elements",
+        "evidence_anchors"
+      ],
+      "properties": {
+        "status": { "type": "string", "enum": ["pass", "rebuild_required", "non_reviewable"] },
+        "research_spine_score_8": { "type": "integer", "minimum": 0, "maximum": 8 },
+        "research_spine_signals": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "object_of_study",
+            "question",
+            "method",
+            "result",
+            "comparator",
+            "uncertainty",
+            "failure_condition",
+            "coherence_bonus"
+          ],
+          "properties": {
+            "object_of_study": { "type": "boolean" },
+            "question": { "type": "boolean" },
+            "method": { "type": "boolean" },
+            "result": { "type": "boolean" },
+            "comparator": { "type": "boolean" },
+            "uncertainty": { "type": "boolean" },
+            "failure_condition": { "type": "boolean" },
+            "coherence_bonus": { "type": "boolean" }
+          }
+        },
+        "missing_elements": { "type": "array", "items": { "type": "string" } },
+        "evidence_anchors": { "type": "array", "items": { "$ref": "#/$defs/anchor" } }
+      }
+    },
+    "claim_evidence_calibration": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["claim_magnitude", "evidence_level", "mismatch", "status", "evidence_anchors"],
+      "properties": {
+        "claim_magnitude": { "type": "integer", "minimum": 1, "maximum": 5 },
+        "evidence_level": { "type": "integer", "minimum": 1, "maximum": 5 },
+        "mismatch": { "type": "integer", "minimum": -4, "maximum": 4 },
+        "status": { "type": "string", "enum": ["aligned", "watch", "fail", "fatal"] },
+        "evidence_anchors": { "type": "array", "items": { "$ref": "#/$defs/anchor" } }
+      }
+    },
+    "adversarial_resilience": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["flags", "flag_count", "triggered_checks", "status", "evidence_anchors"],
+      "properties": {
+        "flags": { "type": "array", "items": { "type": "string" } },
+        "flag_count": { "type": "integer", "minimum": 0 },
+        "triggered_checks": { "type": "array", "items": { "type": "string" } },
+        "status": { "type": "string", "enum": ["clear", "watch", "downgraded", "blocked"] },
+        "family_counts": {
+          "type": "object",
+          "additionalProperties": { "type": "integer", "minimum": 0 }
+        },
+        "evidence_anchors": { "type": "array", "items": { "$ref": "#/$defs/anchor" } }
+      }
+    },
     "scientific_record": {
       "type": "object",
       "additionalProperties": false,
@@ -202,19 +275,25 @@
           "additionalProperties": false,
           "required": [
             "problem_definition_and_claim_clarity",
+            "structural_integrity",
             "methodological_legibility",
             "evidence_to_claim_alignment",
+            "claim_evidence_calibration",
             "literature_positioning",
             "transparency_and_reporting_readiness",
-            "integrity_and_policy_readiness"
+            "integrity_and_policy_readiness",
+            "adversarial_resilience"
           ],
           "properties": {
             "problem_definition_and_claim_clarity": { "$ref": "#/$defs/criterion" },
+            "structural_integrity": { "$ref": "#/$defs/criterion" },
             "methodological_legibility": { "$ref": "#/$defs/criterion" },
             "evidence_to_claim_alignment": { "$ref": "#/$defs/criterion" },
+            "claim_evidence_calibration": { "$ref": "#/$defs/criterion" },
             "literature_positioning": { "$ref": "#/$defs/criterion" },
             "transparency_and_reporting_readiness": { "$ref": "#/$defs/criterion" },
-            "integrity_and_policy_readiness": { "$ref": "#/$defs/criterion" }
+            "integrity_and_policy_readiness": { "$ref": "#/$defs/criterion" },
+            "adversarial_resilience": { "$ref": "#/$defs/criterion" }
           }
         },
         "fatal_failures": { "type": "array", "items": { "type": "string" } },
@@ -261,6 +340,45 @@
         "evidence_anchors": { "type": "array", "items": { "$ref": "#/$defs/anchor" } }
       }
     },
+    "editorial_first_pass": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "central_claim",
+        "novelty_delta",
+        "decisive_result_object",
+        "component_scores",
+        "editorial_first_pass_score_32",
+        "desk_reject_probability",
+        "evidence_anchors"
+      ],
+      "properties": {
+        "central_claim": { "type": ["string", "null"] },
+        "novelty_delta": { "type": ["string", "null"] },
+        "decisive_result_object": { "$ref": "#/$defs/hardObjectOrNull" },
+        "component_scores": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "abstract_clarity",
+            "intro_gap_definition",
+            "first_hard_object_validity",
+            "figure_support",
+            "references_coverage"
+          ],
+          "properties": {
+            "abstract_clarity": { "type": "integer", "minimum": 0, "maximum": 8 },
+            "intro_gap_definition": { "type": "integer", "minimum": 0, "maximum": 6 },
+            "first_hard_object_validity": { "type": "integer", "minimum": 0, "maximum": 8 },
+            "figure_support": { "type": "integer", "minimum": 0, "maximum": 5 },
+            "references_coverage": { "type": "integer", "minimum": 0, "maximum": 5 }
+          }
+        },
+        "editorial_first_pass_score_32": { "type": "integer", "minimum": 0, "maximum": 32 },
+        "desk_reject_probability": { "type": "number", "minimum": 0, "maximum": 1 },
+        "evidence_anchors": { "type": "array", "items": { "$ref": "#/$defs/anchor" } }
+      }
+    },
     "rehabilitation": {
       "type": "object",
       "additionalProperties": false,
@@ -289,10 +407,7 @@
       "properties": {
         "requested_pack_paths": { "type": "array", "items": { "type": "string" } },
         "loaded_packs": { "type": "array", "items": { "$ref": "#/$defs/loadedPack" } },
-        "pack_load_failures": {
-          "type": "array",
-          "items": { "$ref": "#/$defs/packLoadFailure" }
-        },
+        "pack_load_failures": { "type": "array", "items": { "$ref": "#/$defs/packLoadFailure" } },
         "any_pack_requested_human_escalation": { "type": "boolean" }
       }
     },
@@ -303,24 +418,32 @@
     "decision": {
       "type": "object",
       "additionalProperties": false,
-      "required": ["recommendation", "confidence", "human_escalation_required"],
+      "required": [
+        "recommendation",
+        "confidence",
+        "human_escalation_required",
+        "editorial_forecast",
+        "author_recommendation"
+      ],
       "properties": {
-        "recommendation": {
+        "recommendation": { "$ref": "#/$defs/recommendation" },
+        "confidence": { "type": "string", "enum": ["low", "medium", "high"] },
+        "human_escalation_required": { "type": "boolean" },
+        "editorial_forecast": {
           "type": "string",
           "enum": [
             "NON_REVIEWABLE",
-            "DO_NOT_SUBMIT",
-            "REBUILD_BEFORE_SUBMISSION",
-            "REVISE_BEFORE_SUBMISSION",
+            "SCIENTIFIC_RECORD_BLOCK",
+            "REBUILD_REQUIRED",
             "RETARGET_SPECIALIST",
             "RETARGET_SOUNDNESS_FIRST",
-            "PREPRINT_READY_NOT_JOURNAL_READY",
-            "SUBMIT_WITH_CAUTION",
+            "PREPRINT_ONLY",
+            "DESK_REJECT_RISK",
+            "CAUTIONARY_SEND_OUT",
             "PLAUSIBLE_SEND_OUT"
           ]
         },
-        "confidence": { "type": "string", "enum": ["low", "medium", "high"] },
-        "human_escalation_required": { "type": "boolean" }
+        "author_recommendation": { "$ref": "#/$defs/recommendation" }
       }
     },
     "provenance": {
@@ -395,6 +518,20 @@
         "required_repair": { "type": ["string", "null"] },
         "evidence_anchors": { "type": "array", "items": { "$ref": "#/$defs/anchor" } }
       }
+    },
+    "recommendation": {
+      "type": "string",
+      "enum": [
+        "NON_REVIEWABLE",
+        "DO_NOT_SUBMIT",
+        "REBUILD_BEFORE_SUBMISSION",
+        "REVISE_BEFORE_SUBMISSION",
+        "RETARGET_SPECIALIST",
+        "RETARGET_SOUNDNESS_FIRST",
+        "PREPRINT_READY_NOT_JOURNAL_READY",
+        "SUBMIT_WITH_CAUTION",
+        "PLAUSIBLE_SEND_OUT"
+      ]
     },
     "loadedPack": {
       "type": "object",

@@ -62,6 +62,7 @@
         "additionalProperties": false,
         "required": [
           "case_id",
+          "split",
           "stratum",
           "partition",
           "category",
@@ -78,6 +79,13 @@
           "case_id": {
             "type": "string",
             "minLength": 1
+          },
+          "split": {
+            "type": "string",
+            "enum": [
+              "dev",
+              "holdout"
+            ]
           },
           "stratum": {
             "type": "string",

@@ -8,4 +8,4 @@ The goldset manifest references those fixtures directly so there is one canonica
 - regression tests
 - benchmark execution
 
-Case governance metadata lives in `benchmarks/goldset/manifest.yaml`, not in duplicated fixture copies.
+Case governance metadata lives in the benchmark manifests under `benchmarks/goldset_dev/` and `benchmarks/goldset_holdout/`, not in duplicated fixture copies.

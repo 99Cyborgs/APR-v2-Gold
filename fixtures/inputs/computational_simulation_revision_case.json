@@ -1,0 +1,32 @@
+{
+  "audit_mode": "full",
+  "manuscript_id": "computational-sim-revision-001",
+  "title": "Numerical simulation model for eclipse-phase radiator deployment in small satellites",
+  "abstract": "We develop a numerical simulation model for eclipse-phase radiator deployment and show that it predicts hinge-temperature stability in one validated operating window. Figure 1 shows the simulated stability envelope, Table 1 reports uncertainty intervals, and the discussion states the failure regime above the validated thermal gradient.",
+  "manuscript_text": "We ask whether a numerical simulation model can predict hinge-temperature stability during eclipse-phase radiator deployment in one validated operating window. The manuscript defines the solver workflow, boundary conditions, and validation window, and compares the simulated stability envelope against the current engineering estimate in that window. Figure 1 shows the simulated stability envelope, Table 1 reports uncertainty intervals, and the discussion states the failure regime above the validated thermal gradient with explicit limitations on transfer outside the calibrated configuration.",
+  "figures_and_captions": [
+    "Figure 1. Simulated hinge-temperature stability envelope for eclipse-phase radiator deployment in the validated operating window."
+  ],
+  "tables": [
+    "Table 1. Uncertainty intervals and boundary-condition values for the numerical simulation model."
+  ],
+  "references": [
+    "Ref1 engineering estimate for radiator deployment stability.",
+    "Ref2 spacecraft thermal simulation validation windows.",
+    "Ref3 uncertainty accounting for deployment-temperature models."
+  ],
+  "supplement_or_appendix": "Appendix A lists solver settings, boundary conditions, and validation-window definitions.",
+  "target_venue": "Journal of Computational Physics",
+  "target_audience": "computational spacecraft thermal-modeling researchers",
+  "outlet_profile_hint": null,
+  "declared_article_type": "theory_or_model",
+  "data_availability": null,
+  "code_availability": null,
+  "materials_availability": null,
+  "ethics_and_disclosures": "The authors declare no competing interests.",
+  "reporting_checklist": null,
+  "prior_reviews": null,
+  "author_response_to_reviews": null,
+  "reviewer_notes": null,
+  "external_constraints": null
+}

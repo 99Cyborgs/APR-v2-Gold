@@ -16,8 +16,8 @@ from apr_core.goldset.leakage_guard import GOVERNANCE_VERSION, bind_governance_s
 def test_leakage_guard_preserves_decision_and_loss_band_across_repeated_runs(tmp_path: Path):
     ledger_path = tmp_path / "calibration_ledger.jsonl"
 
-    first = run_goldset_manifest(ROOT / "benchmarks" / "goldset" / "manifest.yaml", ledger_path=ledger_path, leakage_guard=True)
-    second = run_goldset_manifest(ROOT / "benchmarks" / "goldset" / "manifest.yaml", ledger_path=ledger_path, leakage_guard=True)
+    first = run_goldset_manifest(ROOT / "benchmarks" / "goldset_dev" / "manifest.yaml", ledger_path=ledger_path, leakage_guard=True)
+    second = run_goldset_manifest(ROOT / "benchmarks" / "goldset_dev" / "manifest.yaml", ledger_path=ledger_path, leakage_guard=True)
 
     first_case = next(case for case in first["cases"] if case["case_id"] == "reviewable_sound_paper")
     second_case = next(case for case in second["cases"] if case["case_id"] == "reviewable_sound_paper")

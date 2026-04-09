@@ -1,6 +1,6 @@
 contract:
   name: APR v2 Active Contract
-  version: 2.0.0
+  version: 2.1.0
   status: active
   canonical_record: CanonicalAuditRecord
   audit_input: NormalizedManuscriptPackage
@@ -9,10 +9,10 @@ contract:
   policy_layer: contracts/active/policy_layer.yaml
   system_prompt: contracts/active/system_prompt.md
   user_prompt_template: contracts/active/user_prompt_template.md
-  policy_layer_version: 2.0.0
+  policy_layer_version: 2.1.0
   compatibility:
     runtime_loadable_contracts:
-      - 2.0.0
+      - 2.1.0
     legacy_runtime_loading: false
     notes:
       - Renderers consume canonical output and do not redefine it.

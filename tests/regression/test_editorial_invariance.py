@@ -25,9 +25,9 @@ def _active_cases(summary: dict[str, object]) -> list[dict[str, object]]:
 
 
 def test_editorial_weight_invariance_holds_for_fixture_manifest():
-    baseline = run_goldset_manifest(ROOT / "benchmarks" / "goldset" / "manifest.yaml", export_calibration_extended=True)
+    baseline = run_goldset_manifest(ROOT / "benchmarks" / "goldset_dev" / "manifest.yaml", export_calibration_extended=True)
     weighted = run_goldset_manifest(
-        ROOT / "benchmarks" / "goldset" / "manifest.yaml",
+        ROOT / "benchmarks" / "goldset_dev" / "manifest.yaml",
         export_calibration_extended=True,
         enable_editorial_weight=True,
     )

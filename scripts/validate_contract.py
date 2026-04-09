@@ -24,8 +24,8 @@ def main() -> int:
     Draft202012Validator.check_schema(load_audit_input_schema())
     Draft202012Validator.check_schema(load_canonical_record_schema())
 
-    assert manifest["contract"]["version"] == "2.0.0"
-    assert policy["policy_layer"]["version"] == "2.0.0"
+    assert manifest["contract"]["version"] == "2.1.0"
+    assert policy["policy_layer"]["version"] == "2.1.0"
     assert policy["policy_layer"]["compatibility"]["one_active_contract_only"] is True
     assert "PREPRINT_READY_NOT_JOURNAL_READY" in policy["policy_layer"]["recommendation_states"]
 

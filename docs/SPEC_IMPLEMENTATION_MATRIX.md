@@ -7,7 +7,7 @@ This matrix marks what APR v2 Gold actually implements and what the benchmark ha
 | Surface | Status | Evidence |
 | --- | --- | --- |
 | Central-claim recovery | Implemented and benchmarked | `parsing.central_claim` is asserted in every active goldset case. |
-| Article type, claim type, domain module, outlet profile classification | Implemented and benchmarked | Exact expectations exist in `benchmarks/goldset/manifest.yaml`. |
+| Article type, claim type, domain module, outlet profile classification | Implemented and benchmarked | Exact expectations exist in the active benchmark manifests under `benchmarks/goldset_dev/` and `benchmarks/goldset_holdout/`. |
 | Reviewability gate | Implemented and benchmarked | Core and stress cases assert `reviewability.status`. |
 | Scientific-record gate | Implemented and benchmarked | Core and stress cases assert `scientific_record.status`. |
 | Venue routing after scientific-record gating | Implemented and benchmarked | `venue.routing_state` is asserted across viable, blocked, and retarget cases. |

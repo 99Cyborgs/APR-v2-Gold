@@ -1,0 +1,32 @@
+{
+  "audit_mode": "full",
+  "manuscript_id": "clinical-pack-001",
+  "title": "Prospective cohort evaluation of a bedside sepsis triage checklist during overnight telemetry review",
+  "abstract": "We report a prospective cohort evaluation of a bedside sepsis triage checklist and show that it shortens escalation delay versus routine overnight review in one monitored ward. The objective is to determine whether the checklist preserves sensitivity while documenting the failure condition for patients with incomplete medication reconciliation. We report 95% confidence intervals, the primary endpoint, adverse event counts, and IRB-approved cohort accounting.",
+  "manuscript_text": "The prospective clinical cohort included 148 adult patients monitored after abdominal surgery, and the primary endpoint was time to sepsis escalation after the first telemetry-triggered alert. The workflow used a bedside checklist, attending review the next morning, and a prespecified adverse event log for false alarms and delayed escalation. Figure 1 shows the ward-level escalation delay distribution, and Table 1 reports endpoint estimates with 95% confidence intervals for the checklist arm versus routine overnight review. The method is limited by one ward configuration and should not be used when medication reconciliation is incomplete, which is the stated failure condition. The institutional review board approved the study with a consent waiver, and the supplement contains the checklist and adjudication workflow.",
+  "figures_and_captions": [
+    "Figure 1. Escalation delay distribution for the prospective ward cohort under checklist-guided review and routine overnight review."
+  ],
+  "tables": [
+    "Table 1. Primary endpoint estimates, sensitivity, and adverse event counts with 95% confidence intervals."
+  ],
+  "references": [
+    "Ref1 sepsis escalation timing in monitored postoperative wards.",
+    "Ref2 clinical adjudication protocols for telemetry-triggered alerts.",
+    "Ref3 cohort reporting guidance for bedside triage evaluations."
+  ],
+  "supplement_or_appendix": "Appendix A contains the checklist, adjudication workflow, and endpoint definitions.",
+  "target_venue": "Journal of Clinical Monitoring Methods",
+  "target_audience": "clinical monitoring and patient safety reviewers",
+  "outlet_profile_hint": null,
+  "declared_article_type": "original_research",
+  "data_availability": "De-identified cohort data are available under institutional data use agreement.",
+  "code_availability": "Analysis scripts are archived in a public repository.",
+  "materials_availability": "The bedside checklist and adjudication worksheet are reproduced in Appendix A.",
+  "ethics_and_disclosures": "Institutional review board approval was obtained with a consent waiver for minimal-risk prospective observation. The authors declare no competing interests.",
+  "reporting_checklist": null,
+  "prior_reviews": null,
+  "author_response_to_reviews": null,
+  "reviewer_notes": null,
+  "external_constraints": null
+}

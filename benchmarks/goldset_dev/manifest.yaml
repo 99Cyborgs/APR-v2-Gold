@@ -1,0 +1,563 @@
+manifest_version: 4.0.0
+contract_version: 2.1.0
+case_root: ../../fixtures/inputs
+strata:
+  - name: core_gold
+    description: Authoritative hard-gate cases that define the APR benchmark contract.
+    default_gate_behavior: hard
+    include_in_regression_gate: true
+  - name: stress_gold
+    description: Active calibration pressure cases that remain visible without defining the whole hard gate.
+    default_gate_behavior: monitor
+    include_in_regression_gate: true
+cases:
+  - case_id: reviewable_sound_paper
+    split: dev
+    stratum: core_gold
+    partition: core_structural
+    category: reviewable_baseline
+    case_state: active
+    gate_behavior: hard
+    input: reviewable_sound_paper.json
+    pack_paths: []
+    expected:
+      exact:
+        parsing.central_claim: We present a calibration routine for low-cost satellite thermal sensors and show that it reduces drift by 18% relative to the current baseline.
+        classification.article_type: methods_or_tools
+        classification.claim_type: benchmark_claim
+        classification.domain_module: methods_or_tools
+        classification.outlet_profile: specialist_research_journal
+        reviewability.status: pass
+        scientific_record.status: pass
+        venue.routing_state: plausible_send_out
+        decision.recommendation: PLAUSIBLE_SEND_OUT
+        decision.human_escalation_required: false
+    required_nonempty_paths:
+      - parsing.central_claim_anchor
+      - parsing.decisive_support_object
+      - scientific_record.criteria.evidence_to_claim_alignment.evidence_anchors
+      - venue.evidence_anchors
+    rationale: Canonical clean pass case. It anchors claim recovery, benchmark classification, record readiness, and positive routing.
+    tags:
+      - clean_reviewable
+      - methods
+      - claim_recovery
+    ambiguity_class: none
+
+  - case_id: abstract_only_fragment
+    split: dev
+    stratum: core_gold
+    partition: core_structural
+    category: non_reviewable_fragment
+    case_state: active
+    gate_behavior: hard
+    input: abstract_only_fragment.json
+    pack_paths: []
+    expected:
+      exact:
+        parsing.central_claim: This perspective argues that future satellite resilience may require a new mindset that combines engineering, culture, and systems thinking.
+        classification.article_type: commentary_or_perspective
+        classification.claim_type: opinion_claim
+        classification.domain_module: general_scientific_manuscript
+        classification.outlet_profile: preprint_screen
+        reviewability.status: fail
+        scientific_record.status: fatal_fail
+        venue.routing_state: blocked_by_scientific_record
+        decision.recommendation: NON_REVIEWABLE
+        decision.human_escalation_required: false
+    required_nonempty_paths:
+      - parsing.central_claim_anchor
+      - scientific_record.criteria.problem_definition_and_claim_clarity.evidence_anchors
+    rationale: Non-reviewable fragment case. APR must desk-reject thin perspective fragments without inventing a viable record.
+    tags:
+      - fragment
+      - non_reviewable
+      - reviewability_gate
+    ambiguity_class: none
+
+  - case_id: null_replication_case
+    split: dev
+    stratum: core_gold
+    partition: viability_and_routing
+    category: null_or_replication
+    case_state: active
+    gate_behavior: hard
+    input: null_replication_case.json
+    pack_paths: []
+    expected:
+      exact:
+        parsing.central_claim: We reanalyze the reported transit-timing anomaly using the original archival survey pipeline and an independent replication workflow.
+        classification.article_type: replication_or_validation
+        classification.claim_type: replication_claim
+        classification.domain_module: observational_or_empirical
+        classification.outlet_profile: soundness_first_journal
+        reviewability.status: pass
+        scientific_record.status: pass
+        venue.routing_state: plausible_send_out
+        decision.recommendation: PLAUSIBLE_SEND_OUT
+        decision.human_escalation_required: false
+    required_nonempty_paths:
+      - parsing.central_claim_anchor
+      - parsing.decisive_support_object
+      - scientific_record.criteria.transparency_and_reporting_readiness.evidence_anchors
+    rationale: Null and replication handling is core doctrine, not an optional venue preference edge case.
+    tags:
+      - null_or_replication
+      - replication
+      - soundness_first
+    ambiguity_class: none
+
+  - case_id: selective_null_result_case
+    split: dev
+    stratum: core_gold
+    partition: viability_and_routing
+    category: null_or_replication
+    case_state: active
+    gate_behavior: hard
+    input: selective_null_result_case.json
+    pack_paths: []
+    expected:
+      exact:
+        parsing.central_claim: We constrain a proposed exomoon timing signal in a reprocessed transit archive and show that the effect does not persist under a preregistered null-analysis workflow.
+        classification.article_type: constraint_or_null_result
+        classification.claim_type: null_result_claim
+        classification.domain_module: observational_or_empirical
+        classification.outlet_profile: nature_selective
+        reviewability.status: pass
+        scientific_record.status: pass
+        venue.routing_state: retarget_soundness_first
+        decision.recommendation: RETARGET_SOUNDNESS_FIRST
+        decision.human_escalation_required: false
+    required_nonempty_paths:
+      - parsing.central_claim_anchor
+      - parsing.decisive_support_object
+      - venue.evidence_anchors
+      - scientific_record.criteria.evidence_to_claim_alignment.evidence_anchors
+    rationale: Selective-journal null results that remain scientifically valid should be retargeted to soundness-first venues rather than promoted or blocked.
+    tags:
+      - null_or_replication
+      - selective_mismatch
+      - routing
+    ambiguity_class: none
+
+  - case_id: venue_mismatched_selective
+    split: dev
+    stratum: core_gold
+    partition: viability_and_routing
+    category: specialist_viability
+    case_state: active
+    gate_behavior: hard
+    input: venue_mismatched_selective.json
+    pack_paths: []
+    expected:
+      exact:
+        parsing.central_claim: We derive a correction term for a specific superconducting cavity geometry and show that it improves readout stability in one experimentally relevant operating window.
+        classification.article_type: theory_or_model
+        classification.claim_type: model_claim
+        classification.domain_module: theory_physics_or_applied_math
+        classification.outlet_profile: nature_selective
+        reviewability.status: pass
+        scientific_record.status: pass
+        venue.routing_state: retarget_specialist
+        decision.recommendation: RETARGET_SPECIALIST
+        decision.human_escalation_required: false
+    required_nonempty_paths:
+      - parsing.central_claim_anchor
+      - parsing.decisive_support_object
+      - venue.evidence_anchors
+    rationale: Selective-venue mismatch must not be collapsed into desk rejection when the manuscript remains specialist-viable.
+    tags:
+      - specialist_viable
+      - venue_mismatch
+      - routing
+    ambiguity_class: none
+
+  - case_id: integrity_escalation
+    split: dev
+    stratum: core_gold
+    partition: fatal_gate_and_integrity
+    category: integrity_escalation
+    case_state: active
+    gate_behavior: hard
+    input: integrity_escalation.json
+    pack_paths: []
+    expected:
+      exact:
+        parsing.central_claim: We report perfect agreement between a new classifier and all retrospective cohort outcomes.
+        classification.article_type: original_research
+        classification.claim_type: empirical_claim
+        classification.domain_module: clinical_or_human_subjects
+        classification.outlet_profile: specialist_research_journal
+        reviewability.status: pass
+        integrity.status: escalate
+        scientific_record.status: fatal_fail
+        venue.routing_state: blocked_by_scientific_record
+        decision.recommendation: DO_NOT_SUBMIT
+        decision.human_escalation_required: true
+    required_nonempty_paths:
+      - parsing.central_claim_anchor
+      - integrity.evidence_anchors
+      - scientific_record.criteria.integrity_and_policy_readiness.evidence_anchors
+    rationale: Fatal integrity signals must remain an unconditional hard stop with explicit human escalation.
+    tags:
+      - fatal_gate
+      - integrity
+      - escalation
+    ambiguity_class: none
+
+  - case_id: review_synthesis_case
+    split: dev
+    stratum: core_gold
+    partition: article_type_coverage
+    category: review_synthesis
+    case_state: active
+    gate_behavior: hard
+    input: review_synthesis_case.json
+    pack_paths: []
+    expected:
+      exact:
+        parsing.central_claim: We review radiation-hardening benchmarks for CubeSat power systems and ask whether comparator choice, uncertainty reporting, and failure-condition disclosure are consistent enough for cross-study synthesis.
+        classification.article_type: review
+        classification.claim_type: synthesis_claim
+        classification.domain_module: review_synthesis
+        classification.outlet_profile: review_only_venue
+        reviewability.status: pass
+        scientific_record.status: pass
+        venue.routing_state: plausible_send_out
+        decision.recommendation: PLAUSIBLE_SEND_OUT
+        decision.human_escalation_required: false
+    required_nonempty_paths:
+      - parsing.central_claim_anchor
+      - scientific_record.criteria.literature_positioning.evidence_anchors
+      - venue.evidence_anchors
+    rationale: Review-only venue routing and review-synthesis classification should have a direct positive-path gold case rather than relying on holdout-only coverage.
+    tags:
+      - review
+      - synthesis
+      - routing
+    ambiguity_class: none
+
+  - case_id: non_reviewable_speculative_paper
+    split: dev
+    stratum: stress_gold
+    partition: stress_theory_and_borderline
+    category: polished_structurally_invalid
+    case_state: active
+    gate_behavior: monitor
+    input: non_reviewable_speculative_paper.json
+    pack_paths: []
+    expected:
+      exact:
+        parsing.central_claim: We propose a universal framework that explains all orbital phenomena from spacecraft control to galaxy formation.
+        classification.article_type: theory_or_model
+        classification.claim_type: model_claim
+        classification.domain_module: theory_physics_or_applied_math
+        classification.outlet_profile: nature_selective
+        reviewability.status: fail
+        scientific_record.status: fatal_fail
+        venue.routing_state: blocked_by_scientific_record
+        decision.recommendation: NON_REVIEWABLE
+        decision.human_escalation_required: false
+    required_nonempty_paths:
+      - parsing.central_claim_anchor
+      - reviewability.evidence_anchors
+    rationale: Polished speculative theory should fail for missing assessable structure even when the prose looks venue-aspirational.
+    tags:
+      - polished_invalid
+      - speculative_theory
+      - stress
+    ambiguity_class: none
+
+  - case_id: preprint_ready_only
+    split: dev
+    stratum: stress_gold
+    partition: stress_theory_and_borderline
+    category: borderline_preprint
+    case_state: active
+    gate_behavior: monitor
+    input: preprint_ready_only.json
+    pack_paths: []
+    expected:
+      exact:
+        parsing.central_claim: We describe an initial scheduling heuristic for small satellites during eclipse transitions and show one toy simulation.
+        classification.article_type: methods_or_tools
+        classification.claim_type: benchmark_claim
+        classification.domain_module: methods_or_tools
+        classification.outlet_profile: preprint_screen
+        reviewability.status: pass
+        scientific_record.status: repairable_fail
+        venue.routing_state: blocked_by_scientific_record
+        decision.recommendation: REBUILD_BEFORE_SUBMISSION
+        decision.human_escalation_required: false
+    required_nonempty_paths:
+      - parsing.central_claim_anchor
+      - venue.evidence_anchors
+    rationale: Borderline preprint-only behavior is calibration-relevant, but it is intentionally softer than the hard core cases.
+    tags:
+      - borderline
+      - preprint_only
+      - stress
+    ambiguity_class: borderline_preprint_threshold
+
+  - case_id: theory_pack_case
+    split: dev
+    stratum: stress_gold
+    partition: pack_specific_physics
+    category: physics_pack_advisory
+    case_state: active
+    gate_behavior: monitor
+    input: theory_pack_case.json
+    pack_paths:
+      - ../../fixtures/external_packs/apr-pack-physics
+    expected:
+      exact:
+        parsing.central_claim: We develop a Hamiltonian model for driven qubit relaxation and predict a spectroscopy line-splitting signature that differs from standard Lindblad dynamics.
+        classification.article_type: theory_or_model
+        classification.claim_type: model_claim
+        classification.domain_module: theory_physics_or_applied_math
+        classification.outlet_profile: specialist_research_journal
+        reviewability.status: pass
+        scientific_record.status: repairable_fail
+        venue.routing_state: blocked_by_scientific_record
+        decision.recommendation: REBUILD_BEFORE_SUBMISSION
+        decision.human_escalation_required: false
+    required_nonempty_paths:
+      - parsing.central_claim_anchor
+      - pack_results
+      - pack_execution.loaded_packs
+    rationale: Advisory packs must annotate, not redefine, core semantics, and pack load/behavior failures must stay visible.
+    tags:
+      - pack_specific
+      - advisory_pack
+      - theory
+    ambiguity_class: none
+
+  - case_id: clinical_pack_case
+    split: dev
+    stratum: stress_gold
+    partition: pack_specific_clinical
+    category: clinical_pack_advisory
+    case_state: active
+    gate_behavior: monitor
+    input: clinical_pack_readiness_case.json
+    pack_paths:
+      - ../../fixtures/external_packs/apr-pack-clinical
+    expected:
+      exact:
+        parsing.central_claim: We report a prospective cohort evaluation of a bedside sepsis triage checklist and show that it shortens escalation delay versus routine overnight review in one monitored ward.
+        classification.article_type: original_research
+        classification.claim_type: empirical_claim
+        classification.domain_module: clinical_or_human_subjects
+        classification.outlet_profile: specialist_research_journal
+        reviewability.status: pass
+        scientific_record.status: pass
+        venue.routing_state: plausible_send_out
+        decision.recommendation: PLAUSIBLE_SEND_OUT
+        decision.human_escalation_required: false
+    required_nonempty_paths:
+      - parsing.central_claim_anchor
+      - parsing.decisive_support_object
+      - pack_results
+      - pack_execution.loaded_packs
+    rationale: Advisory packs should remain additive when a clinical manuscript is already core-valid, while still recording domain-specific readiness signals.
+    tags:
+      - pack_specific
+      - advisory_pack
+      - clinical
+    ambiguity_class: none
+
+  - case_id: clinical_pack_not_applicable_case
+    split: dev
+    stratum: stress_gold
+    partition: pack_specific_not_applicable
+    category: clinical_pack_not_applicable
+    case_state: active
+    gate_behavior: monitor
+    input: reviewable_sound_paper.json
+    pack_paths:
+      - ../../fixtures/external_packs/apr-pack-clinical
+    expected:
+      exact:
+        parsing.central_claim: We present a calibration routine for low-cost satellite thermal sensors and show that it reduces drift by 18% relative to the current baseline.
+        classification.article_type: methods_or_tools
+        classification.claim_type: benchmark_claim
+        classification.domain_module: methods_or_tools
+        classification.outlet_profile: specialist_research_journal
+        reviewability.status: pass
+        scientific_record.status: pass
+        venue.routing_state: plausible_send_out
+        decision.recommendation: PLAUSIBLE_SEND_OUT
+        decision.human_escalation_required: false
+    required_nonempty_paths:
+      - parsing.central_claim_anchor
+      - pack_results
+      - pack_execution.loaded_packs
+    rationale: Cross-domain pack requests must normalize to an explicit not-applicable advisory result rather than failing silently or perturbing the core audit.
+    tags:
+      - pack_specific
+      - advisory_pack
+      - not_applicable
+    ambiguity_class: none
+
+  - case_id: aps_selective_letters_case
+    split: dev
+    stratum: stress_gold
+    partition: outlet_profile_calibration
+    category: aps_selective_candidate
+    case_state: active
+    gate_behavior: monitor
+    input: aps_selective_letters_case.json
+    pack_paths: []
+    expected:
+      exact:
+        parsing.central_claim: We report a scaling law for pulsed plasma plume steering and show that it predicts thrust-vector response across three laboratory geometries relative to an analytic plume-steering model.
+        classification.article_type: original_research
+        classification.claim_type: empirical_claim
+        classification.domain_module: observational_or_empirical
+        classification.outlet_profile: aps_selective
+        reviewability.status: pass
+        scientific_record.status: pass
+        venue.routing_state: submit_with_caution
+        decision.recommendation: SUBMIT_WITH_CAUTION
+        decision.human_escalation_required: false
+    required_nonempty_paths:
+      - parsing.central_claim_anchor
+      - parsing.decisive_support_object
+      - venue.evidence_anchors
+      - editorial_first_pass.evidence_anchors
+    rationale: APS-selective routing should remain distinct from both specialist retargeting and broad-journal acceptance when the scientific record passes but editorial risk remains real.
+    tags:
+      - aps_selective
+      - outlet_profile
+      - routing
+    ambiguity_class: none
+
+  - case_id: protocol_preprint_ready_case
+    split: dev
+    stratum: stress_gold
+    partition: outlet_profile_calibration
+    category: protocol_preprint
+    case_state: active
+    gate_behavior: monitor
+    input: protocol_preprint_ready_case.json
+    pack_paths: []
+    expected:
+      exact:
+        parsing.central_claim: We present a protocol for thermal-vacuum qualification of deployable CubeSat radiators, including the chamber sequence, acceptance thresholds, and the primary figure and table that will govern later evaluation.
+        classification.article_type: protocol_or_registered_report
+        classification.claim_type: protocol_claim
+        classification.domain_module: general_scientific_manuscript
+        classification.outlet_profile: preprint_screen
+        reviewability.status: pass
+        scientific_record.status: pass
+        venue.routing_state: preprint_ready_not_journal_ready
+        decision.recommendation: PREPRINT_READY_NOT_JOURNAL_READY
+        decision.human_escalation_required: false
+    required_nonempty_paths:
+      - parsing.central_claim_anchor
+      - reviewability.evidence_anchors
+      - venue.evidence_anchors
+      - rehabilitation.next_actions_ranked
+    rationale: A protocol-stage manuscript can be assessable and ready for preprint discussion while still being explicitly non-journal-ready.
+    tags:
+      - protocol
+      - preprint
+      - routing
+    ambiguity_class: none
+
+  - case_id: computational_simulation_revision_case
+    split: dev
+    stratum: stress_gold
+    partition: stress_theory_and_borderline
+    category: repairable_simulation
+    case_state: active
+    gate_behavior: monitor
+    input: computational_simulation_revision_case.json
+    pack_paths: []
+    expected:
+      exact:
+        parsing.central_claim: We develop a numerical simulation model for eclipse-phase radiator deployment and show that it predicts hinge-temperature stability in one validated operating window.
+        classification.article_type: theory_or_model
+        classification.claim_type: model_claim
+        classification.domain_module: computational_or_simulation
+        classification.outlet_profile: specialist_research_journal
+        reviewability.status: pass
+        scientific_record.status: repairable_fail
+        venue.routing_state: blocked_by_scientific_record
+        decision.recommendation: REVISE_BEFORE_SUBMISSION
+        decision.human_escalation_required: false
+    required_nonempty_paths:
+      - parsing.central_claim_anchor
+      - scientific_record.criteria.transparency_and_reporting_readiness.evidence_anchors
+      - venue.evidence_anchors
+      - rehabilitation.next_actions_ranked
+    rationale: A simulation-backed model can remain reviewable and structurally sound while still requiring revision before submission when the expected code-release pathway is missing.
+    tags:
+      - simulation
+      - computational
+      - revise_before_submission
+    ambiguity_class: none
+
+  - case_id: case_report_hardware_anomaly
+    split: dev
+    stratum: stress_gold
+    partition: article_type_coverage
+    category: hardware_case_report
+    case_state: active
+    gate_behavior: monitor
+    input: case_report_hardware_anomaly.json
+    pack_paths: []
+    expected:
+      exact:
+        parsing.central_claim: We document one radiator-hinge thermal runaway observed during a CubeSat deployment test and show the exact sensor trace, fault sequence, and recovery attempt for the affected unit.
+        classification.article_type: case_report
+        classification.claim_type: empirical_claim
+        classification.domain_module: observational_or_empirical
+        classification.outlet_profile: specialist_research_journal
+        reviewability.status: pass
+        scientific_record.status: pass
+        venue.routing_state: plausible_send_out
+        decision.recommendation: PLAUSIBLE_SEND_OUT
+        decision.human_escalation_required: false
+    required_nonempty_paths:
+      - parsing.central_claim_anchor
+      - parsing.decisive_support_object
+      - venue.evidence_anchors
+    rationale: A single-event hardware anomaly report should remain a valid specialist-journal case rather than being coerced into methods or benchmark semantics.
+    tags:
+      - case_report
+      - hardware
+      - empirical
+    ambiguity_class: none
+
+  - case_id: editorial_policy_note_case
+    split: dev
+    stratum: stress_gold
+    partition: article_type_coverage
+    category: editorial_policy_note
+    case_state: active
+    gate_behavior: monitor
+    input: editorial_policy_note_case.json
+    pack_paths: []
+    expected:
+      exact:
+        parsing.central_claim: This editorial argues that calibration discipline in small-satellite benchmarking should be treated as a publication threshold rather than a post-hoc optimization.
+        classification.article_type: editorial_or_opinion
+        classification.claim_type: opinion_claim
+        classification.domain_module: general_scientific_manuscript
+        classification.outlet_profile: specialist_research_journal
+        reviewability.status: pass
+        scientific_record.status: repairable_fail
+        venue.routing_state: blocked_by_scientific_record
+        decision.recommendation: REBUILD_BEFORE_SUBMISSION
+        decision.human_escalation_required: false
+    required_nonempty_paths:
+      - parsing.central_claim_anchor
+      - scientific_record.criteria.structural_integrity.evidence_anchors
+      - venue.evidence_anchors
+    rationale: An editorial can be assessable enough for disciplined screening while still failing the research-spine threshold and requiring rebuild before submission.
+    tags:
+      - editorial
+      - opinion
+      - repairable
+    ambiguity_class: none

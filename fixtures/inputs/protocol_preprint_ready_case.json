@@ -1,0 +1,32 @@
+{
+  "audit_mode": "full",
+  "manuscript_id": "protocol-preprint-001",
+  "title": "Protocol for thermal-vacuum qualification of deployable CubeSat radiators",
+  "abstract": "We present a protocol for thermal-vacuum qualification of deployable CubeSat radiators, including the chamber sequence, acceptance thresholds, and the primary figure and table that will govern later evaluation. Figure 1 diagrams the qualification workflow, Table 1 lists the acceptance thresholds and variance budget, and the manuscript states the heater failure condition that should trigger protocol revision before downstream deployment.",
+  "manuscript_text": "The objective of the protocol is to qualify deployable CubeSat radiators with a defined chamber sequence, sensor placement plan, radiator deployment checkpoints, and acceptance thresholds for a later qualification campaign. Figure 1 diagrams the workflow, Table 1 lists the acceptance thresholds, planned measurements, and variance budget, and Appendix A specifies the chamber settings and data-release pathway. The manuscript also states the heater failure condition that should trigger protocol revision before downstream deployment, includes the exact data, code, and materials surfaces that will accompany the eventual evaluation, and explains the limitation boundary for units outside the specified thermal-vacuum envelope.",
+  "figures_and_captions": [
+    "Figure 1. Workflow for thermal-vacuum qualification of deployable CubeSat radiators."
+  ],
+  "tables": [
+    "Table 1. Acceptance thresholds, planned measurements, and deployment checkpoints for the protocol."
+  ],
+  "references": [
+    "Ref1 thermal-vacuum qualification practice for small satellites.",
+    "Ref2 deployable radiator test planning for CubeSat platforms.",
+    "Ref3 reporting guidance for protocol-stage aerospace qualification studies."
+  ],
+  "supplement_or_appendix": "Appendix A lists chamber settings, sensor placement, release surfaces, and protocol revision triggers.",
+  "target_venue": "arXiv",
+  "target_audience": "small-satellite thermal engineering community",
+  "outlet_profile_hint": null,
+  "declared_article_type": "protocol_or_registered_report",
+  "data_availability": "Planned data-release pathway: chamber traces and acceptance logs will be archived after execution; the template release structure is already specified in Appendix A.",
+  "code_availability": "Planned code-release pathway: chamber-control and analysis scripts will be archived after execution; the repository structure is specified in Appendix A.",
+  "materials_availability": "Radiator drawings, sensor placement notes, and chamber fixtures are documented in Appendix A.",
+  "ethics_and_disclosures": "The authors declare no competing interests.",
+  "reporting_checklist": null,
+  "prior_reviews": null,
+  "author_response_to_reviews": null,
+  "reviewer_notes": null,
+  "external_constraints": null
+}

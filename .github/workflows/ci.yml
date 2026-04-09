@@ -16,5 +16,14 @@ jobs:
       - run: python -m pip install -e .[dev]
       - run: python scripts/validate_contract.py
       - run: python scripts/validate_goldset.py
+      - run: python -m pytest tests/surface_lock tests/adversarial
       - run: python -m pytest
-      - run: apr goldset --output output/goldset_summary.json
+      - run: apr-goldset --output output/goldset_summary.json
+      - run: apr-holdout --output output/holdout_summary.json
+        continue-on-error: true
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: benchmark-summaries
+          path: output/*.json
+          if-no-files-found: error

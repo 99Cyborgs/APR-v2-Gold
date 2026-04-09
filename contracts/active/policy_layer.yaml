@@ -1,18 +1,18 @@
 policy_layer:
   name: APR v2 Policy Layer
-  version: 2.0.0
+  version: 2.1.0
   doctrine:
     - Claim before judgment.
     - Scientific-record threshold before venue threshold.
     - Canonical record supremacy over derived reports.
     - Explicit uncertainty over inferred completeness.
     - Domain logic stays outside core unless promoted intentionally.
-    - Packs are advisory only in v2.0.0.
+    - Packs are advisory only in v2.1.0.
     - Human escalation is mandatory for high-stakes ambiguity.
     - Gold-set evidence precedes calibration claims.
   compatibility:
     active_contract_versions:
-      - 2.0.0
+      - 2.1.0
     one_active_contract_only: true
     renderer_rule: renderers consume canonical output and do not redefine it
   input_sufficiency_grades:
@@ -57,8 +57,12 @@ policy_layer:
     - PARSED
     - CLASSIFIED
     - REVIEWABILITY_ASSESSED
+    - STRUCTURAL_INTEGRITY_ASSESSED
+    - CLAIM_EVIDENCE_CALIBRATED
+    - ADVERSARIAL_RESILIENCE_ASSESSED
     - SCIENTIFIC_RECORD_ASSESSED
     - VENUE_CALIBRATED
+    - EDITORIAL_FIRST_PASS_ASSESSED
     - REHABILITATION_COMPUTED
     - PACKS_EXECUTED
     - RENDERED
@@ -87,11 +91,35 @@ policy_layer:
     - scholarly_form_for_audit
   scientific_record_core_criteria:
     - problem_definition_and_claim_clarity
+    - structural_integrity
     - methodological_legibility
     - evidence_to_claim_alignment
+    - claim_evidence_calibration
     - literature_positioning
     - transparency_and_reporting_readiness
     - integrity_and_policy_readiness
+    - adversarial_resilience
+  structural_integrity:
+    non_reviewable_threshold: 3
+    rebuild_threshold: 5
+  claim_evidence_calibration:
+    fail_threshold: 2
+    fatal_threshold: 3
+  adversarial_resilience:
+    downgrade_confidence_threshold: 3
+    block_submit_threshold: 6
+  editorial_first_pass:
+    component_max_scores:
+      abstract_clarity: 8
+      intro_gap_definition: 6
+      first_hard_object_validity: 8
+      figure_support: 5
+      references_coverage: 5
+    desk_reject_probability:
+      floor: 0.05
+      score_weight: 0.7
+      low_clarity_penalty: 0.15
+      low_evidence_penalty: 0.1
   human_escalation_triggers:
     - suspected_duplicate_publication
     - authorship_or_credit_dispute

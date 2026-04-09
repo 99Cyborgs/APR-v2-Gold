@@ -40,9 +40,9 @@ def test_surface_isolation_fields_are_declared_in_summary_and_ledger_schemas():
 
 
 def test_surface_isolation_remains_additive_in_runtime_output():
-    baseline = run_goldset_manifest(ROOT / "benchmarks" / "goldset" / "manifest.yaml")
+    baseline = run_goldset_manifest(ROOT / "benchmarks" / "goldset_dev" / "manifest.yaml")
     strict = run_goldset_manifest(
-        ROOT / "benchmarks" / "goldset" / "manifest.yaml",
+        ROOT / "benchmarks" / "goldset_dev" / "manifest.yaml",
         strict_surface_contract=True,
     )
 

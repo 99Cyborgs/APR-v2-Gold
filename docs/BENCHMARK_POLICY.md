@@ -4,8 +4,9 @@ This file is the authoritative benchmark-governance document for APR v2 Gold.
 
 ## Scope
 
-- The executable goldset lives in `benchmarks/goldset/manifest.yaml`.
-- The manifest is schema-validated by `benchmarks/goldset/schemas/manifest.schema.json`.
+- Development benchmark execution defaults to `benchmarks/goldset_dev/manifest.yaml`.
+- Blind holdout benchmark execution defaults to `benchmarks/goldset_holdout/manifest.yaml`.
+- Both manifests are schema-validated by `benchmarks/goldset/schemas/manifest.schema.json`.
 - Run summaries are validated by `benchmarks/goldset/schemas/summary.schema.json`.
 - Calibration ledger entries are validated by `benchmarks/goldset/schemas/ledger_entry.schema.json`.
 - `docs/BENCHMARK_PROTOCOL.md` and `docs/GOLDSET_PROTOCOL.md` remain as compatibility pointers only.
@@ -14,11 +15,11 @@ This file is the authoritative benchmark-governance document for APR v2 Gold.
 
 - `core_gold`: authoritative hard-gate cases. Any failing active `core_gold` case fails the benchmark gate.
 - `stress_gold`: active calibration pressure cases. They stay visible in summaries and error-class accounting, but they do not all break the merge gate by default.
-- `holdout`: reserved for real untuned public fixtures. Development runs exclude active holdout cases. `apr goldset --holdout-eval` runs holdout-only blind evaluation and redacts expected holdout surfaces from emitted summaries.
+- `holdout`: reserved for real untuned public fixtures. Development runs exclude active holdout cases. `apr goldset --holdout` runs holdout-only blind evaluation and redacts expected holdout surfaces from emitted summaries. `--holdout-eval` remains a compatibility alias.
 
 ## Case Rules
 
-- Every active case must declare a `case_id`, `stratum`, `partition`, `category`, `input`, `expected`, and any `required_nonempty_paths`.
+- Every active case must declare a `case_id`, `split`, `stratum`, `partition`, `category`, `input`, `expected`, and any `required_nonempty_paths`.
 - APR v4-aligned case aliases are supported through `central_claim`, `claim_type`, and `expected_decision`. These must remain consistent with the underlying benchmark expectation surface.
 - `expected.exact` is restricted to stable benchmarkable surfaces in the canonical audit record.
 - `expected.recommendation_band` is allowed when exact recommendation matching would overstate certainty.
@@ -44,13 +45,14 @@ This file is the authoritative benchmark-governance document for APR v2 Gold.
 ## Ledger Rules
 
 - `apr goldset` writes JSONL ledger entries by default to `benchmarks/goldset/output/calibration_ledger.jsonl`.
-- `apr goldset --holdout-eval` writes to the separate holdout ledger by default unless a ledger path is passed explicitly.
+- `apr goldset --holdout` writes to the separate holdout ledger by default unless a ledger path is passed explicitly. `--holdout-eval` remains a compatibility alias.
 - Ledger entries record manifest hash, contract version, result counts, error-class counts, decision-algebra totals, cross-case diagnostics, case deltas, recommendation transitions, gate status, and optional notes/operator metadata.
 - No fake history is backfilled. The ledger is current-forward only.
 
 ## Terminology
 
 - `stratum`: governance weight of a case set.
+- `split`: execution lane for the case set, currently `dev` or `holdout`.
 - `partition`: mechanism-oriented grouping inside a stratum.
 - `category`: case-local analytic label.
 - `gate_behavior`: `hard`, `monitor`, or `exclude`.

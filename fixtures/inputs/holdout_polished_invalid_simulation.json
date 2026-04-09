@@ -1,0 +1,26 @@
+{
+  "audit_mode": "full",
+  "manuscript_id": "holdout-polished-invalid-001",
+  "title": "Universal anomaly prediction from a simulation-first orbital control stack",
+  "abstract": "We introduce a universal anomaly-prediction stack for satellites and claim it generalizes across all orbital regimes. In a toy simulation with 14 tuned parameters and three learning-rate schedules, the stack appears transformative for future space operations. The paper frames the result as a breakthrough, but it does not define a concrete comparator dataset, uncertainty surface, or failure regime.",
+  "manuscript_text": "The manuscript describes a simulation pipeline with repeated hyperparameter sweeps, tuned parameters, and optimizer settings, but it never presents a claim-bearing table, figure, or empirical benchmark object. The presentation emphasizes transformative scope and broad deployment claims without a bounded object of study, explicit baseline, or auditable failure condition. Appendix material lists parameter values, epochs of 50 100 and 200, and learning-rate schedules, but the paper remains simulation-only.",
+  "figures_and_captions": null,
+  "tables": null,
+  "references": [
+    "Ref1 orbital control overview."
+  ],
+  "supplement_or_appendix": "Appendix A lists 14 tuned parameters, three learning-rate schedules, and the optimizer seed configuration.",
+  "target_venue": "Nature Astronomy",
+  "target_audience": "broad space-systems readership",
+  "outlet_profile_hint": null,
+  "declared_article_type": "methods_or_tools",
+  "data_availability": null,
+  "code_availability": "Prototype simulation code available on request.",
+  "materials_availability": null,
+  "ethics_and_disclosures": "The authors declare no competing interests.",
+  "reporting_checklist": null,
+  "prior_reviews": null,
+  "author_response_to_reviews": null,
+  "reviewer_notes": null,
+  "external_constraints": null
+}

@@ -36,10 +36,10 @@ def flag_id(flags: dict[str, bool]) -> str:
 
 
 def load_manifest() -> dict[str, object]:
-    manifest = copy.deepcopy(load_goldset_manifest(ROOT / "benchmarks" / "goldset" / "manifest.yaml"))
+    manifest = copy.deepcopy(load_goldset_manifest(ROOT / "benchmarks" / "goldset_dev" / "manifest.yaml"))
     manifest["case_root"] = str((ROOT / "fixtures" / "inputs").resolve())
     for case in manifest["cases"]:
-        case["pack_paths"] = [str((ROOT / "benchmarks" / "goldset" / path).resolve()) for path in case.get("pack_paths", [])]
+        case["pack_paths"] = [str((ROOT / "benchmarks" / "goldset_dev" / path).resolve()) for path in case.get("pack_paths", [])]
     return manifest
 
 

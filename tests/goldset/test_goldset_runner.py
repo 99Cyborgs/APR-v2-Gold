@@ -27,6 +27,9 @@ from apr_core.goldset import (  # noqa: E402
 )
 import apr_core.goldset.runner as goldset_runner  # noqa: E402
 
+DEV_MANIFEST = ROOT / "benchmarks" / "goldset_dev" / "manifest.yaml"
+HOLDOUT_MANIFEST = ROOT / "benchmarks" / "goldset_holdout" / "manifest.yaml"
+
 
 def _write_manifest(tmp_path: Path, manifest: dict) -> Path:
     manifest_path = tmp_path / "manifest.yaml"
@@ -35,17 +38,18 @@ def _write_manifest(tmp_path: Path, manifest: dict) -> Path:
 
 
 def test_goldset_manifest_passes_schema_validation():
-    manifest = load_goldset_manifest(ROOT / "benchmarks" / "goldset" / "manifest.yaml")
+    manifest = load_goldset_manifest(DEV_MANIFEST)
     validate(instance=manifest, schema=load_goldset_manifest_schema())
-    assert {stratum["name"] for stratum in manifest["strata"]} == {"core_gold", "stress_gold", "holdout"}
-    assert len(manifest["cases"]) == 8
+    assert {stratum["name"] for stratum in manifest["strata"]} == {"core_gold", "stress_gold"}
+    assert len(manifest["cases"]) == 17
     assert all(case["central_claim"] for case in manifest["cases"])
     assert all(case["claim_type"] for case in manifest["cases"])
     assert all("recommendation_band" in case["expected_decision"] for case in manifest["cases"])
+    assert {case["split"] for case in manifest["cases"]} == {"dev"}
 
 
 def test_goldset_runner_passes_fixture_manifest_and_emits_governance_fields():
-    summary = run_goldset_manifest(ROOT / "benchmarks" / "goldset" / "manifest.yaml")
+    summary = run_goldset_manifest(DEV_MANIFEST)
     validate(instance=summary, schema=load_goldset_summary_schema())
 
     assert summary["failed"] == 0
@@ -53,22 +57,22 @@ def test_goldset_runner_passes_fixture_manifest_and_emits_governance_fields():
     assert summary["evaluation_mode"] == "development"
     assert summary["decision_algebra"]["total_score"] == 0
     assert summary["decision_algebra"]["recommendation_loss_model"] == "asymmetric_matrix"
-    assert summary["decision_consistency"]["exact_match_cases"] == 8
+    assert summary["decision_consistency"]["exact_match_cases"] == 17
     assert summary["governance"]["baseline_window"] == default_goldset_governance_config()["baseline_window"]
     assert summary["editorial_first_pass_score"]["case_count"] == summary["total_cases"]
     assert summary["calibration_export"]["case_count"] == summary["total_cases"]
     assert summary["system_diagnostics"]["baseline"]["available"] is False
-    assert summary["strata"]["core_gold"]["total"] == 5
-    assert summary["strata"]["stress_gold"]["total"] == 3
-    assert summary["strata"]["holdout"]["total"] == 0
+    assert summary["strata"]["core_gold"]["total"] == 7
+    assert summary["strata"]["stress_gold"]["total"] == 10
+    assert "holdout" not in summary["strata"]
     assert summary["case_deltas"]["available"] is False
 
 
 def test_goldset_runner_writes_valid_calibration_ledger(tmp_path: Path):
     ledger_path = tmp_path / "calibration_ledger.jsonl"
 
-    first = run_goldset_manifest(ROOT / "benchmarks" / "goldset" / "manifest.yaml", ledger_path=ledger_path, notes="baseline")
-    second = run_goldset_manifest(ROOT / "benchmarks" / "goldset" / "manifest.yaml", ledger_path=ledger_path, notes="repeat")
+    first = run_goldset_manifest(DEV_MANIFEST, ledger_path=ledger_path, notes="baseline")
+    second = run_goldset_manifest(DEV_MANIFEST, ledger_path=ledger_path, notes="repeat")
 
     assert first["calibration_ledger"]["entry_appended"] is True
     assert second["case_deltas"]["available"] is True
@@ -83,10 +87,10 @@ def test_goldset_runner_writes_valid_calibration_ledger(tmp_path: Path):
 
 
 def test_goldset_runner_classifies_missed_fatal_gate_for_forced_core_regression(tmp_path: Path):
-    manifest = load_goldset_manifest(ROOT / "benchmarks" / "goldset" / "manifest.yaml")
+    manifest = load_goldset_manifest(DEV_MANIFEST)
     manifest["case_root"] = str((ROOT / "fixtures" / "inputs").resolve())
     for case in manifest["cases"]:
-        case["pack_paths"] = [str((ROOT / "benchmarks" / "goldset" / path).resolve()) for path in case.get("pack_paths", [])]
+        case["pack_paths"] = [str((ROOT / "benchmarks" / "goldset_dev" / path).resolve()) for path in case.get("pack_paths", [])]
     for case in manifest["cases"]:
         if case["case_id"] == "reviewable_sound_paper":
             case["expected"]["exact"]["scientific_record.status"] = "fatal_fail"
@@ -108,11 +112,11 @@ def test_goldset_runner_classifies_missed_fatal_gate_for_forced_core_regression(
 
 
 def test_goldset_runner_excludes_holdout_in_development_and_redacts_holdout_eval(tmp_path: Path):
-    manifest = load_goldset_manifest(ROOT / "benchmarks" / "goldset" / "manifest.yaml")
+    manifest = load_goldset_manifest(DEV_MANIFEST)
     manifest["case_root"] = str((ROOT / "fixtures" / "inputs").resolve())
     for case in manifest["cases"]:
         if case["case_id"] == "reviewable_sound_paper":
-            case["stratum"] = "holdout"
+            case["split"] = "holdout"
             case["gate_behavior"] = "exclude"
             break
     else:
@@ -121,7 +125,7 @@ def test_goldset_runner_excludes_holdout_in_development_and_redacts_holdout_eval
     manifest_path = _write_manifest(tmp_path, manifest)
 
     development = run_goldset_manifest(manifest_path)
-    assert development["total_cases"] == 7
+    assert development["total_cases"] == 16
     assert "reviewable_sound_paper" in development["holdout"]["excluded_case_ids"]
     assert all(case["case_id"] != "reviewable_sound_paper" for case in development["cases"])
 
@@ -142,13 +146,13 @@ def test_goldset_runner_excludes_holdout_in_development_and_redacts_holdout_eval
 
 def test_goldset_runner_blocks_on_new_core_gold_failure_class_in_rolling_baseline(tmp_path: Path):
     ledger_path = tmp_path / "calibration_ledger.jsonl"
-    baseline_manifest = ROOT / "benchmarks" / "goldset" / "manifest.yaml"
+    baseline_manifest = DEV_MANIFEST
     run_goldset_manifest(baseline_manifest, ledger_path=ledger_path, notes="baseline")
 
     manifest = load_goldset_manifest(baseline_manifest)
     manifest["case_root"] = str((ROOT / "fixtures" / "inputs").resolve())
     for case in manifest["cases"]:
-        case["pack_paths"] = [str((ROOT / "benchmarks" / "goldset" / path).resolve()) for path in case.get("pack_paths", [])]
+        case["pack_paths"] = [str((ROOT / "benchmarks" / "goldset_dev" / path).resolve()) for path in case.get("pack_paths", [])]
     for case in manifest["cases"]:
         if case["case_id"] == "reviewable_sound_paper":
             case["expected"]["exact"]["classification.article_type"] = "editorial_or_opinion"
@@ -163,7 +167,7 @@ def test_goldset_runner_blocks_on_new_core_gold_failure_class_in_rolling_baselin
 
 def test_goldset_runner_scores_recommendation_loss_for_recommendation_drift(tmp_path: Path):
     ledger_path = tmp_path / "calibration_ledger.jsonl"
-    baseline_manifest = ROOT / "benchmarks" / "goldset" / "manifest.yaml"
+    baseline_manifest = DEV_MANIFEST
     run_goldset_manifest(baseline_manifest, ledger_path=ledger_path, notes="baseline")
 
     manifest = load_goldset_manifest(baseline_manifest)
@@ -185,7 +189,7 @@ def test_goldset_runner_scores_recommendation_loss_for_recommendation_drift(tmp_
 
 def test_goldset_runner_blocks_when_fatal_error_count_exceeds_rolling_baseline(tmp_path: Path):
     ledger_path = tmp_path / "calibration_ledger.jsonl"
-    baseline_manifest = ROOT / "benchmarks" / "goldset" / "manifest.yaml"
+    baseline_manifest = DEV_MANIFEST
     run_goldset_manifest(baseline_manifest, ledger_path=ledger_path, notes="baseline")
 
     manifest = load_goldset_manifest(baseline_manifest)
@@ -206,7 +210,7 @@ def test_goldset_runner_blocks_when_fatal_error_count_exceeds_rolling_baseline(t
 def test_goldset_runner_allows_governance_tuning(tmp_path: Path):
     ledger_path = tmp_path / "calibration_ledger.jsonl"
     summary = run_goldset_manifest(
-        ROOT / "benchmarks" / "goldset" / "manifest.yaml",
+        DEV_MANIFEST,
         ledger_path=ledger_path,
         ledger_baseline_window=3,
         regression_threshold=0.2,
@@ -221,7 +225,7 @@ def test_goldset_runner_allows_governance_tuning(tmp_path: Path):
 
 def test_goldset_runner_emits_drift_attribution_with_recent_code_changes(tmp_path: Path, monkeypatch):
     ledger_path = tmp_path / "calibration_ledger.jsonl"
-    baseline_manifest = ROOT / "benchmarks" / "goldset" / "manifest.yaml"
+    baseline_manifest = DEV_MANIFEST
 
     monkeypatch.setattr(goldset_runner, "_current_git_metadata", lambda: {"commit_sha": "oldsha", "git_dirty": False})
     monkeypatch.setattr(goldset_runner, "git_output", lambda args, cwd=None: (0, ""))
@@ -230,7 +234,7 @@ def test_goldset_runner_emits_drift_attribution_with_recent_code_changes(tmp_pat
     manifest = load_goldset_manifest(baseline_manifest)
     manifest["case_root"] = str((ROOT / "fixtures" / "inputs").resolve())
     for case in manifest["cases"]:
-        case["pack_paths"] = [str((ROOT / "benchmarks" / "goldset" / path).resolve()) for path in case.get("pack_paths", [])]
+        case["pack_paths"] = [str((ROOT / "benchmarks" / "goldset_dev" / path).resolve()) for path in case.get("pack_paths", [])]
     for case in manifest["cases"]:
         if case["case_id"] == "reviewable_sound_paper":
             case["expected"]["exact"]["classification.article_type"] = "editorial_or_opinion"
@@ -255,7 +259,7 @@ def test_goldset_runner_emits_drift_attribution_with_recent_code_changes(tmp_pat
 
 
 def test_goldset_runner_emits_separate_scientific_and_editorial_planes():
-    summary = run_goldset_manifest(ROOT / "benchmarks" / "goldset" / "manifest.yaml", separate_planes=True)
+    summary = run_goldset_manifest(DEV_MANIFEST, separate_planes=True)
     case = next(item for item in summary["cases"] if item["case_id"] == "reviewable_sound_paper")
 
     assert summary["governance"]["gating"]["use_editorial_for_decision"] is False
@@ -267,7 +271,7 @@ def test_goldset_runner_emits_separate_scientific_and_editorial_planes():
 
 
 def test_goldset_runner_editorial_score_does_not_change_decision():
-    manifest = load_goldset_manifest(ROOT / "benchmarks" / "goldset" / "manifest.yaml")
+    manifest = load_goldset_manifest(DEV_MANIFEST)
     case = next(item for item in manifest["cases"] if item["case_id"] == "reviewable_sound_paper")
     payload = json.loads((ROOT / "fixtures" / "inputs" / case["input"]).read_text(encoding="utf-8"))
     record = goldset_runner.run_audit(payload)
@@ -309,7 +313,7 @@ def test_goldset_runner_editorial_score_does_not_change_decision():
 
 
 def test_goldset_runner_scientific_vector_is_independent_from_scientific_record_criteria():
-    manifest = load_goldset_manifest(ROOT / "benchmarks" / "goldset" / "manifest.yaml")
+    manifest = load_goldset_manifest(DEV_MANIFEST)
     case = next(item for item in manifest["cases"] if item["case_id"] == "reviewable_sound_paper")
     payload = json.loads((ROOT / "fixtures" / "inputs" / case["input"]).read_text(encoding="utf-8"))
     record = goldset_runner.run_audit(payload)
@@ -330,7 +334,7 @@ def test_goldset_runner_scientific_vector_is_independent_from_scientific_record_
 
 
 def test_goldset_runner_editorial_penalty_remains_non_gating():
-    manifest = load_goldset_manifest(ROOT / "benchmarks" / "goldset" / "manifest.yaml")
+    manifest = load_goldset_manifest(DEV_MANIFEST)
     case = next(item for item in manifest["cases"] if item["case_id"] == "reviewable_sound_paper")
     payload = json.loads((ROOT / "fixtures" / "inputs" / case["input"]).read_text(encoding="utf-8"))
     record = goldset_runner.run_audit(payload)
@@ -373,7 +377,7 @@ def test_goldset_runner_editorial_penalty_remains_non_gating():
 
 def test_goldset_runner_exports_extended_calibration_records():
     summary = run_goldset_manifest(
-        ROOT / "benchmarks" / "goldset" / "manifest.yaml",
+        DEV_MANIFEST,
         export_calibration_extended=True,
         drift_counterfactuals=True,
     )
@@ -402,7 +406,7 @@ def test_goldset_runner_exports_extended_calibration_records():
 
 
 def test_goldset_runner_quantizes_losses_when_enabled():
-    manifest = load_goldset_manifest(ROOT / "benchmarks" / "goldset" / "manifest.yaml")
+    manifest = load_goldset_manifest(DEV_MANIFEST)
     case = next(item for item in manifest["cases"] if item["case_id"] == "reviewable_sound_paper")
     payload = json.loads((ROOT / "fixtures" / "inputs" / case["input"]).read_text(encoding="utf-8"))
     record = goldset_runner.run_audit(payload)
@@ -435,10 +439,10 @@ def test_goldset_runner_quantizes_losses_when_enabled():
 
 
 def test_goldset_runner_applies_strict_holdout_blindness_bins_and_masking(tmp_path: Path):
-    manifest = load_goldset_manifest(ROOT / "benchmarks" / "goldset" / "manifest.yaml")
+    manifest = load_goldset_manifest(DEV_MANIFEST)
     manifest["case_root"] = str((ROOT / "fixtures" / "inputs").resolve())
     manifest["cases"] = [case for case in manifest["cases"] if case["case_id"] == "reviewable_sound_paper"]
-    manifest["cases"][0]["stratum"] = "holdout"
+    manifest["cases"][0]["split"] = "holdout"
     manifest["cases"][0]["gate_behavior"] = "exclude"
     manifest["cases"][0]["expected"]["exact"]["scientific_record.status"] = "fatal_fail"
     manifest["cases"][0]["expected"]["exact"]["decision.recommendation"] = "DO_NOT_SUBMIT"
@@ -464,7 +468,7 @@ def test_goldset_runner_applies_strict_holdout_blindness_bins_and_masking(tmp_pa
 
 def test_goldset_runner_reports_drift_intervention_delta(tmp_path: Path, monkeypatch):
     ledger_path = tmp_path / "calibration_ledger.jsonl"
-    baseline_manifest = ROOT / "benchmarks" / "goldset" / "manifest.yaml"
+    baseline_manifest = DEV_MANIFEST
 
     monkeypatch.setattr(goldset_runner, "_current_git_metadata", lambda: {"commit_sha": "oldsha", "git_dirty": False})
     monkeypatch.setattr(goldset_runner, "git_output", lambda args, cwd=None: (0, ""))
@@ -472,6 +476,8 @@ def test_goldset_runner_reports_drift_intervention_delta(tmp_path: Path, monkeyp
 
     manifest = load_goldset_manifest(baseline_manifest)
     manifest["case_root"] = str((ROOT / "fixtures" / "inputs").resolve())
+    for case in manifest["cases"]:
+        case["pack_paths"] = [str((ROOT / "benchmarks" / "goldset_dev" / path).resolve()) for path in case.get("pack_paths", [])]
     for case in manifest["cases"]:
         if case["case_id"] == "reviewable_sound_paper":
             case["expected"]["exact"]["classification.article_type"] = "editorial_or_opinion"
@@ -495,10 +501,10 @@ def test_goldset_runner_reports_drift_intervention_delta(tmp_path: Path, monkeyp
 
 
 def test_goldset_runner_emits_case_level_drift_counterfactual(tmp_path: Path):
-    manifest = load_goldset_manifest(ROOT / "benchmarks" / "goldset" / "manifest.yaml")
+    manifest = load_goldset_manifest(DEV_MANIFEST)
     manifest["case_root"] = str((ROOT / "fixtures" / "inputs").resolve())
     for case in manifest["cases"]:
-        case["pack_paths"] = [str((ROOT / "benchmarks" / "goldset" / path).resolve()) for path in case.get("pack_paths", [])]
+        case["pack_paths"] = [str((ROOT / "benchmarks" / "goldset_dev" / path).resolve()) for path in case.get("pack_paths", [])]
     for case in manifest["cases"]:
         if case["case_id"] == "reviewable_sound_paper":
             case["expected"]["exact"]["classification.article_type"] = "editorial_or_opinion"

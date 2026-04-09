@@ -18,7 +18,7 @@ def test_invariance_trace_detects_silent_drift_when_outputs_match(tmp_path: Path
     ledger_path = tmp_path / "calibration_ledger.jsonl"
 
     baseline = run_goldset_manifest(
-        ROOT / "benchmarks" / "goldset" / "manifest.yaml",
+        ROOT / "benchmarks" / "goldset_dev" / "manifest.yaml",
         ledger_path=ledger_path,
         invariance_trace=True,
     )
@@ -28,7 +28,7 @@ def test_invariance_trace_detects_silent_drift_when_outputs_match(tmp_path: Path
         lambda features, weights, scoring_path: "forced-drift-hash",
     )
     drifted = run_goldset_manifest(
-        ROOT / "benchmarks" / "goldset" / "manifest.yaml",
+        ROOT / "benchmarks" / "goldset_dev" / "manifest.yaml",
         ledger_path=ledger_path,
         invariance_trace=True,
     )

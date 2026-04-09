@@ -1,0 +1,10 @@
+pack:
+  pack_id: clinical_pack
+  display_name: APR Clinical Pack
+  version: 0.1.0
+  api_version: 1
+  advisory_only: true
+  supported_domains:
+    - clinical_or_human_subjects
+  python_module: apr_pack_clinical.entry
+  builder: build_pack

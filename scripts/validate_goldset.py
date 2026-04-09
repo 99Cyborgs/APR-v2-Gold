@@ -23,7 +23,7 @@ def build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(description="Validate APR v2 goldset manifest, summary, or ledger artifacts.")
     parser.add_argument(
         "--manifest",
-        default=str(ROOT / "benchmarks" / "goldset" / "manifest.yaml"),
+        default=str(ROOT / "benchmarks" / "goldset_dev" / "manifest.yaml"),
         help="Path to the goldset manifest YAML.",
     )
     parser.add_argument("--summary", help="Optional summary JSON path to validate against the summary schema.")

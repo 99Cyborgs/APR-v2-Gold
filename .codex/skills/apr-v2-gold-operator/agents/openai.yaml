@@ -1,0 +1,4 @@
+interface:
+  display_name: "APR v2 Gold Operator"
+  short_description: "Operate APR v2 Gold with governed workflows"
+  default_prompt: "Inspect APR v2 Gold, preserve contract and canonical-record boundaries, then execute the requested repo workflow with validation receipts."

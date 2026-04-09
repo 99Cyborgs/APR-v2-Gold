@@ -25,8 +25,8 @@ from apr_core.policy import (
 def test_active_contract_versions_are_locked():
     manifest = load_contract_manifest()
     policy = load_policy_layer()
-    assert manifest["contract"]["version"] == "2.0.0"
-    assert policy["policy_layer"]["version"] == "2.0.0"
+    assert manifest["contract"]["version"] == "2.1.0"
+    assert policy["policy_layer"]["version"] == "2.1.0"
     assert policy["policy_layer"]["compatibility"]["one_active_contract_only"] is True
 
 

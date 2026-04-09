@@ -1,0 +1,34 @@
+{
+  "audit_mode": "full",
+  "manuscript_id": "review-synthesis-001",
+  "title": "Review of radiation-hardening benchmarks for CubeSat power systems",
+  "abstract": "We review radiation-hardening benchmarks for CubeSat power systems and ask whether comparator choice, uncertainty reporting, and failure-condition disclosure are consistent enough for cross-study synthesis. Figure 1 maps the thematic evidence structure, Table 1 summarizes the benchmark families and scope limits, and the manuscript states the failure condition that breaks cross-mission comparability.",
+  "manuscript_text": "This review synthesizes benchmark families for CubeSat power-system radiation hardening, asks whether the literature is internally comparable, and defines the synthesis workflow used to group the evidence. Figure 1 maps the thematic evidence structure, Table 1 summarizes comparator choice and scope limits, and the discussion states the uncertainty around cross-mission transfer together with the failure condition that breaks comparability when reporting boundaries are absent. Appendix A lists the grouping rules and synthesis workflow for the reviewed studies.",
+  "figures_and_captions": [
+    "Figure 1. Thematic evidence structure across CubeSat radiation-hardening benchmark studies."
+  ],
+  "tables": [
+    "Table 1. Comparator choice, uncertainty reporting, failure conditions, and scope limits across the reviewed studies."
+  ],
+  "references": [
+    "Ref1 CubeSat power-system radiation benchmark study.",
+    "Ref2 board-level shielding comparison study.",
+    "Ref3 proton-beam qualification review.",
+    "Ref4 uncertainty reporting in radiation-hardening studies.",
+    "Ref5 failure-condition disclosure in spacecraft electronics work."
+  ],
+  "supplement_or_appendix": "Appendix A lists the reviewed studies, grouping rules, and synthesis workflow.",
+  "target_venue": "Space Systems Review Journal",
+  "target_audience": "spacecraft power-system review editors",
+  "outlet_profile_hint": null,
+  "declared_article_type": "review",
+  "data_availability": null,
+  "code_availability": null,
+  "materials_availability": null,
+  "ethics_and_disclosures": "The authors declare no competing interests.",
+  "reporting_checklist": null,
+  "prior_reviews": null,
+  "author_response_to_reviews": null,
+  "reviewer_notes": null,
+  "external_constraints": null
+}

@@ -1,0 +1,32 @@
+{
+  "audit_mode": "full",
+  "manuscript_id": "holdout-specialist-001",
+  "title": "A targeted radiation-hardening update for one CubeSat power-control board",
+  "abstract": "We present a shielding update for one CubeSat power-control board and show a 12% reduction in latch-up events relative to the current baseline under proton irradiation. Figure 1 shows the reduction, Table 1 reports uncertainty intervals, and the discussion identifies the failure regime above 42 krad. The contribution is narrow but technically sound for specialist spacecraft electronics work.",
+  "manuscript_text": "We irradiated one CubeSat power-control board configuration in a controlled proton beam campaign and compared the modified shield stack against the current baseline design. Figure 1 reports latch-up reduction across three runs, and Table 1 gives uncertainty intervals for each estimate. The method is limited above 42 krad, where the board still fails. We position the result against prior board-level radiation-hardening references and describe the exact scope boundary for the updated design.",
+  "figures_and_captions": [
+    "Figure 1. Latch-up reduction for the updated shield stack relative to the baseline design across three proton-beam runs."
+  ],
+  "tables": [
+    "Table 1. Latch-up counts and uncertainty intervals for the baseline and updated board configurations."
+  ],
+  "references": [
+    "Ref1 board-level radiation-hardening methods.",
+    "Ref2 proton-beam qualification procedure.",
+    "Ref3 uncertainty handling for latch-up testing."
+  ],
+  "supplement_or_appendix": "Appendix A details beam exposure duration, board revision, and shield dimensions.",
+  "target_venue": "Nature Electronics",
+  "target_audience": "spacecraft electronics researchers",
+  "outlet_profile_hint": null,
+  "declared_article_type": "methods_or_tools",
+  "data_availability": "Beam-test logs are archived in the supplementary materials.",
+  "code_availability": "Board-analysis scripts are archived with the irradiation logs.",
+  "materials_availability": "Shield dimensions and board revision notes are listed in Appendix A.",
+  "ethics_and_disclosures": "The authors declare no competing interests.",
+  "reporting_checklist": null,
+  "prior_reviews": null,
+  "author_response_to_reviews": null,
+  "reviewer_notes": null,
+  "external_constraints": null
+}

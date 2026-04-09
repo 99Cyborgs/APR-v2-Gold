@@ -1,11 +1,12 @@
 # Goldset Case Schema
 
-APR v2 Goldset cases are declared in `benchmarks/goldset/manifest.yaml` and validated by `benchmarks/goldset/schemas/manifest.schema.json`.
+APR v2 Goldset cases are declared in `benchmarks/goldset_dev/manifest.yaml` for development runs and `benchmarks/goldset_holdout/manifest.yaml` for blind holdout runs. Both manifests are validated by `benchmarks/goldset/schemas/manifest.schema.json`.
 
 ## Case Shape
 
 ```yaml
 - case_id: reviewable_sound_paper
+  split: dev
   stratum: core_gold
   partition: core_structural
   category: reviewable_baseline
@@ -43,6 +44,7 @@ APR v2 Goldset cases are declared in `benchmarks/goldset/manifest.yaml` and vali
 ## Required Governance Fields
 
 - `case_id`: stable benchmark identifier.
+- `split`: execution lane, currently `dev` or `holdout`.
 - `stratum`: `core_gold`, `stress_gold`, or `holdout`.
 - `partition`: mechanism-oriented grouping used in summaries.
 - `category`: case-local analytic label.

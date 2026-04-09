@@ -68,6 +68,8 @@ DEFAULT_COUNTERFACTUAL_PERTURBATIONS = 7
 DEFAULT_COUNTERFACTUAL_JITTER = 0.05
 
 HOLDOUT_STRATUM = "holdout"
+DEV_SPLIT = "dev"
+HOLDOUT_SPLIT = "holdout"
 DEVELOPMENT_EVALUATION_MODE = "development"
 HOLDOUT_BLIND_EVALUATION_MODE = "holdout_blind"
 
@@ -424,7 +426,11 @@ def _schema_path(name: str) -> Path:
 
 
 def _default_manifest() -> Path:
-    return _goldset_root() / "manifest.yaml"
+    return repo_root() / "benchmarks" / "goldset_dev" / "manifest.yaml"
+
+
+def _default_holdout_manifest() -> Path:
+    return repo_root() / "benchmarks" / "goldset_holdout" / "manifest.yaml"
 
 
 def default_calibration_ledger_path() -> Path:
@@ -1226,6 +1232,7 @@ def _normalize_legacy_manifest(raw_manifest: dict[str, Any]) -> dict[str, Any]:
             cases.append(
                 {
                     "case_id": case["case_id"],
+                    "split": HOLDOUT_SPLIT if stratum_name == HOLDOUT_STRATUM else DEV_SPLIT,
                     "stratum": stratum_name,
                     "partition": partition_name,
                     "category": partition_name,
@@ -1267,6 +1274,7 @@ def _normalize_manifest(raw_manifest: dict[str, Any]) -> dict[str, Any]:
 
         case: dict[str, Any] = {
             "case_id": raw_case["case_id"],
+            "split": raw_case.get("split", HOLDOUT_SPLIT if stratum_name == HOLDOUT_STRATUM else DEV_SPLIT),
             "stratum": stratum_name,
             "partition": raw_case["partition"],
             "category": raw_case.get("category", raw_case["partition"]),
@@ -1314,6 +1322,8 @@ def validate_goldset_manifest(manifest: dict[str, Any]) -> None:
 
         if case["stratum"] not in strata_by_name:
             errors.append(f"case {case_id} references undefined stratum {case['stratum']}")
+        if case["split"] not in {DEV_SPLIT, HOLDOUT_SPLIT}:
+            errors.append(f"case {case_id} has unsupported split {case['split']}")
 
         has_expectation = bool(case["expected"].get("exact")) or bool(case["expected"].get("recommendation_band"))
         has_required_paths = bool(case.get("required_nonempty_paths"))
@@ -1379,8 +1389,8 @@ def load_goldset_manifest(manifest_path: str | Path | None = None) -> dict[str, 
 
 
 def load_holdout_cases(manifest_path: str | Path | None = None) -> list[dict[str, Any]]:
-    manifest = load_goldset_manifest(manifest_path)
-    return [dict(case) for case in manifest["cases"] if case["stratum"] == HOLDOUT_STRATUM]
+    manifest = load_goldset_manifest(manifest_path or _default_holdout_manifest())
+    return [dict(case) for case in manifest["cases"] if case["split"] == HOLDOUT_SPLIT]
 
 
 def _current_operator_identifier() -> str | None:
@@ -1809,11 +1819,11 @@ def _build_case_decision_metrics(
 
 
 def _holdout_runtime_guard(case: dict[str, Any], evaluation_mode: str) -> None:
-    if case["stratum"] == HOLDOUT_STRATUM and evaluation_mode != HOLDOUT_BLIND_EVALUATION_MODE:
+    if case["split"] == HOLDOUT_SPLIT and evaluation_mode != HOLDOUT_BLIND_EVALUATION_MODE:
         raise RuntimeError(
             f"holdout case {case['case_id']} may not execute in development mode; use holdout_eval to run blind holdout evaluation"
         )
-    if case["stratum"] != HOLDOUT_STRATUM and evaluation_mode == HOLDOUT_BLIND_EVALUATION_MODE:
+    if case["split"] != HOLDOUT_SPLIT and evaluation_mode == HOLDOUT_BLIND_EVALUATION_MODE:
         raise RuntimeError(f"non-holdout case {case['case_id']} may not execute in holdout blind evaluation mode")
 
 
@@ -2299,11 +2309,14 @@ def _build_decision_consistency_summary(case_results: list[dict[str, Any]]) -> d
 
 
 def _select_cases_for_run(manifest: dict[str, Any], *, holdout_eval: bool) -> tuple[list[dict[str, Any]], dict[str, Any]]:
-    holdout_cases = [case for case in manifest["cases"] if case["stratum"] == HOLDOUT_STRATUM]
+    development_cases = [case for case in manifest["cases"] if case["split"] != HOLDOUT_SPLIT]
+    holdout_cases = [case for case in manifest["cases"] if case["split"] == HOLDOUT_SPLIT]
     active_holdout_case_ids = [case["case_id"] for case in holdout_cases if case["case_state"] == "active"]
     scaffold_holdout_case_ids = [case["case_id"] for case in holdout_cases if case["case_state"] == "scaffold"]
 
     if holdout_eval:
+        if not holdout_cases:
+            raise ValueError("holdout evaluation requested but the manifest contains no split=holdout cases")
         return holdout_cases, {
             "mode": "blind_eval",
             "blind_evaluation": True,
@@ -2314,7 +2327,10 @@ def _select_cases_for_run(manifest: dict[str, Any], *, holdout_eval: bool) -> tu
             "redacted_case_ids": active_holdout_case_ids + scaffold_holdout_case_ids,
         }
 
-    return [case for case in manifest["cases"] if case["stratum"] != HOLDOUT_STRATUM], {
+    if not development_cases:
+        raise ValueError("development evaluation requested but the manifest contains no split=dev cases")
+
+    return development_cases, {
         "mode": "excluded" if holdout_cases else "not_present",
         "blind_evaluation": False,
         "active_case_count": len(active_holdout_case_ids),
@@ -3678,7 +3694,10 @@ def run_goldset_manifest(
     # Development and blind-holdout modes share evaluation machinery but not the
     # same public exposure rules. The mode split exists to prevent benchmark
     # leakage, not to create a second decision policy.
-    manifest_file = Path(manifest_path) if manifest_path else _default_manifest()
+    if manifest_path:
+        manifest_file = Path(manifest_path)
+    else:
+        manifest_file = _default_holdout_manifest() if holdout_eval else _default_manifest()
     manifest = load_goldset_manifest(manifest_file)
     manifest_sha256 = _manifest_sha256(manifest_file)
     governance = _resolve_goldset_governance_config(
@@ -3705,8 +3724,8 @@ def run_goldset_manifest(
     selected_cases, holdout = _select_cases_for_run(manifest, holdout_eval=holdout_eval)
 
     ledger_entries = _load_ledger_entries(Path(ledger_path) if ledger_path else None)
-    case_histories = _case_histories(ledger_entries)
     comparable_entries = [entry for entry in ledger_entries if _ledger_entry_evaluation_mode(entry) == evaluation_mode]
+    case_histories = _case_histories(comparable_entries)
     prior_entry = comparable_entries[-1] if comparable_entries else None
     baseline_window = governance["baseline_window"]
     baseline_entries = comparable_entries[-baseline_window:] if comparable_entries and baseline_window > 0 else []

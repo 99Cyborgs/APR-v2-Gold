@@ -35,6 +35,7 @@ def test_doctor_cli_smoke():
 
 def test_audit_render_goldset_and_packs_cli_smoke(tmp_path: Path):
     record_path = tmp_path / "record.json"
+    review_path = tmp_path / "review_record.json"
     report_path = tmp_path / "report.md"
     goldset_path = tmp_path / "goldset.json"
     ledger_path = tmp_path / "goldset_ledger.jsonl"
@@ -42,6 +43,18 @@ def test_audit_render_goldset_and_packs_cli_smoke(tmp_path: Path):
     audit = _run("audit", "fixtures/inputs/reviewable_sound_paper.json", "--output", str(record_path))
     assert audit.returncode == 0, audit.stderr or audit.stdout
     assert record_path.exists()
+
+    review = _run(
+        "review",
+        "fixtures/inputs/reviewable_sound_paper.json",
+        "--profile",
+        "nature_selective",
+        "--output",
+        str(review_path),
+    )
+    assert review.returncode == 0, review.stderr or review.stdout
+    reviewed_record = json.loads(review_path.read_text(encoding="utf-8"))
+    assert reviewed_record["classification"]["outlet_profile"] == "nature_selective"
 
     render = _run("render", str(record_path), "--output", str(report_path))
     assert render.returncode == 0, render.stderr or render.stdout
@@ -72,16 +85,25 @@ def test_audit_render_goldset_and_packs_cli_smoke(tmp_path: Path):
     assert ledger_entry["governance_report"] == goldset_summary["governance_report"]
     assert ledger_entry["case_outcomes"][0]["decision_recommendation"] == goldset_summary["cases"][0]["decision_recommendation"]
 
-    packs = _run("packs", "--pack-path", "fixtures/external_packs/apr-pack-physics")
+    packs = _run(
+        "packs",
+        "--pack-path",
+        "fixtures/external_packs/apr-pack-physics",
+        "--pack-path",
+        "fixtures/external_packs/apr-pack-clinical",
+    )
     assert packs.returncode == 0, packs.stderr or packs.stdout
+    pack_report = json.loads(packs.stdout)
+    assert [item["pack_id"] for item in pack_report["loaded_packs"]] == ["physics_pack", "clinical_pack"]
+    assert pack_report["pack_load_failures"] == []
 
 
 def test_goldset_holdout_eval_cli_smoke(tmp_path: Path):
-    manifest = yaml.safe_load((ROOT / "benchmarks" / "goldset" / "manifest.yaml").read_text(encoding="utf-8"))
+    manifest = yaml.safe_load((ROOT / "benchmarks" / "goldset_dev" / "manifest.yaml").read_text(encoding="utf-8"))
     manifest["case_root"] = str((ROOT / "fixtures" / "inputs").resolve())
     for case in manifest["cases"]:
         if case["case_id"] == "reviewable_sound_paper":
-            case["stratum"] = "holdout"
+            case["split"] = "holdout"
             case["gate_behavior"] = "exclude"
             break
 
@@ -89,7 +111,7 @@ def test_goldset_holdout_eval_cli_smoke(tmp_path: Path):
     output_path = tmp_path / "holdout_summary.json"
     manifest_path.write_text(yaml.safe_dump(manifest, sort_keys=False), encoding="utf-8")
 
-    result = _run("goldset", "--manifest", str(manifest_path), "--holdout-eval", "--no-ledger", "--output", str(output_path))
+    result = _run("goldset", "--manifest", str(manifest_path), "--holdout", "--no-ledger", "--output", str(output_path))
     assert result.returncode == 0, result.stderr or result.stdout
 
     summary = json.loads(output_path.read_text(encoding="utf-8"))

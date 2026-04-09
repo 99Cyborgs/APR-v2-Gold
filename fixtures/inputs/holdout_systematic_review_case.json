@@ -1,0 +1,35 @@
+{
+  "audit_mode": "full",
+  "manuscript_id": "holdout-review-001",
+  "title": "Systematic review of onboard fault-detection benchmarks for small satellites",
+  "abstract": "We systematically review onboard fault-detection benchmark studies for small satellites and show that dataset reporting, comparator choice, and failure-boundary disclosure are inconsistent across the current literature. Table 1 summarizes the benchmark families, Figure 1 maps the study-selection workflow, and the review provides a scoped synthesis for spacecraft autonomy practitioners.",
+  "manuscript_text": "We follow a structured search and screening workflow across flight software, power, and attitude-control studies published for small satellites, recording inclusion and exclusion rules before extraction. Figure 1 shows the study-selection workflow, Table 1 summarizes comparator coverage, dataset disclosure, and failure-boundary reporting across the retained studies, and Appendix A records the extraction rubric. The review compares prior work directly, identifies where benchmark claims cannot be compared across datasets, and states the remaining uncertainty around cross-mission transfer rather than claiming a new primary experiment.",
+  "figures_and_captions": [
+    "Figure 1. Study-selection workflow for the systematic review of small-satellite fault-detection benchmarks."
+  ],
+  "tables": [
+    "Table 1. Comparator coverage, dataset disclosure, and failure-boundary reporting across the retained benchmark studies."
+  ],
+  "references": [
+    "Ref1 benchmark datasets for onboard fault detection in CubeSats.",
+    "Ref2 comparator design in spacecraft autonomy benchmarking.",
+    "Ref3 reporting failures in flight-software anomaly studies.",
+    "Ref4 transfer limits for cross-mission benchmark claims.",
+    "Ref5 study-selection methodology for engineering evidence syntheses.",
+    "Ref6 uncertainty reporting in spacecraft autonomy evaluation."
+  ],
+  "supplement_or_appendix": "Appendix A lists the extraction rubric, inclusion and exclusion rules, and the complete retained-study table.",
+  "target_venue": "Space Systems Review Journal",
+  "target_audience": "spacecraft autonomy reviewers and synthesis editors",
+  "outlet_profile_hint": null,
+  "declared_article_type": "systematic_review",
+  "data_availability": "The search log, screening table, and retained-study matrix are archived in the supplement.",
+  "code_availability": "Screening and extraction scripts are archived with the review materials.",
+  "materials_availability": "The extraction rubric and study matrix are listed in Appendix A.",
+  "ethics_and_disclosures": "The authors declare no competing interests.",
+  "reporting_checklist": "PRISMA-style study-selection checklist provided in Appendix A.",
+  "prior_reviews": null,
+  "author_response_to_reviews": null,
+  "reviewer_notes": null,
+  "external_constraints": null
+}

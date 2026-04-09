@@ -1,0 +1,31 @@
+{
+  "audit_mode": "full",
+  "manuscript_id": "case-report-001",
+  "title": "Case report of a radiator-hinge thermal runaway during one CubeSat deployment test",
+  "abstract": "We document one radiator-hinge thermal runaway observed during a CubeSat deployment test and show the exact sensor trace, fault sequence, and recovery attempt for the affected unit. Figure 1 shows the sensor trace, Table 1 lists the observed thresholds, and the discussion states the limitation that the report covers one hardware configuration only.",
+  "manuscript_text": "This case report documents one CubeSat radiator deployment test in which a hinge thermal runaway occurred above the stated threshold. Figure 1 shows the sensor trace and recovery attempt, Table 1 lists the observed thresholds and timing markers, and the manuscript asks whether the event is consistent with the documented fixture configuration rather than making a broad reliability claim. The discussion references the nearest engineering guidance, states the uncertainty around generalization, and records the failure condition for the affected unit.",
+  "figures_and_captions": [
+    "Figure 1. Sensor trace and recovery attempt for the affected CubeSat radiator hinge."
+  ],
+  "tables": [
+    "Table 1. Observed thresholds, timing markers, and fixture settings for the reported event."
+  ],
+  "references": [
+    "Ref1 engineering guidance for CubeSat deployment anomalies.",
+    "Ref2 threshold reporting in deployment-fault investigations."
+  ],
+  "supplement_or_appendix": "Appendix A lists fixture settings and sensor placement for the reported unit.",
+  "target_venue": "Journal of Small Satellite Systems",
+  "target_audience": "small-satellite anomaly investigators",
+  "outlet_profile_hint": null,
+  "declared_article_type": "case_report",
+  "data_availability": "Sensor trace archived in the supplement.",
+  "code_availability": null,
+  "materials_availability": "Fixture settings are recorded in Appendix A.",
+  "ethics_and_disclosures": "The authors declare no competing interests.",
+  "reporting_checklist": null,
+  "prior_reviews": null,
+  "author_response_to_reviews": null,
+  "reviewer_notes": null,
+  "external_constraints": null
+}

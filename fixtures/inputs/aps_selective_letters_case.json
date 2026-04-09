@@ -1,0 +1,32 @@
+{
+  "audit_mode": "full",
+  "manuscript_id": "aps-selective-001",
+  "title": "A cross-geometry scaling law for pulsed plasma plume steering",
+  "abstract": "We report a scaling law for pulsed plasma plume steering and show that it predicts thrust-vector response across three laboratory geometries relative to an analytic plume-steering model. Figure 1 shows cross-geometry agreement, Table 1 reports uncertainty intervals, and the discussion defines the low-power failure regime below 8 W. Data, code, and calibration logs are publicly archived.",
+  "manuscript_text": "We drive three laboratory plume-steering geometries with the same pulsed source and evaluate the observed thrust-vector response against an analytic plume-steering model across matched operating windows. Figure 1 shows agreement between the measured response and the scaling-law prediction for each geometry, and Table 1 reports uncertainty intervals for the fitted exponents and residuals. The manuscript states the exact low-power failure regime below 8 W, where the scaling law no longer holds, and positions the result against prior plasma-thruster steering references with explicit scope limits for the laboratory apparatus.",
+  "figures_and_captions": [
+    "Figure 1. Cross-geometry agreement between the measured thrust-vector response and the scaling-law prediction."
+  ],
+  "tables": [
+    "Table 1. Fitted exponents, residuals, and uncertainty intervals for the three laboratory geometries."
+  ],
+  "references": [
+    "Ref1 analytic model for pulsed plasma plume steering.",
+    "Ref2 laboratory geometry comparison for electric propulsion steering.",
+    "Ref3 uncertainty quantification for thrust-vector measurements."
+  ],
+  "supplement_or_appendix": "Appendix A lists the pulsed-source timing, diagnostic calibration logs, and geometry-specific operating windows.",
+  "target_venue": "Physical Review Letters",
+  "target_audience": "broad plasma physics readership",
+  "outlet_profile_hint": null,
+  "declared_article_type": "original_research",
+  "data_availability": "Laboratory measurements and calibration logs are archived in the supplementary repository.",
+  "code_availability": "Fitting and analysis scripts are archived with the calibration logs.",
+  "materials_availability": "Geometry dimensions and diagnostic settings are listed in Appendix A.",
+  "ethics_and_disclosures": "The authors declare no competing interests.",
+  "reporting_checklist": null,
+  "prior_reviews": null,
+  "author_response_to_reviews": null,
+  "reviewer_notes": null,
+  "external_constraints": null
+}
