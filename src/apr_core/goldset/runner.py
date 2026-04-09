@@ -23,8 +23,18 @@ from jsonschema import Draft202012Validator, validate
 
 from apr_core.goldset.governance import governance_router
 from apr_core.goldset.governance import surface_contract as governance_surface_contract
-from apr_core.pipeline import run_audit
-from apr_core.utils import get_by_path, git_output, is_nonempty, read_json, repo_root, utc_now_iso
+from apr_core.pipeline import ACTIVE_CONTRACT_ROOT, BOOTSTRAP_ENTRYPOINT, CORE_RUNTIME_ROOT, run_audit
+from apr_core.policy import load_canonical_record_schema, load_contract_manifest, load_policy_layer
+from apr_core.utils import (
+    append_jsonl_atomic,
+    get_by_path,
+    git_output,
+    is_nonempty,
+    read_json,
+    repo_root,
+    sha256_file,
+    utc_now_iso,
+)
 
 DEFAULT_STRATA = [
     {
@@ -72,6 +82,13 @@ DEV_SPLIT = "dev"
 HOLDOUT_SPLIT = "holdout"
 DEVELOPMENT_EVALUATION_MODE = "development"
 HOLDOUT_BLIND_EVALUATION_MODE = "holdout_blind"
+GOVERNANCE_REASON_CODES = {
+    "leakage_budget_exhausted",
+    "leakage_rank_jitter_applied",
+    "non_identifiable_attribution",
+    "silent_drift_detected",
+    governance_surface_contract.SURFACE_CONTRACT_MIXED_REASON,
+}
 
 EXPECTED_PATH_ERROR_CLASSES = {
     "parsing.central_claim": "wrong_central_claim",
@@ -376,6 +393,7 @@ ERROR_CLASS_MAP = {
     "false_desk_reject_on_viable_specialist_case": "semantic",
     "ambiguous_case_mismatch": "semantic",
 }
+KNOWN_GOLDSET_ERROR_CLASSES = set(ERROR_CLASS_SEVERITY_WEIGHTS) | {HOLDOUT_MASKED_ERROR_CLASS}
 
 
 class EditorialDriftError(RuntimeError):
@@ -431,6 +449,46 @@ def _default_manifest() -> Path:
 
 def _default_holdout_manifest() -> Path:
     return repo_root() / "benchmarks" / "goldset_holdout" / "manifest.yaml"
+
+
+def _active_contract_paths() -> dict[str, Path]:
+    root = repo_root()
+    return {
+        "contract_manifest": root / "contracts" / "active" / "manifest.yaml",
+        "policy_layer": root / "contracts" / "active" / "policy_layer.yaml",
+        "canonical_schema": root / "contracts" / "active" / "canonical_audit_record.schema.json",
+    }
+
+
+def _runtime_identity() -> dict[str, str]:
+    return {
+        "bootstrap_entrypoint": BOOTSTRAP_ENTRYPOINT,
+        "core_runtime_root": CORE_RUNTIME_ROOT,
+        "active_contract_root": ACTIVE_CONTRACT_ROOT,
+    }
+
+
+def _runtime_contract_fingerprints() -> dict[str, str]:
+    manifest = load_contract_manifest()
+    policy = load_policy_layer()
+    contract_paths = _active_contract_paths()
+    return {
+        "contract_version": manifest["contract"]["version"],
+        "policy_layer_version": policy["policy_layer"]["version"],
+        "contract_manifest_sha256": sha256_file(contract_paths["contract_manifest"]),
+        "policy_layer_sha256": sha256_file(contract_paths["policy_layer"]),
+        "canonical_schema_sha256": sha256_file(contract_paths["canonical_schema"]),
+    }
+
+
+def _assert_manifest_contract_parity(manifest: dict[str, Any], *, manifest_path: Path | None = None) -> None:
+    active_version = _runtime_contract_fingerprints()["contract_version"]
+    observed_version = str(manifest["contract_version"])
+    if observed_version != active_version:
+        source = str(manifest_path.resolve()) if manifest_path is not None else "goldset manifest"
+        raise ValueError(
+            f"{source} declares contract_version={observed_version}, but contracts/active/manifest.yaml is {active_version}"
+        )
 
 
 def default_calibration_ledger_path() -> Path:
@@ -1300,10 +1358,21 @@ def _normalize_manifest(raw_manifest: dict[str, Any]) -> dict[str, Any]:
     return normalized
 
 
-def validate_goldset_manifest(manifest: dict[str, Any]) -> None:
+def _normalize_manifest_runtime_paths(manifest: dict[str, Any], *, manifest_file: Path) -> dict[str, Any]:
+    normalized = dict(manifest)
+    normalized["cases"] = []
+    for case in manifest.get("cases", []):
+        updated_case = dict(case)
+        updated_case["pack_paths"] = [_resolve_case_pack_path(manifest_file, path) for path in case.get("pack_paths", [])]
+        normalized["cases"].append(updated_case)
+    return normalized
+
+
+def validate_goldset_manifest(manifest: dict[str, Any], *, manifest_path: Path | None = None) -> None:
     schema = load_goldset_manifest_schema()
     Draft202012Validator.check_schema(schema)
     validate(instance=manifest, schema=schema)
+    _assert_manifest_contract_parity(manifest, manifest_path=manifest_path)
 
     errors: list[str] = []
     seen_case_ids: set[str] = set()
@@ -1384,8 +1453,8 @@ def load_goldset_manifest(manifest_path: str | Path | None = None) -> dict[str, 
     manifest_file = Path(manifest_path) if manifest_path else _default_manifest()
     raw_manifest = yaml.safe_load(manifest_file.read_text(encoding="utf-8")) or {}
     normalized = _normalize_manifest(raw_manifest)
-    validate_goldset_manifest(normalized)
-    return normalized
+    validate_goldset_manifest(normalized, manifest_path=manifest_file)
+    return _normalize_manifest_runtime_paths(normalized, manifest_file=manifest_file)
 
 
 def load_holdout_cases(manifest_path: str | Path | None = None) -> list[dict[str, Any]]:
@@ -1827,6 +1896,19 @@ def _holdout_runtime_guard(case: dict[str, Any], evaluation_mode: str) -> None:
         raise RuntimeError(f"non-holdout case {case['case_id']} may not execute in holdout blind evaluation mode")
 
 
+def _resolve_case_pack_path(manifest_file: Path, raw_path: str) -> str:
+    pack_path = Path(raw_path).expanduser()
+    if pack_path.is_absolute():
+        return str(pack_path.resolve())
+    manifest_relative = (manifest_file.parent / pack_path).resolve()
+    if manifest_relative.exists():
+        return str(manifest_relative)
+    repo_relative = (repo_root() / pack_path).resolve()
+    if repo_relative.exists():
+        return str(repo_relative)
+    return str(manifest_relative)
+
+
 def _redact_holdout_result(result: dict[str, Any]) -> dict[str, Any]:
     redacted = dict(result)
     redacted["central_claim"] = None
@@ -2029,7 +2111,7 @@ def _evaluate_case(
         return result
 
     payload = read_json(case_root / case["input"])
-    case_pack_paths = [str((manifest_file.parent / path).resolve()) for path in case.get("pack_paths", [])]
+    case_pack_paths = [_resolve_case_pack_path(manifest_file, path) for path in case.get("pack_paths", [])]
     merged_pack_paths = [*case_pack_paths, *(extra_pack_paths or [])]
     governance_router.validate_input_surface_contract(payload, governance)
     record = run_audit(payload, pack_paths=merged_pack_paths)
@@ -2096,6 +2178,38 @@ def _load_ledger_entries(ledger_path: Path | None) -> list[dict[str, Any]]:
         validate(instance=entry, schema=schema)
         entries.append(entry)
     return entries
+
+
+def _validate_reason_code_namespace(reason_codes: list[str] | None) -> None:
+    unknown = sorted(set(reason_codes or []) - GOVERNANCE_REASON_CODES)
+    if unknown:
+        raise ValueError(f"unknown governance reason codes: {', '.join(unknown)}")
+
+
+def _validate_error_class_namespace(error_classes: list[str] | None) -> None:
+    unknown = sorted(set(error_classes or []) - KNOWN_GOLDSET_ERROR_CLASSES)
+    if unknown:
+        raise ValueError(f"unknown goldset error classes: {', '.join(unknown)}")
+
+
+def _validate_governance_report_namespace(governance_report: dict[str, Any]) -> None:
+    contract_status = governance_report.get("contract_status") or {}
+    warning_mode = governance_report.get("warning_mode") or {}
+    _validate_reason_code_namespace(contract_status.get("hard_fail_reason_codes"))
+    _validate_reason_code_namespace(contract_status.get("soft_warning_reason_codes"))
+    _validate_reason_code_namespace(warning_mode.get("reason_codes"))
+    for layer in (governance_report.get("layers") or {}).values():
+        _validate_reason_code_namespace((layer or {}).get("hard_fail_reason_codes"))
+        _validate_reason_code_namespace((layer or {}).get("soft_warning_reason_codes"))
+
+
+def _validate_case_governance_namespace(case: dict[str, Any]) -> None:
+    surface_contract = case.get("surface_contract") or {}
+    _validate_reason_code_namespace(surface_contract.get("reason_codes"))
+    counterfactual_extended = case.get("counterfactual_extended") or {}
+    warning = counterfactual_extended.get("warning")
+    if warning:
+        _validate_reason_code_namespace([warning])
 
 
 def _case_histories(entries: list[dict[str, Any]]) -> dict[str, list[dict[str, Any]]]:
@@ -3566,11 +3680,10 @@ def _build_ledger_entry(
     summary: dict[str, Any],
     *,
     manifest_file: Path,
-    prior_entry: dict[str, Any] | None,
     notes: str | None,
     operator: str | None,
-    git_metadata: dict[str, Any],
 ) -> dict[str, Any]:
+    git_metadata = _current_git_metadata()
     # Ledger entries are append-only run records. New additive fields belong
     # here so prior rows remain valid comparators for regression governance.
     return {
@@ -3580,9 +3693,15 @@ def _build_ledger_entry(
         "operator": operator or _current_operator_identifier(),
         "notes": notes or "",
         "contract_version": summary["contract_version"],
+        "policy_layer_version": summary["policy_layer_version"],
         "manifest_version": summary["manifest_version"],
         "manifest_path": str(manifest_file.resolve()),
         "manifest_sha256": summary["manifest_sha256"],
+        "contract_manifest_sha256": summary["contract_manifest_sha256"],
+        "policy_layer_sha256": summary["policy_layer_sha256"],
+        "canonical_schema_sha256": summary["canonical_schema_sha256"],
+        "runtime_identity": summary["runtime_identity"],
+        "repo_state": summary["repo_state"],
         "evaluation_mode": summary["evaluation_mode"],
         "holdout": summary["holdout"],
         "result_type_counts": summary["result_type_counts"],
@@ -3602,7 +3721,7 @@ def _build_ledger_entry(
         "case_deltas": summary["case_deltas"],
         "recommendation_changes_vs_prior": summary["recommendation_changes_vs_prior"],
         "gates": summary["gates"],
-        "prior_generated_at_utc": prior_entry["generated_at_utc"] if prior_entry else None,
+        "prior_generated_at_utc": summary["case_deltas"]["prior_generated_at_utc"],
         "case_outcomes": [
             {
                 "case_id": case["case_id"],
@@ -3650,20 +3769,51 @@ def _build_ledger_entry(
     }
 
 
+def build_goldset_ledger_entry(
+    summary: dict[str, Any],
+    *,
+    manifest_path: str | Path,
+    notes: str | None = None,
+    operator: str | None = None,
+) -> dict[str, Any]:
+    manifest_file = Path(manifest_path)
+    return _build_ledger_entry(
+        summary,
+        manifest_file=manifest_file,
+        notes=notes,
+        operator=operator,
+    )
+
+
 def _append_ledger_entry(ledger_path: Path, entry: dict[str, Any]) -> None:
     # Re-validate at append time so ledger growth cannot accumulate records that
     # were valid in memory but invalid for the durable calibration history.
     schema = load_goldset_ledger_entry_schema()
     Draft202012Validator.check_schema(schema)
+    _validate_governance_report_namespace(entry.get("governance_report") or {})
+    _validate_error_class_namespace(list((entry.get("error_class_counts") or {}).keys()))
+    for outcome in entry.get("case_outcomes", []):
+        _validate_error_class_namespace(outcome.get("error_classes"))
+        _validate_case_governance_namespace(outcome)
     validate(instance=entry, schema=schema)
     ledger_path.parent.mkdir(parents=True, exist_ok=True)
-    with ledger_path.open("a", encoding="utf-8") as handle:
-        handle.write(json.dumps(entry, sort_keys=True) + "\n")
+    append_jsonl_atomic(ledger_path, entry)
+
+
+def append_goldset_ledger_entry(ledger_path: str | Path, entry: dict[str, Any]) -> None:
+    _append_ledger_entry(Path(ledger_path), entry)
 
 
 def _validate_summary(summary: dict[str, Any]) -> None:
     schema = load_goldset_summary_schema()
     Draft202012Validator.check_schema(schema)
+    _validate_governance_report_namespace(summary.get("governance_report") or {})
+    _validate_error_class_namespace(list((summary.get("error_class_counts") or {}).keys()))
+    for case in summary.get("cases", []):
+        _validate_error_class_namespace(case.get("error_classes"))
+        _validate_case_governance_namespace(case)
+    for calibration_case in (summary.get("calibration_export") or {}).get("cases", []):
+        _validate_case_governance_namespace((calibration_case.get("calibration_extended") or {}))
     validate(instance=summary, schema=schema)
 
 
@@ -3700,6 +3850,8 @@ def run_goldset_manifest(
         manifest_file = _default_holdout_manifest() if holdout_eval else _default_manifest()
     manifest = load_goldset_manifest(manifest_file)
     manifest_sha256 = _manifest_sha256(manifest_file)
+    contract_fingerprints = _runtime_contract_fingerprints()
+    runtime_identity = _runtime_identity()
     governance = _resolve_goldset_governance_config(
         baseline_window=ledger_baseline_window,
         regression_threshold=regression_threshold,
@@ -3801,8 +3953,17 @@ def run_goldset_manifest(
     summary = {
         "manifest_version": manifest["manifest_version"],
         "contract_version": manifest["contract_version"],
+        "policy_layer_version": contract_fingerprints["policy_layer_version"],
         "manifest_path": str(manifest_file.resolve()),
         "manifest_sha256": manifest_sha256,
+        "contract_manifest_sha256": contract_fingerprints["contract_manifest_sha256"],
+        "policy_layer_sha256": contract_fingerprints["policy_layer_sha256"],
+        "canonical_schema_sha256": contract_fingerprints["canonical_schema_sha256"],
+        "runtime_identity": runtime_identity,
+        "repo_state": {
+            "commit_sha": git_metadata["commit_sha"],
+            "git_dirty": git_metadata["git_dirty"],
+        },
         "generated_at_utc": utc_now_iso(),
         "evaluation_mode": evaluation_mode,
         "holdout": holdout,
@@ -3845,13 +4006,11 @@ def run_goldset_manifest(
     _validate_summary(summary)
 
     if ledger_path:
-        entry = _build_ledger_entry(
+        entry = build_goldset_ledger_entry(
             summary,
-            manifest_file=manifest_file,
-            prior_entry=prior_entry,
+            manifest_path=manifest_file,
             notes=notes,
             operator=operator,
-            git_metadata=git_metadata,
         )
         target_ledger_path = Path(ledger_path)
         _append_ledger_entry(target_ledger_path, entry)

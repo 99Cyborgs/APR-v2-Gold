@@ -26,6 +26,7 @@ apr-review = "apr_core.cli:review_entry_main"
 apr-goldset = "apr_core.cli:goldset_entry_main"
 apr-holdout = "apr_core.cli:holdout_entry_main"
 apr-doctor = "apr_core.cli:doctor_entry_main"
+apr-readiness = "apr_core.cli:readiness_entry_main"
 
 [tool.setuptools]
 package-dir = { "" = "src" }

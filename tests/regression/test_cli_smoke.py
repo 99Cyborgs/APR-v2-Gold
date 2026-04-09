@@ -27,10 +27,21 @@ def _run(*args: str) -> subprocess.CompletedProcess[str]:
 def test_doctor_cli_smoke():
     result = _run("doctor")
     payload = json.loads(result.stdout)
+    assert result.returncode == 0, result.stderr or result.stdout
+    assert payload["status"] == "ok"
+    assert payload["git_status"] in {"clean", "dirty", "unavailable"}
+
+
+def test_readiness_cli_smoke():
+    result = _run("readiness")
+    payload = json.loads(result.stdout)
     if result.returncode == 0:
         assert payload["status"] == "ok"
+        assert payload["git_status"] == "clean"
     else:
-        assert payload == {"status": "error", "git_status": "dirty"}
+        assert payload["status"] == "error"
+        assert payload["reason"] == "release_readiness_requires_clean_worktree"
+        assert payload["git_status"] == "dirty"
 
 
 def test_audit_render_goldset_and_packs_cli_smoke(tmp_path: Path):
@@ -81,8 +92,12 @@ def test_audit_render_goldset_and_packs_cli_smoke(tmp_path: Path):
     ledger_entry = json.loads(ledger_path.read_text(encoding="utf-8").splitlines()[-1])
     assert goldset_summary["governance"]["baseline_window"] == 3
     assert goldset_summary["governance"]["fatal_weight_scale"] == 1.5
+    assert goldset_summary["calibration_ledger"]["entry_appended"] is True
     assert governance_report == goldset_summary["governance_report"]
     assert ledger_entry["governance_report"] == goldset_summary["governance_report"]
+    assert ledger_entry["policy_layer_version"] == goldset_summary["policy_layer_version"]
+    assert ledger_entry["runtime_identity"] == goldset_summary["runtime_identity"]
+    assert ledger_entry["repo_state"]["git_dirty"] in {True, False, None}
     assert ledger_entry["case_outcomes"][0]["decision_recommendation"] == goldset_summary["cases"][0]["decision_recommendation"]
 
     packs = _run(

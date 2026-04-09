@@ -12,6 +12,8 @@ while str(SRC) in sys.path:
 sys.path.insert(0, str(SRC))
 
 from apr_core.goldset import load_goldset_ledger_entry_schema, load_goldset_summary_schema, run_goldset_manifest  # noqa: E402
+from apr_core import cli as apr_cli  # noqa: E402
+import apr_core.goldset.runner as goldset_runner  # noqa: E402
 from apr_core.goldset.governance.surface_contract import (  # noqa: E402
     enforce_surface_exclusivity,
     validate_governance_schema_contract,
@@ -52,3 +54,13 @@ def test_surface_isolation_remains_additive_in_runtime_output():
     assert "surface_contract" not in baseline_case
     assert strict_case["decision_recommendation"] == baseline_case["decision_recommendation"]
     assert strict_case["surface_contract"]["mixed_usage_violation"] is False
+
+
+def test_provider_and_adapter_seams_remain_dormant_in_active_runtime():
+    cli_source = Path(apr_cli.__file__).read_text(encoding="utf-8")
+    runner_source = Path(goldset_runner.__file__).read_text(encoding="utf-8")
+
+    assert "apr_core.providers" not in cli_source
+    assert "apr_core.providers" not in runner_source
+    assert "apr_core.adapters" not in cli_source
+    assert "apr_core.adapters" not in runner_source

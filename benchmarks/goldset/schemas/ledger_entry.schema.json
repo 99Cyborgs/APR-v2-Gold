@@ -51,6 +51,9 @@
     "contract_version": {
       "type": "string"
     },
+    "policy_layer_version": {
+      "type": "string"
+    },
     "manifest_version": {
       "type": "string"
     },
@@ -59,6 +62,21 @@
     },
     "manifest_sha256": {
       "type": "string"
+    },
+    "contract_manifest_sha256": {
+      "type": "string"
+    },
+    "policy_layer_sha256": {
+      "type": "string"
+    },
+    "canonical_schema_sha256": {
+      "type": "string"
+    },
+    "runtime_identity": {
+      "$ref": "#/$defs/runtimeIdentity"
+    },
+    "repo_state": {
+      "$ref": "#/$defs/repoState"
     },
     "evaluation_mode": {
       "type": "string"
@@ -370,6 +388,48 @@
     }
   },
   "$defs": {
+    "runtimeIdentity": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "bootstrap_entrypoint",
+        "core_runtime_root",
+        "active_contract_root"
+      ],
+      "properties": {
+        "bootstrap_entrypoint": {
+          "type": "string"
+        },
+        "core_runtime_root": {
+          "type": "string"
+        },
+        "active_contract_root": {
+          "type": "string"
+        }
+      }
+    },
+    "repoState": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "commit_sha",
+        "git_dirty"
+      ],
+      "properties": {
+        "commit_sha": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "git_dirty": {
+          "type": [
+            "boolean",
+            "null"
+          ]
+        }
+      }
+    },
     "governanceReport": {
       "type": "object",
       "additionalProperties": false,

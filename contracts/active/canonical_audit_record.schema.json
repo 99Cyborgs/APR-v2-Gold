@@ -106,10 +106,58 @@
         "article_claim_mismatch_reason"
       ],
       "properties": {
-        "article_type": { "type": "string" },
-        "claim_type": { "type": "string" },
-        "outlet_profile": { "type": "string" },
-        "domain_module": { "type": "string" },
+        "article_type": {
+          "type": "string",
+          "enum": [
+            "original_research",
+            "methods_or_tools",
+            "theory_or_model",
+            "constraint_or_null_result",
+            "replication_or_validation",
+            "review",
+            "systematic_review",
+            "commentary_or_perspective",
+            "protocol_or_registered_report",
+            "case_report",
+            "editorial_or_opinion"
+          ]
+        },
+        "claim_type": {
+          "type": "string",
+          "enum": [
+            "empirical_claim",
+            "benchmark_claim",
+            "model_claim",
+            "null_result_claim",
+            "replication_claim",
+            "synthesis_claim",
+            "protocol_claim",
+            "opinion_claim"
+          ]
+        },
+        "outlet_profile": {
+          "type": "string",
+          "enum": [
+            "nature_selective",
+            "aps_selective",
+            "specialist_research_journal",
+            "soundness_first_journal",
+            "review_only_venue",
+            "preprint_screen"
+          ]
+        },
+        "domain_module": {
+          "type": "string",
+          "enum": [
+            "methods_or_tools",
+            "observational_or_empirical",
+            "theory_physics_or_applied_math",
+            "computational_or_simulation",
+            "review_synthesis",
+            "clinical_or_human_subjects",
+            "general_scientific_manuscript"
+          ]
+        },
         "article_claim_mismatch": { "type": "boolean" },
         "article_claim_mismatch_reason": { "type": ["string", "null"] }
       }
@@ -333,8 +381,28 @@
         "evidence_anchors"
       ],
       "properties": {
-        "outlet_profile": { "type": "string" },
-        "routing_state": { "type": "string" },
+        "outlet_profile": {
+          "type": "string",
+          "enum": [
+            "nature_selective",
+            "aps_selective",
+            "specialist_research_journal",
+            "soundness_first_journal",
+            "review_only_venue",
+            "preprint_screen"
+          ]
+        },
+        "routing_state": {
+          "type": "string",
+          "enum": [
+            "blocked_by_scientific_record",
+            "retarget_specialist",
+            "retarget_soundness_first",
+            "preprint_ready_not_journal_ready",
+            "submit_with_caution",
+            "plausible_send_out"
+          ]
+        },
         "scientific_record_gate_passed": { "type": "boolean" },
         "rationale": { "type": "array", "items": { "type": "string" } },
         "evidence_anchors": { "type": "array", "items": { "$ref": "#/$defs/anchor" } }
@@ -454,14 +522,48 @@
         "generated_at_utc",
         "contract_version",
         "policy_layer_version",
-        "processing_states_completed"
+        "processing_states_completed",
+        "normalized_input_sha256",
+        "contract_manifest_sha256",
+        "policy_layer_sha256",
+        "canonical_schema_sha256",
+        "runtime_identity",
+        "loaded_pack_fingerprints"
       ],
       "properties": {
         "runtime_version": { "type": "string" },
         "generated_at_utc": { "type": "string", "format": "date-time" },
         "contract_version": { "type": "string" },
         "policy_layer_version": { "type": "string" },
-        "processing_states_completed": { "type": "array", "items": { "type": "string" } }
+        "processing_states_completed": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "enum": [
+              "INGESTED",
+              "PARSED",
+              "CLASSIFIED",
+              "REVIEWABILITY_ASSESSED",
+              "STRUCTURAL_INTEGRITY_ASSESSED",
+              "CLAIM_EVIDENCE_CALIBRATED",
+              "ADVERSARIAL_RESILIENCE_ASSESSED",
+              "SCIENTIFIC_RECORD_ASSESSED",
+              "VENUE_CALIBRATED",
+              "EDITORIAL_FIRST_PASS_ASSESSED",
+              "REHABILITATION_COMPUTED",
+              "PACKS_EXECUTED"
+            ]
+          }
+        },
+        "normalized_input_sha256": { "type": "string" },
+        "contract_manifest_sha256": { "type": "string" },
+        "policy_layer_sha256": { "type": "string" },
+        "canonical_schema_sha256": { "type": "string" },
+        "runtime_identity": { "$ref": "#/$defs/runtimeIdentity" },
+        "loaded_pack_fingerprints": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/packFingerprint" }
+        }
       }
     },
     "rendering": {
@@ -544,6 +646,9 @@
         "advisory_only",
         "supported_domains",
         "repo_root",
+        "resolved_repo_root",
+        "manifest_path",
+        "manifest_sha256",
         "python_module"
       ],
       "properties": {
@@ -554,6 +659,9 @@
         "advisory_only": { "type": "boolean" },
         "supported_domains": { "type": "array", "items": { "type": "string" } },
         "repo_root": { "type": "string" },
+        "resolved_repo_root": { "type": "string" },
+        "manifest_path": { "type": "string" },
+        "manifest_sha256": { "type": "string" },
         "python_module": { "type": "string" }
       }
     },
@@ -571,12 +679,12 @@
       "additionalProperties": false,
       "required": ["code", "reason", "scope", "evidence_anchors"],
       "properties": {
-        "code": { "type": "string" },
-        "reason": { "type": "string" },
-        "scope": { "type": "string" },
-        "evidence_anchors": { "type": "array", "items": { "$ref": "#/$defs/anchor" } }
-      }
-    },
+                "code": { "type": "string" },
+                "reason": { "type": "string" },
+                "scope": { "type": "string", "enum": ["advisory_pack_request", "pack_specific_advisory"] },
+                "evidence_anchors": { "type": "array", "items": { "$ref": "#/$defs/anchor" } }
+              }
+            },
     "packResult": {
       "type": "object",
       "additionalProperties": false,
@@ -614,6 +722,27 @@
         "fatal_gates": { "type": "array", "items": { "$ref": "#/$defs/packFatalGate" } },
         "evidence_anchors": { "type": "array", "items": { "$ref": "#/$defs/anchor" } },
         "advisory_fields": { "type": "object" }
+        }
+    },
+    "runtimeIdentity": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["bootstrap_entrypoint", "core_runtime_root", "active_contract_root"],
+      "properties": {
+        "bootstrap_entrypoint": { "type": "string" },
+        "core_runtime_root": { "type": "string" },
+        "active_contract_root": { "type": "string" }
+      }
+    },
+    "packFingerprint": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["pack_id", "resolved_repo_root", "manifest_path", "manifest_sha256"],
+      "properties": {
+        "pack_id": { "type": "string" },
+        "resolved_repo_root": { "type": "string" },
+        "manifest_path": { "type": "string" },
+        "manifest_sha256": { "type": "string" }
       }
     }
   }

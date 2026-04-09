@@ -5,6 +5,7 @@ Packs are external repos discovered by explicit path. They must expose `pack.yam
 APR v2 core guarantees:
 
 - path-based discovery only
+- canonicalized and deduplicated resolved pack paths before load
 - explicit metadata capture in `pack_execution`
 - explicit applicability reporting
 - scoped advisory results under `pack_results`
@@ -12,7 +13,7 @@ APR v2 core guarantees:
 Packs may:
 
 - add signals
-- add scoped fatal-gate requests
+- add scoped fatal-gate requests as advisory pack requests only
 - request human escalation
 - lower confidence indirectly through recorded uncertainty
 

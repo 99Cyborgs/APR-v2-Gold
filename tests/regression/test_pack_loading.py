@@ -19,12 +19,16 @@ from apr_core.utils import read_json
 def test_advisory_pack_loads_and_records_scoped_output():
     payload = read_json(ROOT / "fixtures" / "inputs" / "theory_pack_case.json")
     baseline = run_audit(payload)
-    record = run_audit(payload, pack_paths=[str(ROOT / "fixtures" / "external_packs" / "apr-pack-physics")])
+    pack_root = ROOT / "fixtures" / "external_packs" / "apr-pack-physics"
+    record = run_audit(payload, pack_paths=[str(pack_root), str(pack_root / "pack.yaml"), str(pack_root)])
     assert record["decision"]["recommendation"] == baseline["decision"]["recommendation"] == "REBUILD_BEFORE_SUBMISSION"
     assert record["pack_execution"]["loaded_packs"]
     assert record["pack_results"]
     assert record["pack_results"][0]["pack_id"] == "physics_pack"
     assert record["pack_results"][0]["advisory_only"] is True
+    assert record["pack_execution"]["requested_pack_paths"] == [str(pack_root.resolve())]
+    assert record["pack_execution"]["loaded_packs"][0]["manifest_path"] == str((pack_root / "pack.yaml").resolve())
+    assert record["provenance"]["loaded_pack_fingerprints"][0]["resolved_repo_root"] == str(pack_root.resolve())
 
 
 def test_clinical_pack_loads_and_preserves_core_recommendation():
@@ -38,6 +42,7 @@ def test_clinical_pack_loads_and_preserves_core_recommendation():
     assert record["pack_results"][0]["pack_id"] == "clinical_pack"
     assert record["pack_results"][0]["advisory_only"] is True
     assert record["pack_results"][0]["status"] == "pass"
+    assert record["pack_results"][0]["fatal_gates"] == []
     assert "clinical_endpoint_surface_visible" in record["pack_results"][0]["signals"]
 
 

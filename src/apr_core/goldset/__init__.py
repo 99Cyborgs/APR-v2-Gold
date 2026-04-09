@@ -1,4 +1,6 @@
 from apr_core.goldset.runner import (
+    append_goldset_ledger_entry,
+    build_goldset_ledger_entry,
     default_calibration_ledger_path,
     default_goldset_governance_config,
     default_holdout_calibration_ledger_path,
@@ -12,6 +14,8 @@ from apr_core.goldset.runner import (
 )
 
 __all__ = [
+    "append_goldset_ledger_entry",
+    "build_goldset_ledger_entry",
     "default_calibration_ledger_path",
     "default_goldset_governance_config",
     "default_holdout_calibration_ledger_path",

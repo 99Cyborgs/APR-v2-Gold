@@ -17,6 +17,9 @@ class PackSpec:
     supported_domains: list[str]
     run: PackRunner
     repo_root: str | None = None
+    resolved_repo_root: str | None = None
+    manifest_path: str | None = None
+    manifest_sha256: str | None = None
     python_module: str | None = None
     metadata: dict[str, Any] = field(default_factory=dict)
 
@@ -29,5 +32,8 @@ class PackSpec:
             "advisory_only": self.advisory_only,
             "supported_domains": list(self.supported_domains),
             "repo_root": self.repo_root,
+            "resolved_repo_root": self.resolved_repo_root,
+            "manifest_path": self.manifest_path,
+            "manifest_sha256": self.manifest_sha256,
             "python_module": self.python_module,
         }

@@ -17,6 +17,13 @@ import apr_core.goldset.runner as goldset_runner  # noqa: E402
 
 DEV_MANIFEST = ROOT / "benchmarks" / "goldset_dev" / "manifest.yaml"
 HOLDOUT_MANIFEST = ROOT / "benchmarks" / "goldset_holdout" / "manifest.yaml"
+AUTHORITATIVE_DOCS = [
+    ROOT / "README.md",
+    ROOT / "benchmarks" / "goldset" / "README.md",
+    ROOT / "benchmarks" / "goldset" / "holdout" / "README.md",
+    ROOT / "docs" / "SPEC_IMPLEMENTATION_MATRIX.md",
+    ROOT / "docs" / "BENCHMARK_POLICY.md",
+]
 
 
 def test_holdout_ledger_entries_do_not_seed_dev_baselines(tmp_path: Path):
@@ -48,3 +55,13 @@ def test_holdout_ledger_entries_do_not_enter_dev_case_history(tmp_path: Path, mo
 
     assert captured_histories
     assert all(history_size == 0 for history_size in captured_histories.values())
+
+
+def test_holdout_authoritative_docs_describe_active_blind_lane():
+    for doc_path in AUTHORITATIVE_DOCS:
+        content = doc_path.read_text(encoding="utf-8")
+        assert "goldset_dev/" in content
+        assert "goldset_holdout/" in content
+    benchmark_policy = (ROOT / "docs" / "BENCHMARK_POLICY.md").read_text(encoding="utf-8")
+    assert "apr goldset --holdout" in benchmark_policy
+    assert "blind evaluation" in benchmark_policy

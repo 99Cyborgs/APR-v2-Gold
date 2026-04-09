@@ -1,0 +1,464 @@
+phases:
+  - id: PH1
+    title: Fail-Closed Contract and Canonical-Record Hardening
+    objective: Close silent drift between the active contract, policy layer, canonical schema, and live runtime semantics.
+    priority: P0
+    execution_order: 1
+    status: planned
+    repo_paths:
+      - contracts/active/
+      - src/apr_core/pipeline.py
+      - src/apr_core/classify/
+      - src/apr_core/venue/
+      - src/apr_core/render/
+      - tests/contract/
+      - tests/surface_lock/
+    validation_gates:
+      - "python scripts/validate_contract.py"
+      - "python -m pytest tests/contract tests/regression/test_minimal_pipeline.py tests/surface_lock/test_output_surfaces.py -q"
+      - "apr doctor"
+  - id: PH2
+    title: Validation, Regression, and Replay Hardening
+    objective: Make benchmark, docs, and repo-level validation surfaces fail closed before drift reaches release truth surfaces.
+    priority: P0
+    execution_order: 2
+    status: planned
+    repo_paths:
+      - benchmarks/goldset/
+      - benchmarks/goldset_dev/
+      - benchmarks/goldset_holdout/
+      - src/apr_core/goldset/runner.py
+      - scripts/validate_goldset.py
+      - .github/workflows/ci.yml
+      - tests/goldset/
+      - tests/regression/
+    validation_gates:
+      - "python scripts/validate_goldset.py"
+      - "python -m pytest tests/goldset tests/regression/test_cli_smoke.py tests/regression/test_surface_isolation.py -q"
+      - "apr goldset --output <tmp-summary> --no-ledger"
+      - "apr goldset --holdout --no-ledger --output <tmp-holdout-summary>"
+  - id: PH3
+    title: Provenance, Auditability, and Failure-Classification Hardening
+    objective: Add deterministic replay and failure-taxonomy closure without changing recommendation semantics.
+    priority: P1
+    execution_order: 3
+    status: planned
+    repo_paths:
+      - src/apr_core/pipeline.py
+      - src/apr_core/goldset/
+      - contracts/active/canonical_audit_record.schema.json
+      - benchmarks/goldset/schemas/summary.schema.json
+      - benchmarks/goldset/schemas/ledger_entry.schema.json
+      - tests/goldset/
+      - tests/regression/
+      - tests/adversarial/
+    validation_gates:
+      - "python scripts/validate_contract.py"
+      - "python scripts/validate_goldset.py"
+      - "python -m pytest tests/goldset tests/regression/test_trace_stability.py tests/regression/test_invariance_trace.py tests/adversarial -q"
+  - id: PH4
+    title: Output, Artifact, and Local Runtime Resilience Hardening
+    objective: Make local output and ledger persistence crash-safe and operator-facing readiness semantics clearer.
+    priority: P1
+    execution_order: 4
+    status: planned
+    repo_paths:
+      - src/apr_core/utils.py
+      - src/apr_core/cli.py
+      - src/apr_core/goldset/runner.py
+      - scripts/build_release.py
+      - tests/regression/
+      - tests/goldset/
+    validation_gates:
+      - "python -m pytest tests/regression/test_cli_smoke.py tests/goldset/test_goldset_runner.py -q"
+      - "python scripts/build_release.py"
+  - id: PH5
+    title: Latent Seam Hardening for Packs, Adapters, and Providers
+    objective: Tighten extension trust boundaries while keeping packs advisory and provider/adapter seams dormant.
+    priority: P1
+    execution_order: 5
+    status: planned
+    repo_paths:
+      - src/apr_core/packs/
+      - src/apr_core/providers/
+      - src/apr_core/adapters/
+      - fixtures/external_packs/
+      - docs/PACK_INTERFACE.md
+      - docs/EXECUTION_MODEL.md
+      - docs/MIGRATION_POLICY.md
+      - tests/regression/
+    validation_gates:
+      - "python -m pytest tests/regression/test_pack_loading.py tests/regression/test_surface_isolation.py -q"
+      - "python scripts/validate_contract.py"
+  - id: PH6
+    title: Migration, Extension, and Release Readiness Hardening
+    objective: Align published docs, packaging, release checks, and extension doctrine with the hardened runtime.
+    priority: P1
+    execution_order: 6
+    status: in_progress
+    repo_paths:
+      - README.md
+      - benchmarks/goldset/README.md
+      - docs/
+      - pyproject.toml
+      - setup.py
+      - scripts/build_release.py
+      - .github/workflows/ci.yml
+    validation_gates:
+      - "python scripts/validate_contract.py"
+      - "python scripts/validate_goldset.py"
+      - "python scripts/build_release.py"
+
+work_packages:
+  - id: WP-16
+    title: Docs truthfulness sweep for manifest and holdout surfaces
+    phase: PH6
+    priority: P0
+    execution_order: 1
+    pr_batch: 1
+    status: completed
+    confidence: high
+    dependencies: []
+    enables: [WP-05, WP-06, WP-17]
+    validation_gates:
+      - "docs lockstep checks"
+      - "python scripts/validate_goldset.py"
+    repo_paths:
+      - README.md
+      - benchmarks/goldset/README.md
+      - benchmarks/goldset/holdout/README.md
+      - docs/SPEC_IMPLEMENTATION_MATRIX.md
+      - docs/BENCHMARK_POLICY.md
+      - benchmarks/goldset_dev/manifest.yaml
+      - benchmarks/goldset_holdout/manifest.yaml
+  - id: WP-04
+    title: Benchmark manifest and active-contract parity guard
+    phase: PH2
+    priority: P0
+    execution_order: 2
+    pr_batch: 1
+    status: planned
+    confidence: high
+    dependencies: []
+    enables: [WP-05, WP-06, WP-08]
+    validation_gates:
+      - "python scripts/validate_goldset.py"
+      - "python -m pytest tests/goldset/test_goldset_runner.py -q"
+    repo_paths:
+      - benchmarks/goldset_dev/manifest.yaml
+      - benchmarks/goldset_holdout/manifest.yaml
+      - benchmarks/goldset/schemas/manifest.schema.json
+      - scripts/validate_goldset.py
+      - src/apr_core/goldset/runner.py
+  - id: WP-01
+    title: Contract taxonomy lockstep guard
+    phase: PH1
+    priority: P0
+    execution_order: 3
+    pr_batch: 1
+    status: planned
+    confidence: high
+    dependencies: []
+    enables: [WP-02, WP-03, WP-05]
+    validation_gates:
+      - "python scripts/validate_contract.py"
+      - "python -m pytest tests/contract/test_contract_manifest.py -q"
+    repo_paths:
+      - contracts/active/policy_layer.yaml
+      - contracts/active/canonical_audit_record.schema.json
+      - src/apr_core/classify/classification.py
+      - src/apr_core/pipeline.py
+      - src/apr_core/goldset/runner.py
+      - scripts/validate_contract.py
+  - id: WP-02
+    title: Canonical schema closure for fixed semantic fields
+    phase: PH1
+    priority: P0
+    execution_order: 4
+    pr_batch: 2
+    status: planned
+    confidence: high
+    dependencies: [WP-01]
+    enables: [WP-07, WP-10]
+    validation_gates:
+      - "python scripts/validate_contract.py"
+      - "python -m pytest tests/contract/test_active_schemas.py tests/surface_lock/test_output_surfaces.py -q"
+    repo_paths:
+      - contracts/active/canonical_audit_record.schema.json
+      - src/apr_core/classify/classification.py
+      - src/apr_core/venue/routing.py
+      - docs/CANONICAL_AUDIT_RECORD.md
+      - tests/surface_lock/test_output_surfaces.py
+  - id: WP-03
+    title: Processing-state and renderer-boundary clarification
+    phase: PH1
+    priority: P1
+    execution_order: 5
+    pr_batch: 2
+    status: planned
+    confidence: medium
+    dependencies: [WP-01]
+    enables: [WP-07, WP-12]
+    validation_gates:
+      - "python scripts/validate_contract.py"
+      - "python -m pytest tests/surface_lock/test_output_surfaces.py tests/regression/test_trace_stability.py -q"
+    repo_paths:
+      - contracts/active/policy_layer.yaml
+      - src/apr_core/pipeline.py
+      - src/apr_core/render/markdown.py
+      - docs/ARCHITECTURE.md
+      - docs/EXECUTION_MODEL.md
+      - docs/CANONICAL_AUDIT_RECORD.md
+  - id: WP-05
+    title: Unified validation matrix and repo lockstep gate
+    phase: PH2
+    priority: P1
+    execution_order: 6
+    pr_batch: 2
+    status: planned
+    confidence: medium
+    dependencies: [WP-01, WP-04, WP-16]
+    enables: [WP-17]
+    validation_gates:
+      - "python scripts/validate_contract.py"
+      - "python scripts/validate_goldset.py"
+      - "python -m pytest tests/regression/test_cli_smoke.py -q"
+    repo_paths:
+      - .github/workflows/ci.yml
+      - Makefile
+      - docs/DEVELOPMENT.md
+      - scripts/validate_contract.py
+      - scripts/validate_goldset.py
+      - tests/
+  - id: WP-06
+    title: Holdout truthfulness and split-isolation hardening
+    phase: PH2
+    priority: P1
+    execution_order: 7
+    pr_batch: 2
+    status: planned
+    confidence: high
+    dependencies: [WP-04, WP-16]
+    enables: [WP-08]
+    validation_gates:
+      - "python scripts/validate_goldset.py"
+      - "python -m pytest tests/goldset/test_holdout_leakage.py tests/goldset/test_holdout_split_isolation.py -q"
+      - "apr goldset --holdout --no-ledger --output <tmp-holdout-summary>"
+    repo_paths:
+      - benchmarks/goldset_holdout/manifest.yaml
+      - benchmarks/goldset/README.md
+      - docs/BENCHMARK_POLICY.md
+      - docs/SPEC_IMPLEMENTATION_MATRIX.md
+      - tests/goldset/test_holdout_leakage.py
+      - tests/goldset/test_holdout_split_isolation.py
+  - id: WP-07
+    title: Canonical provenance fingerprint expansion
+    phase: PH3
+    priority: P1
+    execution_order: 8
+    pr_batch: 3
+    status: planned
+    confidence: medium
+    dependencies: [WP-02, WP-03]
+    enables: [WP-08, WP-10, WP-13]
+    validation_gates:
+      - "python scripts/validate_contract.py"
+      - "python -m pytest tests/regression/test_minimal_pipeline.py tests/surface_lock/test_output_surfaces.py -q"
+    repo_paths:
+      - src/apr_core/pipeline.py
+      - src/apr_core/models.py
+      - contracts/active/canonical_audit_record.schema.json
+      - docs/CANONICAL_AUDIT_RECORD.md
+      - tests/surface_lock/test_output_surfaces.py
+  - id: WP-08
+    title: Benchmark summary and ledger replay envelope
+    phase: PH3
+    priority: P1
+    execution_order: 9
+    pr_batch: 3
+    status: planned
+    confidence: medium
+    dependencies: [WP-04, WP-07]
+    enables: [WP-09, WP-11]
+    validation_gates:
+      - "python scripts/validate_goldset.py"
+      - "python -m pytest tests/goldset/test_goldset_runner.py tests/goldset/test_holdout_split_isolation.py -q"
+    repo_paths:
+      - src/apr_core/goldset/runner.py
+      - benchmarks/goldset/schemas/summary.schema.json
+      - benchmarks/goldset/schemas/ledger_entry.schema.json
+      - scripts/validate_goldset.py
+      - tests/goldset/test_goldset_runner.py
+  - id: WP-09
+    title: Failure-class and reason-code closure
+    phase: PH3
+    priority: P2
+    execution_order: 10
+    pr_batch: 3
+    status: planned
+    confidence: medium
+    dependencies: [WP-08]
+    enables: [WP-11, WP-17]
+    validation_gates:
+      - "python scripts/validate_goldset.py"
+      - "python -m pytest tests/goldset tests/adversarial/test_matrix.py tests/adversarial/test_metric_reporting.py -q"
+    repo_paths:
+      - src/apr_core/goldset/runner.py
+      - src/apr_core/goldset/governance/governance_router.py
+      - benchmarks/goldset/schemas/summary.schema.json
+      - benchmarks/goldset/schemas/ledger_entry.schema.json
+      - docs/BENCHMARK_POLICY.md
+  - id: WP-10
+    title: Atomic canonical JSON and markdown writes
+    phase: PH4
+    priority: P1
+    execution_order: 11
+    pr_batch: 4
+    status: planned
+    confidence: medium
+    dependencies: [WP-07]
+    enables: [WP-11, WP-12]
+    validation_gates:
+      - "python -m pytest tests/regression/test_cli_smoke.py -q"
+      - "targeted tempdir atomic-write tests"
+    repo_paths:
+      - src/apr_core/utils.py
+      - src/apr_core/cli.py
+      - tests/regression/test_cli_smoke.py
+      - tests/regression/
+  - id: WP-11
+    title: Crash-safe summary and ledger emission
+    phase: PH4
+    priority: P2
+    execution_order: 12
+    pr_batch: 4
+    status: planned
+    confidence: medium
+    dependencies: [WP-08, WP-10]
+    enables: [WP-12, WP-17]
+    validation_gates:
+      - "python scripts/validate_goldset.py"
+      - "python -m pytest tests/goldset/test_goldset_runner.py tests/regression/test_cli_smoke.py -q"
+    repo_paths:
+      - src/apr_core/cli.py
+      - src/apr_core/goldset/runner.py
+      - src/apr_core/utils.py
+      - tests/goldset/test_goldset_runner.py
+  - id: WP-12
+    title: Doctor and readiness split
+    phase: PH4
+    priority: P2
+    execution_order: 13
+    pr_batch: 4
+    status: planned
+    confidence: medium
+    dependencies: [WP-10, WP-11]
+    enables: [WP-17]
+    validation_gates:
+      - "python -m pytest tests/regression/test_cli_smoke.py::test_doctor_cli_smoke -q"
+      - "apr doctor"
+      - "python scripts/build_release.py"
+    repo_paths:
+      - src/apr_core/cli.py
+      - scripts/build_release.py
+      - docs/DEVELOPMENT.md
+      - docs/RELEASE_POLICY.md
+  - id: WP-13
+    title: Pack path canonicalization and source identity capture
+    phase: PH5
+    priority: P1
+    execution_order: 14
+    pr_batch: 5
+    status: planned
+    confidence: medium
+    dependencies: [WP-07]
+    enables: [WP-14, WP-18]
+    validation_gates:
+      - "python scripts/validate_contract.py"
+      - "python -m pytest tests/regression/test_pack_loading.py -q"
+    repo_paths:
+      - src/apr_core/packs/loader.py
+      - src/apr_core/packs/protocol.py
+      - src/apr_core/pipeline.py
+      - docs/PACK_INTERFACE.md
+      - fixtures/external_packs/
+  - id: WP-15
+    title: Provider and adapter seam quarantine and admission criteria
+    phase: PH5
+    priority: P1
+    execution_order: 15
+    pr_batch: 5
+    status: planned
+    confidence: high
+    dependencies: []
+    enables: [WP-18]
+    validation_gates:
+      - "python scripts/validate_contract.py"
+      - "targeted seam-inertness tests"
+    repo_paths:
+      - src/apr_core/providers/
+      - src/apr_core/adapters/
+      - docs/EXECUTION_MODEL.md
+      - docs/MIGRATION_POLICY.md
+  - id: WP-14
+    title: Pack advisory semantics clarification
+    phase: PH5
+    priority: P2
+    execution_order: 16
+    pr_batch: 5
+    status: planned
+    confidence: medium
+    dependencies: [WP-13]
+    enables: [WP-18]
+    validation_gates:
+      - "python scripts/validate_contract.py"
+      - "python -m pytest tests/regression/test_pack_loading.py tests/surface_lock/test_output_surfaces.py -q"
+    repo_paths:
+      - docs/PACK_INTERFACE.md
+      - src/apr_core/packs/loader.py
+      - src/apr_core/pipeline.py
+      - contracts/active/canonical_audit_record.schema.json
+      - tests/regression/test_pack_loading.py
+  - id: WP-17
+    title: Release and package truthfulness lock tests
+    phase: PH6
+    priority: P2
+    execution_order: 17
+    pr_batch: 6
+    status: planned
+    confidence: medium
+    dependencies: [WP-05, WP-11, WP-12, WP-16]
+    enables: [WP-18]
+    validation_gates:
+      - "python scripts/validate_contract.py"
+      - "python scripts/build_release.py"
+      - "release-surface tests"
+    repo_paths:
+      - pyproject.toml
+      - setup.py
+      - scripts/build_release.py
+      - .github/workflows/ci.yml
+      - docs/RELEASE_POLICY.md
+      - docs/DEVELOPMENT.md
+  - id: WP-18
+    title: Migration and extension governance tightening
+    phase: PH6
+    priority: P3
+    execution_order: 18
+    pr_batch: 6
+    status: planned
+    confidence: medium
+    dependencies: [WP-13, WP-14, WP-15, WP-17]
+    enables: []
+    validation_gates:
+      - "docs lockstep checks"
+      - "targeted seam-inertness tests"
+      - "python scripts/validate_contract.py"
+    repo_paths:
+      - docs/MIGRATION_POLICY.md
+      - docs/PACK_INTERFACE.md
+      - docs/EXECUTION_MODEL.md
+      - docs/REPO_CHARTER.md
+      - src/apr_core/packs/loader.py
+      - src/apr_core/providers/
+      - src/apr_core/adapters/

@@ -27,8 +27,50 @@ from apr_core.reviewability import assess_reviewability
 from apr_core.scientific_record import assess_scientific_record
 from apr_core.structure import assess_structural_integrity
 from apr_core.transparency import assess_transparency
-from apr_core.utils import utc_now_iso
+from apr_core.utils import repo_root, sha256_file, stable_json_sha256, utc_now_iso
 from apr_core.venue import route_venue
+
+AUDIT_PROCESSING_STATES = (
+    "INGESTED",
+    "PARSED",
+    "CLASSIFIED",
+    "REVIEWABILITY_ASSESSED",
+    "STRUCTURAL_INTEGRITY_ASSESSED",
+    "CLAIM_EVIDENCE_CALIBRATED",
+    "ADVERSARIAL_RESILIENCE_ASSESSED",
+    "SCIENTIFIC_RECORD_ASSESSED",
+    "VENUE_CALIBRATED",
+    "EDITORIAL_FIRST_PASS_ASSESSED",
+    "REHABILITATION_COMPUTED",
+    "PACKS_EXECUTED",
+)
+BOOTSTRAP_ENTRYPOINT = "src/apr_core_bootstrap.py"
+CORE_RUNTIME_ROOT = "src/apr_core"
+ACTIVE_CONTRACT_ROOT = "contracts/active"
+
+
+def _active_contract_paths() -> dict[str, Any]:
+    root = repo_root()
+    contract_root = root / "contracts" / "active"
+    return {
+        "manifest": contract_root / "manifest.yaml",
+        "policy_layer": contract_root / "policy_layer.yaml",
+        "canonical_schema": contract_root / "canonical_audit_record.schema.json",
+    }
+
+
+def _loaded_pack_fingerprints(pack_execution: dict[str, Any]) -> list[dict[str, Any]]:
+    fingerprints: list[dict[str, Any]] = []
+    for pack in pack_execution.get("loaded_packs", []):
+        fingerprints.append(
+            {
+                "pack_id": pack["pack_id"],
+                "resolved_repo_root": pack["resolved_repo_root"],
+                "manifest_path": pack["manifest_path"],
+                "manifest_sha256": pack["manifest_sha256"],
+            }
+        )
+    return fingerprints
 
 
 def _downgrade_confidence(confidence: str) -> str:
@@ -282,6 +324,16 @@ def run_audit(payload: dict[str, Any], *, pack_paths: list[str] | None = None) -
             "contract_version": manifest["contract"]["version"],
             "policy_layer_version": policy["policy_layer"]["version"],
             "processing_states_completed": processing_states,
+            "normalized_input_sha256": stable_json_sha256(normalized),
+            "contract_manifest_sha256": sha256_file(_active_contract_paths()["manifest"]),
+            "policy_layer_sha256": sha256_file(_active_contract_paths()["policy_layer"]),
+            "canonical_schema_sha256": sha256_file(_active_contract_paths()["canonical_schema"]),
+            "runtime_identity": {
+                "bootstrap_entrypoint": BOOTSTRAP_ENTRYPOINT,
+                "core_runtime_root": CORE_RUNTIME_ROOT,
+                "active_contract_root": ACTIVE_CONTRACT_ROOT,
+            },
+            "loaded_pack_fingerprints": _loaded_pack_fingerprints(pack_execution),
         },
         rendering={
             "default_renderer": "markdown",

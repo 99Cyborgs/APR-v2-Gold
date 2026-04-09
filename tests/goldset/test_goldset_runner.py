@@ -55,6 +55,12 @@ def test_goldset_runner_passes_fixture_manifest_and_emits_governance_fields():
     assert summary["failed"] == 0
     assert summary["gates"]["status"] == "pass"
     assert summary["evaluation_mode"] == "development"
+    assert summary["policy_layer_version"] == summary["contract_version"]
+    assert summary["contract_manifest_sha256"]
+    assert summary["policy_layer_sha256"]
+    assert summary["canonical_schema_sha256"]
+    assert summary["runtime_identity"]["bootstrap_entrypoint"] == "src/apr_core_bootstrap.py"
+    assert summary["repo_state"]["git_dirty"] in {True, False, None}
     assert summary["decision_algebra"]["total_score"] == 0
     assert summary["decision_algebra"]["recommendation_loss_model"] == "asymmetric_matrix"
     assert summary["decision_consistency"]["exact_match_cases"] == 17
@@ -84,6 +90,23 @@ def test_goldset_runner_writes_valid_calibration_ledger(tmp_path: Path):
     assert len(ledger_lines) == 2
     for entry in ledger_lines:
         validate(instance=entry, schema=schema)
+        assert entry["policy_layer_version"] == entry["contract_version"]
+        assert entry["contract_manifest_sha256"]
+        assert entry["policy_layer_sha256"]
+        assert entry["canonical_schema_sha256"]
+
+
+def test_goldset_manifest_must_match_active_contract_version(tmp_path: Path):
+    manifest = load_goldset_manifest(DEV_MANIFEST)
+    manifest["contract_version"] = "9.9.9"
+    manifest_path = _write_manifest(tmp_path, manifest)
+
+    try:
+        load_goldset_manifest(manifest_path)
+    except ValueError as exc:
+        assert "contract_version=9.9.9" in str(exc)
+    else:
+        raise AssertionError("expected load_goldset_manifest to fail on contract-version drift")
 
 
 def test_goldset_runner_classifies_missed_fatal_gate_for_forced_core_regression(tmp_path: Path):

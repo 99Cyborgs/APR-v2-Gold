@@ -5,6 +5,14 @@ from typing import Any
 from apr_core.anchors import dedupe_anchors
 
 SELECTIVE_MARKERS = ["universal", "field-defining", "broad readership", "transform", "major advance"]
+ROUTING_STATES = (
+    "blocked_by_scientific_record",
+    "retarget_specialist",
+    "retarget_soundness_first",
+    "preprint_ready_not_journal_ready",
+    "submit_with_caution",
+    "plausible_send_out",
+)
 
 
 def route_venue(

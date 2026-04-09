@@ -40,7 +40,13 @@ def main(argv: list[str] | None = None) -> int:
     Draft202012Validator.check_schema(manifest_schema)
     Draft202012Validator.check_schema(summary_schema)
     Draft202012Validator.check_schema(ledger_schema)
-    load_goldset_manifest(args.manifest)
+    validated_manifests = {
+        str(ROOT / "benchmarks" / "goldset_dev" / "manifest.yaml"),
+        str(ROOT / "benchmarks" / "goldset_holdout" / "manifest.yaml"),
+        str(Path(args.manifest).resolve()),
+    }
+    for manifest_path in sorted(validated_manifests):
+        load_goldset_manifest(manifest_path)
 
     if args.summary:
         validate(instance=read_json(args.summary), schema=summary_schema)

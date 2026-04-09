@@ -16,6 +16,8 @@ from pathlib import Path
 from jsonschema import Draft202012Validator, validate
 
 from apr_core.goldset import (
+    append_goldset_ledger_entry,
+    build_goldset_ledger_entry,
     default_calibration_ledger_path,
     default_goldset_governance_config,
     default_holdout_calibration_ledger_path,
@@ -29,7 +31,7 @@ from apr_core.packs import inspect_packs
 from apr_core.pipeline import run_audit
 from apr_core.policy import load_audit_input_schema, load_canonical_record_schema, load_contract_manifest, load_policy_layer
 from apr_core.render import render_markdown_report
-from apr_core.utils import git_output, read_json, repo_root, write_json, write_text
+from apr_core.utils import git_output, read_json, repo_root, stable_json_dumps, write_json, write_text, write_text_bundle
 
 
 def _non_negative_int(value: str) -> int:
@@ -69,7 +71,7 @@ def _apply_profile_override(payload: dict[str, object], profile: str | None) -> 
     return overridden
 
 
-def cmd_doctor(_: argparse.Namespace) -> int:
+def _doctor_report() -> tuple[dict[str, object], int]:
     root = repo_root()
     manifest = load_contract_manifest()
     policy = load_policy_layer()
@@ -100,8 +102,7 @@ def cmd_doctor(_: argparse.Namespace) -> int:
     ]
     missing = [str(path) for path in required_paths if not path.exists()]
     if missing:
-        print(json.dumps({"status": "error", "missing_paths": missing}, indent=2))
-        return 1
+        return {"status": "error", "missing_paths": missing}, 1
 
     sample_payload = read_json(root / "fixtures" / "inputs" / "reviewable_sound_paper.json")
     sample_record = run_audit(sample_payload)
@@ -112,25 +113,46 @@ def cmd_doctor(_: argparse.Namespace) -> int:
     if git_code == 0:
         status_code, status_output = git_output(["status", "--porcelain"], cwd=root)
         git_status = "clean" if status_code == 0 and not status_output else "dirty"
-        if git_status == "dirty":
-            print(json.dumps({"status": "error", "git_status": git_status}, indent=2))
-            return 1
     else:
         git_msg = "not a git repository"
 
-    print(
-        json.dumps(
-            {
-                "status": "ok",
-                "repo_root": str(root),
-                "contract_version": manifest["contract"]["version"],
-                "policy_layer_version": policy["policy_layer"]["version"],
-                "git_status": git_status,
-                "git_detail": git_msg,
-            },
-            indent=2,
-        )
+    return (
+        {
+            "status": "ok",
+            "repo_root": str(root),
+            "contract_version": manifest["contract"]["version"],
+            "policy_layer_version": policy["policy_layer"]["version"],
+            "git_status": git_status,
+            "git_detail": git_msg,
+        },
+        0,
     )
+
+
+def cmd_doctor(_: argparse.Namespace) -> int:
+    payload, exit_code = _doctor_report()
+    print(json.dumps(payload, indent=2))
+    return exit_code
+
+
+def cmd_readiness(_: argparse.Namespace) -> int:
+    payload, exit_code = _doctor_report()
+    if exit_code != 0:
+        print(json.dumps(payload, indent=2))
+        return exit_code
+    if payload["git_status"] != "clean":
+        print(
+            json.dumps(
+                {
+                    **payload,
+                    "status": "error",
+                    "reason": "release_readiness_requires_clean_worktree",
+                },
+                indent=2,
+            )
+        )
+        return 1
+    print(json.dumps(payload, indent=2))
     return 0
 
 
@@ -170,10 +192,11 @@ def cmd_goldset(args: argparse.Namespace) -> int:
         ledger_path = str(default_holdout_calibration_ledger_path())
     else:
         ledger_path = str(default_calibration_ledger_path())
+    defer_ledger_append = bool(args.output and ledger_path)
     summary = run_goldset_manifest(
         manifest_path,
         extra_pack_paths=args.pack_path or [],
-        ledger_path=ledger_path,
+        ledger_path=None if defer_ledger_append else ledger_path,
         notes=args.notes,
         operator=args.operator,
         holdout_eval=holdout_requested,
@@ -192,10 +215,40 @@ def cmd_goldset(args: argparse.Namespace) -> int:
         invariance_trace=args.invariance_trace if args.invariance_trace else None,
         strict_surface_contract=args.strict_surface_contract if args.strict_surface_contract else None,
     )
+    if args.output and defer_ledger_append:
+        output_path = Path(args.output)
+        governance_report_path = output_path.with_name("governance_report.json")
+        write_text_bundle(
+            {
+                output_path: stable_json_dumps(summary) + "\n",
+                governance_report_path: stable_json_dumps(summary["governance_report"]) + "\n",
+            }
+        )
+    if defer_ledger_append:
+        entry = build_goldset_ledger_entry(
+            summary,
+            manifest_path=manifest_path,
+            notes=args.notes,
+            operator=args.operator,
+        )
+        append_goldset_ledger_entry(ledger_path, entry)
+        summary = {
+            **summary,
+            "calibration_ledger": {
+                "path": str(Path(ledger_path).resolve()),
+                "entry_appended": True,
+                "baseline_window": summary["calibration_ledger"]["baseline_window"],
+            },
+        }
     if args.output:
-        write_json(args.output, summary)
-        governance_report_path = Path(args.output).with_name("governance_report.json")
-        write_json(governance_report_path, summary["governance_report"])
+        output_path = Path(args.output)
+        governance_report_path = output_path.with_name("governance_report.json")
+        write_text_bundle(
+            {
+                output_path: stable_json_dumps(summary) + "\n",
+                governance_report_path: stable_json_dumps(summary["governance_report"]) + "\n",
+            }
+        )
     else:
         print(json.dumps(summary, indent=2))
     return 0 if summary["gates"]["status"] == "pass" else 1
@@ -214,6 +267,12 @@ def build_parser() -> argparse.ArgumentParser:
 
     doctor = subparsers.add_parser("doctor", help="Validate repo, contracts, and local runtime wiring.")
     doctor.set_defaults(func=cmd_doctor)
+
+    readiness = subparsers.add_parser(
+        "readiness",
+        help="Validate release readiness, including clean-worktree policy, on top of doctor checks.",
+    )
+    readiness.set_defaults(func=cmd_readiness)
 
     outlet_profiles = load_policy_layer()["policy_layer"]["outlet_profiles"]
 
@@ -366,6 +425,10 @@ def holdout_entry_main() -> int:
 
 def doctor_entry_main() -> int:
     return main(["doctor", *sys.argv[1:]])
+
+
+def readiness_entry_main() -> int:
+    return main(["readiness", *sys.argv[1:]])
 
 
 if __name__ == "__main__":

@@ -14,6 +14,7 @@ This matrix marks what APR v2 Gold actually implements and what the benchmark ha
 | Human-escalation requirement | Implemented and benchmarked | `decision.human_escalation_required` is asserted in every active case. |
 | Integrity escalation | Implemented and benchmarked | `integrity_escalation` is a hard core case. |
 | Advisory-pack execution visibility | Implemented and benchmarked | `theory_pack_case` asserts pack result presence without allowing pack semantic override. |
+| Blind holdout benchmark lane | Implemented and benchmarked | `benchmarks/goldset_holdout/manifest.yaml` contains active holdout cases executed through `apr goldset --holdout` with summary redaction. |
 
 ## Implemented But Not Directly Benchmarked
 
@@ -28,7 +29,6 @@ This matrix marks what APR v2 Gold actually implements and what the benchmark ha
 | Surface | Status | Notes |
 | --- | --- | --- |
 | Prompt-driven contract execution | Specified elsewhere but not implemented here | `contracts/active/system_prompt.md` and `user_prompt_template.md` are contract artifacts, not active runtime drivers in this local deterministic engine. |
-| Real public holdout benchmark set | Specified elsewhere but not implemented here | The `holdout` stratum exists, but there are no active untuned public holdout fixtures in the repo yet. |
 
 ## Intentionally Out Of Scope For v2
 

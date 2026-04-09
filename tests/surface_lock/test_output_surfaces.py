@@ -57,6 +57,24 @@ EXPECTED_TRANSPARENCY_KEYS = [
     "missing_items",
     "evidence_anchors",
 ]
+EXPECTED_PROVENANCE_KEYS = [
+    "runtime_version",
+    "generated_at_utc",
+    "contract_version",
+    "policy_layer_version",
+    "processing_states_completed",
+    "normalized_input_sha256",
+    "contract_manifest_sha256",
+    "policy_layer_sha256",
+    "canonical_schema_sha256",
+    "runtime_identity",
+    "loaded_pack_fingerprints",
+]
+EXPECTED_RUNTIME_IDENTITY_KEYS = [
+    "bootstrap_entrypoint",
+    "core_runtime_root",
+    "active_contract_root",
+]
 EXPECTED_CRITERIA_KEYS = [
     "problem_definition_and_claim_clarity",
     "structural_integrity",
@@ -156,6 +174,8 @@ def test_canonical_output_surfaces_are_present_typed_and_ordered(case: dict):
     assert list(record.keys()) == EXPECTED_TOP_LEVEL_KEYS
     assert list(record["decision"].keys()) == EXPECTED_DECISION_KEYS
     assert list(record["transparency"].keys()) == EXPECTED_TRANSPARENCY_KEYS
+    assert list(record["provenance"].keys()) == EXPECTED_PROVENANCE_KEYS
+    assert list(record["provenance"]["runtime_identity"].keys()) == EXPECTED_RUNTIME_IDENTITY_KEYS
     assert list(record["scientific_record"]["criteria"].keys()) == EXPECTED_CRITERIA_KEYS
     assert list(record["editorial_first_pass"]["component_scores"].keys()) == EXPECTED_EDITORIAL_COMPONENT_KEYS
 
@@ -189,6 +209,7 @@ def test_canonical_output_surfaces_are_present_typed_and_ordered(case: dict):
         assert record["pack_execution"]["requested_pack_paths"] == []
         assert record["pack_execution"]["loaded_packs"] == []
         assert record["pack_execution"]["pack_load_failures"] == []
+        assert record["provenance"]["loaded_pack_fingerprints"] == []
 
     if case["case_id"] == "repair_required":
         assert record["decision"]["editorial_forecast"] == "REBUILD_REQUIRED"
@@ -204,10 +225,16 @@ def test_canonical_output_surfaces_are_present_typed_and_ordered(case: dict):
     if case["case_id"] == "pack_applicable":
         result = record["pack_results"][0]
         assert record["pack_execution"]["pack_load_failures"] == []
+        loaded_pack = record["pack_execution"]["loaded_packs"][0]
+        fingerprint = record["provenance"]["loaded_pack_fingerprints"][0]
         assert result["display_name"] == "APR Clinical Pack"
         assert result["pack_id"] == "clinical_pack"
         assert result["applicability"] == "applicable"
         assert result["status"] == "pass"
+        assert loaded_pack["resolved_repo_root"].endswith("fixtures\\external_packs\\apr-pack-clinical")
+        assert loaded_pack["manifest_path"].endswith("fixtures\\external_packs\\apr-pack-clinical\\pack.yaml")
+        assert fingerprint["pack_id"] == "clinical_pack"
+        assert fingerprint["manifest_sha256"] == loaded_pack["manifest_sha256"]
         assert result["advisory_fields"]["clinical_readiness"]["endpoint_surface_visible"] is True
 
     if case["case_id"] == "pack_not_applicable":

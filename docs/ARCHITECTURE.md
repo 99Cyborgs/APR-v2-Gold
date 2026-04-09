@@ -12,3 +12,4 @@ APR v2 is a layered local pipeline.
 8. `render` consumes the canonical record and never mutates it.
 
 The only durable runtime truth object is `CanonicalAuditRecord`.
+Provider and adapter seams remain dormant until explicitly admitted; the active CLI and pipeline do not route through `src/apr_core/providers/` or `src/apr_core/adapters/`.

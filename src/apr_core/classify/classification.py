@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from typing import Any
 
-KNOWN_ARTICLE_TYPES = {
+ARTICLE_TYPES = (
     "original_research",
     "methods_or_tools",
     "theory_or_model",
@@ -14,7 +14,35 @@ KNOWN_ARTICLE_TYPES = {
     "protocol_or_registered_report",
     "case_report",
     "editorial_or_opinion",
-}
+)
+KNOWN_ARTICLE_TYPES = set(ARTICLE_TYPES)
+CLAIM_TYPES = (
+    "empirical_claim",
+    "benchmark_claim",
+    "model_claim",
+    "null_result_claim",
+    "replication_claim",
+    "synthesis_claim",
+    "protocol_claim",
+    "opinion_claim",
+)
+OUTLET_PROFILES = (
+    "nature_selective",
+    "aps_selective",
+    "specialist_research_journal",
+    "soundness_first_journal",
+    "review_only_venue",
+    "preprint_screen",
+)
+DOMAIN_MODULES = (
+    "methods_or_tools",
+    "observational_or_empirical",
+    "theory_physics_or_applied_math",
+    "computational_or_simulation",
+    "review_synthesis",
+    "clinical_or_human_subjects",
+    "general_scientific_manuscript",
+)
 
 
 def _text(payload: dict[str, Any]) -> str:
@@ -77,14 +105,7 @@ def _claim_type(article_type: str, text: str) -> str:
 def _outlet_profile(payload: dict[str, Any], text: str) -> str:
     hint = (payload.get("outlet_profile_hint") or "").lower()
     venue = (payload.get("target_venue") or "").lower()
-    if hint in {
-        "preprint_screen",
-        "soundness_first_journal",
-        "nature_selective",
-        "aps_selective",
-        "review_only_venue",
-        "specialist_research_journal",
-    }:
+    if hint in OUTLET_PROFILES:
         return hint
     combined = f"{hint} {venue}"
     if "preprint" in combined or "arxiv" in combined:

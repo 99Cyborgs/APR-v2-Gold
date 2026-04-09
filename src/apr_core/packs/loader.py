@@ -17,7 +17,7 @@ import yaml
 
 from apr_core.anchors import dedupe_anchors
 from apr_core.packs.protocol import PackSpec
-from apr_core.utils import repo_root
+from apr_core.utils import repo_root, sha256_file
 
 PACK_API_VERSION = 1
 
@@ -38,18 +38,46 @@ def _load_manifest(path: Path) -> dict[str, Any]:
 def _import_builder(repo_path: Path, python_module: str, builder_name: str):
     import_root = repo_path / "src" if (repo_path / "src").exists() else repo_path
     import_root_str = str(import_root)
+    inserted = False
     if import_root_str not in sys.path:
         sys.path.insert(0, import_root_str)
-    module = importlib.import_module(python_module)
-    if not hasattr(module, builder_name):
-        raise ValueError(f"builder '{builder_name}' not found in module '{python_module}'")
-    return getattr(module, builder_name)
+        inserted = True
+    try:
+        module = importlib.import_module(python_module)
+        if not hasattr(module, builder_name):
+            raise ValueError(f"builder '{builder_name}' not found in module '{python_module}'")
+        return getattr(module, builder_name)
+    finally:
+        if inserted:
+            try:
+                sys.path.remove(import_root_str)
+            except ValueError:
+                pass
+
+
+def _canonical_pack_request(path: str | Path) -> tuple[Path, Path]:
+    raw_path = Path(path).expanduser()
+    manifest_path = (raw_path if raw_path.name == "pack.yaml" else raw_path / "pack.yaml").resolve()
+    if not manifest_path.exists():
+        raise ValueError(f"pack manifest not found: {manifest_path}")
+    return manifest_path.parent, manifest_path
+
+
+def _canonical_requested_paths(pack_paths: list[str | Path] | None) -> list[str]:
+    canonical: list[str] = []
+    seen: set[str] = set()
+    for path in pack_paths or []:
+        repo_path, _ = _canonical_pack_request(path)
+        canonical_path = str(repo_path)
+        if canonical_path in seen:
+            continue
+        seen.add(canonical_path)
+        canonical.append(canonical_path)
+    return canonical
 
 
 def load_pack_from_path(path: str | Path) -> PackSpec:
-    raw_path = Path(path)
-    manifest_path = raw_path if raw_path.name == "pack.yaml" else raw_path / "pack.yaml"
-    repo_path = manifest_path.parent
+    repo_path, manifest_path = _canonical_pack_request(path)
     manifest = _load_manifest(manifest_path)
     builder = _import_builder(repo_path, manifest["python_module"], manifest["builder"])
     built = builder()
@@ -69,6 +97,9 @@ def load_pack_from_path(path: str | Path) -> PackSpec:
     spec.advisory_only = bool(manifest["advisory_only"])
     spec.supported_domains = list(manifest["supported_domains"])
     spec.repo_root = str(repo_path)
+    spec.resolved_repo_root = str(repo_path)
+    spec.manifest_path = str(manifest_path)
+    spec.manifest_sha256 = sha256_file(manifest_path)
     spec.python_module = str(manifest["python_module"])
     return spec
 
@@ -77,7 +108,7 @@ def discover_fixture_packs() -> list[str]:
     fixture_root = repo_root() / "fixtures" / "external_packs"
     if not fixture_root.exists():
         return []
-    return [str(path.parent) for path in fixture_root.glob("*/pack.yaml")]
+    return _canonical_requested_paths([path.parent for path in fixture_root.glob("*/pack.yaml")])
 
 
 def _failed_pack(path: str | Path, error: Exception) -> dict[str, str]:
@@ -110,7 +141,7 @@ def _normalize_fatal_gates(items: list[dict[str, Any]] | None) -> list[dict[str,
             {
                 "code": str(item.get("code") or "unspecified_pack_gate"),
                 "reason": str(item.get("reason") or "unspecified_pack_reason"),
-                "scope": str(item.get("scope") or "pack_specific_advisory"),
+                "scope": str(item.get("scope") or "advisory_pack_request"),
                 "evidence_anchors": dedupe_anchors(item.get("evidence_anchors") or []),
             }
         )
@@ -140,7 +171,7 @@ def _normalize_result(spec: PackSpec, result: dict[str, Any]) -> dict[str, Any]:
 
 
 def inspect_packs(pack_paths: list[str | Path] | None = None) -> dict[str, Any]:
-    paths = [str(path) for path in (pack_paths or discover_fixture_packs())]
+    paths = _canonical_requested_paths(pack_paths or discover_fixture_packs())
     loaded: list[dict[str, Any]] = []
     failures: list[dict[str, str]] = []
     for path in paths:
@@ -156,7 +187,7 @@ def execute_packs(
     record: dict[str, Any],
     pack_paths: list[str | Path] | None = None,
 ) -> tuple[dict[str, Any], list[dict[str, Any]]]:
-    requested = [str(Path(path)) for path in (pack_paths or [])]
+    requested = _canonical_requested_paths(pack_paths or [])
     if not requested:
         return {
             "requested_pack_paths": [],

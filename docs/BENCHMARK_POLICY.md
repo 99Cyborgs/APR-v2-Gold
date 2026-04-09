@@ -7,8 +7,10 @@ This file is the authoritative benchmark-governance document for APR v2 Gold.
 - Development benchmark execution defaults to `benchmarks/goldset_dev/manifest.yaml`.
 - Blind holdout benchmark execution defaults to `benchmarks/goldset_holdout/manifest.yaml`.
 - Both manifests are schema-validated by `benchmarks/goldset/schemas/manifest.schema.json`.
+- Both manifests must also match the active runtime contract version in `contracts/active/manifest.yaml`.
 - Run summaries are validated by `benchmarks/goldset/schemas/summary.schema.json`.
 - Calibration ledger entries are validated by `benchmarks/goldset/schemas/ledger_entry.schema.json`.
+- `python scripts/validate_repo_lockstep.py` is the minimum repo lockstep gate for contract validation, benchmark validation, authoritative holdout-doc checks, and CLI smoke coverage.
 - `docs/BENCHMARK_PROTOCOL.md` and `docs/GOLDSET_PROTOCOL.md` remain as compatibility pointers only.
 
 ## Strata
@@ -46,6 +48,7 @@ This file is the authoritative benchmark-governance document for APR v2 Gold.
 
 - `apr goldset` writes JSONL ledger entries by default to `benchmarks/goldset/output/calibration_ledger.jsonl`.
 - `apr goldset --holdout` writes to the separate holdout ledger by default unless a ledger path is passed explicitly. `--holdout-eval` remains a compatibility alias.
+- When summary files are emitted, the summary JSON and governance report are persisted before the ledger row is appended.
 - Ledger entries record manifest hash, contract version, result counts, error-class counts, decision-algebra totals, cross-case diagnostics, case deltas, recommendation transitions, gate status, and optional notes/operator metadata.
 - No fake history is backfilled. The ledger is current-forward only.
 
