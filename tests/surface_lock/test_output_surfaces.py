@@ -231,8 +231,8 @@ def test_canonical_output_surfaces_are_present_typed_and_ordered(case: dict):
         assert result["pack_id"] == "clinical_pack"
         assert result["applicability"] == "applicable"
         assert result["status"] == "pass"
-        assert loaded_pack["resolved_repo_root"].endswith("fixtures\\external_packs\\apr-pack-clinical")
-        assert loaded_pack["manifest_path"].endswith("fixtures\\external_packs\\apr-pack-clinical\\pack.yaml")
+        assert Path(loaded_pack["resolved_repo_root"]).as_posix().endswith("fixtures/external_packs/apr-pack-clinical")
+        assert Path(loaded_pack["manifest_path"]).as_posix().endswith("fixtures/external_packs/apr-pack-clinical/pack.yaml")
         assert fingerprint["pack_id"] == "clinical_pack"
         assert fingerprint["manifest_sha256"] == loaded_pack["manifest_sha256"]
         assert result["advisory_fields"]["clinical_readiness"]["endpoint_surface_visible"] is True

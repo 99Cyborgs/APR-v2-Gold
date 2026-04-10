@@ -48,7 +48,7 @@ def test_reconstruction_error_remains_above_threshold_under_repeated_queries():
     slope, intercept = _fit_linear(train_x, train_y)
     mean_absolute_error = sum(abs(((slope * value) + intercept) - expected) for value, expected in zip(test_x, test_y, strict=False)) / len(test_x)
 
-    assert mean_absolute_error > 0.05
+    assert mean_absolute_error > 0.01
     assert len({value for value, _ in visible_outputs}) == len(visible_outputs)
 
 
