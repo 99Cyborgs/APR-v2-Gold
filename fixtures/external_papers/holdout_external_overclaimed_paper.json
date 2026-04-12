@@ -1,0 +1,33 @@
+{
+  "audit_mode": "full",
+  "manuscript_id": "external-holdout-overclaim-001",
+  "title": "A transformative universal model for all shoreline erosion dynamics",
+  "abstract": "We present a transformative universal model for all shoreline erosion dynamics and show a small improvement on one regional simulation archive relative to the current baseline. The manuscript claims immediate policy relevance across all coasts.",
+  "manuscript_text": "We test one model on one regional simulation archive. Figure 1 shows a modest improvement relative to the baseline, but Table 1 does not report uncertainty intervals, comparator stress tests, or failure conditions. The manuscript argues that the model should transform shoreline planning across all coasts.",
+  "figures_and_captions": [
+    "Figure 1. Modest improvement relative to the baseline on one regional archive."
+  ],
+  "tables": [
+    "Table 1. One summary metric for the regional simulation archive."
+  ],
+  "references": [
+    "Ref1 shoreline simulation baseline.",
+    "Ref2 erosion forecasting overview."
+  ],
+  "supplement_or_appendix": null,
+  "target_venue": "Global Climate Systems",
+  "target_audience": "climate-model reviewers",
+  "outlet_profile_hint": "nature_selective",
+  "declared_article_type": "theory_or_model",
+  "data_availability": "Data release pending regional agreement.",
+  "code_availability": null,
+  "materials_availability": null,
+  "ethics_and_disclosures": "The authors declare no competing interests.",
+  "reporting_checklist": null,
+  "prior_reviews": null,
+  "author_response_to_reviews": null,
+  "reviewer_notes": null,
+  "external_constraints": [
+    "Synthetic external-paper calibration fixture."
+  ]
+}

@@ -1,0 +1,35 @@
+{
+  "audit_mode": "full",
+  "manuscript_id": "external-strong-clear-001",
+  "title": "A transparent calibration protocol for airborne methane sensors",
+  "abstract": "We present a calibration protocol for airborne methane sensors and show that it reduces drift by 14% relative to the current baseline across three field deployments. The manuscript names the failure regime during sustained humidity spikes, reports uncertainty intervals, and releases code and data.",
+  "manuscript_text": "We benchmark the protocol across three airborne methane surveys using the same reference gas workflow. Table 1 reports pre-calibration and post-calibration error with confidence intervals. Figure 1 shows drift reduction for each deployment, and Figure 2 shows the humidity-driven failure regime above 88% relative humidity. The method should not be used outside the validated humidity window. We compare against the current baseline and document the open data, code, and materials pathway.",
+  "figures_and_captions": [
+    "Figure 1. Drift reduction across the three airborne deployments after calibration.",
+    "Figure 2. Failure regime observed during sustained humidity spikes above 88% relative humidity."
+  ],
+  "tables": [
+    "Table 1. Pre-calibration and post-calibration error with confidence intervals."
+  ],
+  "references": [
+    "Ref1 baseline airborne methane calibration workflow.",
+    "Ref2 field validation protocol for mobile gas sensing.",
+    "Ref3 uncertainty reporting for atmospheric sensor calibration."
+  ],
+  "supplement_or_appendix": "Appendix A lists deployment settings, calibration gas composition, and instrument intervals.",
+  "target_venue": "Environmental Instrumentation Letters",
+  "target_audience": "measurement scientists and field-instrumentation reviewers",
+  "outlet_profile_hint": null,
+  "declared_article_type": "methods_or_tools",
+  "data_availability": "Field deployment data are archived in a public repository.",
+  "code_availability": "Calibration scripts are archived in a public repository.",
+  "materials_availability": "Reference gas workflow and materials list are included in the appendix.",
+  "ethics_and_disclosures": "The authors declare no competing interests.",
+  "reporting_checklist": null,
+  "prior_reviews": null,
+  "author_response_to_reviews": null,
+  "reviewer_notes": null,
+  "external_constraints": [
+    "Synthetic external-paper calibration fixture."
+  ]
+}

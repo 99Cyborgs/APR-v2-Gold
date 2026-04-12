@@ -1,0 +1,34 @@
+{
+  "audit_mode": "full",
+  "manuscript_id": "external-null-replication-001",
+  "title": "Replication of a reported catalyst-speedup effect under preregistered null conditions",
+  "abstract": "We replicate a reported catalyst-speedup effect under preregistered null conditions and show that the effect does not persist relative to the original baseline assay. The manuscript emphasizes constraint, replication logic, and transparent reporting.",
+  "manuscript_text": "We rerun the original assay with the preregistered null workflow and the same baseline catalyst conditions. Table 1 reports the replicated speed measurements and uncertainty intervals. Figure 1 shows that the originally reported effect does not persist under the replication workflow. We release the assay protocol, raw tables, and analysis scripts.",
+  "figures_and_captions": [
+    "Figure 1. Replication result showing that the reported speedup does not persist."
+  ],
+  "tables": [
+    "Table 1. Replicated speed measurements with uncertainty intervals."
+  ],
+  "references": [
+    "Ref1 original catalyst-speedup claim.",
+    "Ref2 preregistered null workflow.",
+    "Ref3 replication reporting guidance."
+  ],
+  "supplement_or_appendix": "Appendix A includes the preregistered assay workflow and release checklist.",
+  "target_venue": "Soundness-first Chemistry Reports",
+  "target_audience": "chemical methods and replication reviewers",
+  "outlet_profile_hint": "soundness_first_journal",
+  "declared_article_type": "replication_or_validation",
+  "data_availability": "Raw assay tables are publicly archived.",
+  "code_availability": "Analysis scripts are publicly archived.",
+  "materials_availability": "Assay workflow and catalyst sourcing details are in the appendix.",
+  "ethics_and_disclosures": "The authors declare no competing interests.",
+  "reporting_checklist": null,
+  "prior_reviews": null,
+  "author_response_to_reviews": null,
+  "reviewer_notes": null,
+  "external_constraints": [
+    "Synthetic external-paper calibration fixture."
+  ]
+}

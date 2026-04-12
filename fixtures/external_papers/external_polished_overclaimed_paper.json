@@ -1,0 +1,33 @@
+{
+  "audit_mode": "full",
+  "manuscript_id": "external-overclaim-001",
+  "title": "A universal forecasting framework for all urban flood regimes",
+  "abstract": "We present a universal forecasting framework for all urban flood regimes and show a 3% improvement relative to the municipal baseline on one retrospective archive. The manuscript argues that the framework should transform flood response practice across all future cities.",
+  "manuscript_text": "We benchmark one recurrent model on a single city archive. Figure 1 shows a 3% improvement versus the municipal baseline, while Table 1 reports one summary metric without uncertainty intervals or failure conditions. The paper argues that the framework should generalize to all urban basins and future hazard scenarios. Code release is planned after publication.",
+  "figures_and_captions": [
+    "Figure 1. Retrospective score improvement for one city archive."
+  ],
+  "tables": [
+    "Table 1. One summary metric for the retrospective archive."
+  ],
+  "references": [
+    "Ref1 municipal flood baseline.",
+    "Ref2 recurrent forecasting overview."
+  ],
+  "supplement_or_appendix": null,
+  "target_venue": "Broad Impact Computing",
+  "target_audience": "applied machine learning reviewers",
+  "outlet_profile_hint": "nature_selective",
+  "declared_article_type": "methods_or_tools",
+  "data_availability": "Data release pending municipal approval.",
+  "code_availability": "Code release planned after publication.",
+  "materials_availability": null,
+  "ethics_and_disclosures": "The authors declare no competing interests.",
+  "reporting_checklist": null,
+  "prior_reviews": null,
+  "author_response_to_reviews": null,
+  "reviewer_notes": null,
+  "external_constraints": [
+    "Synthetic external-paper calibration fixture."
+  ]
+}

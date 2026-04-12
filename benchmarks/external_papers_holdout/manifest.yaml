@@ -1,0 +1,58 @@
+manifest_version: 1.0.0
+contract_version: 2.1.0
+case_root: ../../fixtures/external_papers
+strata:
+  - name: stress_gold
+    description: Holdout synthetic external-paper calibration cases kept out of development tuning.
+    default_gate_behavior: monitor
+    include_in_regression_gate: false
+cases:
+  - case_id: holdout_external_narrow_specialist_paper
+    split: holdout
+    stratum: stress_gold
+    partition: external_dissection_holdout
+    category: holdout_narrow_specialist
+    case_state: active
+    gate_behavior: monitor
+    input: holdout_external_narrow_specialist_paper.json
+    pack_paths: []
+    expected:
+      exact:
+        parsing.central_claim: We derive a narrow correction for ion-beam mirror jitter in one optics geometry and show improved stability in one validated operating window relative to the standard mirror model.
+    expected_external:
+      context_type: journal_referee
+      first_hard_object_kind: equation_or_formal_object
+      decisive_support_object_kind: figure
+    required_nonempty_paths:
+      - parsing.central_claim_anchor
+    rationale: Hidden narrow specialist case for dissection holdout.
+    tags:
+      - external_paper
+      - holdout
+      - narrow_specialist
+    ambiguity_class: none
+
+  - case_id: holdout_external_overclaimed_paper
+    split: holdout
+    stratum: stress_gold
+    partition: external_dissection_holdout
+    category: holdout_overclaimed
+    case_state: active
+    gate_behavior: monitor
+    input: holdout_external_overclaimed_paper.json
+    pack_paths: []
+    expected:
+      exact:
+        parsing.central_claim: We present a transformative universal model for all shoreline erosion dynamics and show a small improvement on one regional simulation archive relative to the current baseline.
+    expected_external:
+      context_type: phd_defense_committee
+      first_hard_object_kind: table
+      decisive_support_object_kind: figure
+    required_nonempty_paths:
+      - parsing.central_claim_anchor
+    rationale: Hidden overclaim case for external-paper holdout drift visibility.
+    tags:
+      - external_paper
+      - holdout
+      - overclaim
+    ambiguity_class: none

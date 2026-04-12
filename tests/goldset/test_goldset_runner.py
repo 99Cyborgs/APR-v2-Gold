@@ -29,6 +29,8 @@ import apr_core.goldset.runner as goldset_runner  # noqa: E402
 
 DEV_MANIFEST = ROOT / "benchmarks" / "goldset_dev" / "manifest.yaml"
 HOLDOUT_MANIFEST = ROOT / "benchmarks" / "goldset_holdout" / "manifest.yaml"
+EXTERNAL_DEV_MANIFEST = ROOT / "benchmarks" / "external_papers_dev" / "manifest.yaml"
+EXTERNAL_HOLDOUT_MANIFEST = ROOT / "benchmarks" / "external_papers_holdout" / "manifest.yaml"
 
 
 def _write_manifest(tmp_path: Path, manifest: dict) -> Path:
@@ -46,6 +48,16 @@ def test_goldset_manifest_passes_schema_validation():
     assert all(case["claim_type"] for case in manifest["cases"])
     assert all("recommendation_band" in case["expected_decision"] for case in manifest["cases"])
     assert {case["split"] for case in manifest["cases"]} == {"dev"}
+
+
+def test_external_paper_manifest_passes_schema_validation():
+    manifest = load_goldset_manifest(EXTERNAL_DEV_MANIFEST)
+    validate(instance=manifest, schema=load_goldset_manifest_schema())
+
+    assert len(manifest["cases"]) == 6
+    assert all(case["partition"] == "external_dissection_calibration" for case in manifest["cases"])
+    assert all(case["expected_external"]["first_hard_object_kind"] for case in manifest["cases"])
+    assert all(case["expected_external"]["decisive_support_object_kind"] for case in manifest["cases"])
 
 
 def test_goldset_runner_passes_fixture_manifest_and_emits_governance_fields():
@@ -72,6 +84,26 @@ def test_goldset_runner_passes_fixture_manifest_and_emits_governance_fields():
     assert summary["strata"]["stress_gold"]["total"] == 10
     assert "holdout" not in summary["strata"]
     assert summary["case_deltas"]["available"] is False
+
+
+def test_external_paper_lane_runs_and_holdout_masks_external_dissection():
+    development = run_goldset_manifest(EXTERNAL_DEV_MANIFEST)
+    holdout = run_goldset_manifest(EXTERNAL_HOLDOUT_MANIFEST, holdout_eval=True)
+
+    assert development["failed"] == 0
+    assert development["external_dissection_summary"]["available"] is True
+    assert development["external_dissection_summary"]["passed_case_count"] == development["total_cases"]
+    assert development["external_dissection_summary"]["metric_means"]["central_claim_token_f1"] == 1.0
+    assert development["external_dissection_summary"]["metric_means"]["decisive_support_object_kind_match"] == 1.0
+
+    assert holdout["evaluation_mode"] == "holdout_blind"
+    assert holdout["total_cases"] == 2
+    assert holdout["external_dissection_summary"]["available"] is False
+    assert holdout["external_dissection_summary"]["case_count"] == 2
+    assert holdout["external_dissection_summary"]["metric_means"] == {}
+    assert all(case["external_dissection"]["status"] == "masked_holdout" for case in holdout["cases"])
+    assert all(case["external_dissection"]["expected"] == {} for case in holdout["cases"])
+    assert all(case["external_dissection"]["observed"] == {} for case in holdout["cases"])
 
 
 def test_goldset_runner_writes_valid_calibration_ledger(tmp_path: Path):

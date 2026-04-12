@@ -26,7 +26,8 @@
     "recommendation_changes_vs_prior",
     "gates",
     "prior_run",
-    "calibration_ledger"
+    "calibration_ledger",
+    "external_dissection_summary"
   ],
   "properties": {
     "manifest_version": {
@@ -224,6 +225,9 @@
         "type": "integer",
         "minimum": 0
       }
+    },
+    "external_dissection_summary": {
+      "$ref": "#/$defs/externalDissectionSummary"
     }
   },
   "$defs": {
@@ -662,6 +666,99 @@
         }
       }
     },
+    "externalDissection": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "available"
+      ],
+      "properties": {
+        "available": {
+          "type": "boolean"
+        },
+        "status": {
+          "type": "string"
+        },
+        "expected": {
+          "type": "object"
+        },
+        "observed": {
+          "type": "object"
+        },
+        "metrics": {
+          "type": "object",
+          "additionalProperties": {
+            "type": [
+              "number",
+              "boolean"
+            ]
+          }
+        },
+        "mismatches": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "field",
+              "expected",
+              "actual",
+              "metric"
+            ],
+            "properties": {
+              "field": {
+                "type": "string"
+              },
+              "expected": {},
+              "actual": {},
+              "metric": {
+                "type": "number"
+              }
+            }
+          }
+        },
+        "error_classes": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "externalDissectionSummary": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "available",
+        "case_count",
+        "passed_case_count",
+        "failed_case_count",
+        "metric_means"
+      ],
+      "properties": {
+        "available": {
+          "type": "boolean"
+        },
+        "case_count": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "passed_case_count": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "failed_case_count": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "metric_means": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "number"
+          }
+        }
+      }
+    },
     "primitiveOrNull": {
       "type": [
         "string",
@@ -815,6 +912,9 @@
           "items": {
             "type": "string"
           }
+        },
+        "external_dissection": {
+          "$ref": "#/$defs/externalDissection"
         },
         "error_classes": {
           "type": "array",

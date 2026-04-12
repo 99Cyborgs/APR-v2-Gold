@@ -1,0 +1,123 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://apr-v2.local/contracts/active/question_registry.schema.json",
+  "title": "QuestionRegistry",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["registry_type", "schema_version", "entries"],
+  "properties": {
+    "registry_type": { "const": "QuestionRegistry" },
+    "schema_version": { "const": "1.0.0" },
+    "entries": {
+      "type": "array",
+      "items": { "$ref": "#/$defs/entry" }
+    }
+  },
+  "$defs": {
+    "contextType": {
+      "type": "string",
+      "enum": [
+        "phd_defense_committee",
+        "dissertation_proposal_committee",
+        "departmental_research_review",
+        "journal_referee",
+        "ethics_or_compliance_board"
+      ]
+    },
+    "riskCategory": {
+      "type": "string",
+      "enum": [
+        "central_claim_clarity_risk",
+        "novelty_positioning_risk",
+        "literature_gap_risk",
+        "method_legibility_risk",
+        "evidence_alignment_risk",
+        "overclaim_risk",
+        "comparator_or_control_risk",
+        "reproducibility_risk",
+        "statistics_or_uncertainty_risk",
+        "scope_inflation_risk",
+        "limitations_acknowledgment_risk",
+        "ethics_or_provenance_risk",
+        "defense_question_pressure_risk"
+      ]
+    },
+    "questionCategory": {
+      "type": "string",
+      "enum": [
+        "central_question_and_significance",
+        "novelty_relative_to_nearest_prior_work",
+        "assumptions_and_theoretical_framing",
+        "method_choice_and_alternatives",
+        "dataset_sample_or_experimental_design",
+        "controls_and_baselines",
+        "uncertainty_statistics_and_robustness",
+        "interpretation_vs_alternative_explanations",
+        "limitations_and_failure_conditions",
+        "reproducibility_and_transparency",
+        "ethics_and_provenance",
+        "contribution_future_work_and_next_experiment"
+      ]
+    },
+    "entry": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "question_id",
+        "contexts",
+        "category",
+        "canonical_question_text",
+        "why_boards_ask_it",
+        "trigger_conditions",
+        "expected_answer_ingredients",
+        "linked_risk_families"
+      ],
+      "properties": {
+        "question_id": { "type": "string" },
+        "contexts": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/contextType" }
+        },
+        "category": { "$ref": "#/$defs/questionCategory" },
+        "canonical_question_text": { "type": "string" },
+        "why_boards_ask_it": { "type": "string" },
+        "trigger_conditions": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "risk_categories",
+            "minimum_risk_score",
+            "always_include",
+            "article_types",
+            "only_when_applicable"
+          ],
+          "properties": {
+            "risk_categories": {
+              "type": "array",
+              "items": { "$ref": "#/$defs/riskCategory" }
+            },
+            "minimum_risk_score": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 100
+            },
+            "always_include": { "type": "boolean" },
+            "article_types": {
+              "type": "array",
+              "items": { "type": "string" }
+            },
+            "only_when_applicable": { "type": "boolean" }
+          }
+        },
+        "expected_answer_ingredients": {
+          "type": "array",
+          "items": { "type": "string" }
+        },
+        "linked_risk_families": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/riskCategory" }
+        }
+      }
+    }
+  }
+}

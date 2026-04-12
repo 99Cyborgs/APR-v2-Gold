@@ -1,0 +1,28 @@
+{
+  "audit_mode": "full",
+  "manuscript_id": "external-method-weak-001",
+  "title": "A promising screening workflow for coral disease detection",
+  "abstract": "We propose a promising workflow for coral disease detection and report encouraging early performance on a small convenience sample. The manuscript does not yet define the final protocol, uncertainty treatment, or reproducibility pathway.",
+  "manuscript_text": "We describe a screening workflow and report one encouraging result. The current manuscript does not include a stable protocol, a decisive figure, a comparator rationale, or an uncertainty interval. The text argues that the workflow should be useful in many reef systems, but the operational boundary remains provisional.",
+  "figures_and_captions": [],
+  "tables": [],
+  "references": [
+    "Ref1 coral disease screening overview."
+  ],
+  "supplement_or_appendix": null,
+  "target_venue": "Marine Methods Notes",
+  "target_audience": "marine-methods reviewers",
+  "outlet_profile_hint": "specialist_research_journal",
+  "declared_article_type": "methods_or_tools",
+  "data_availability": null,
+  "code_availability": null,
+  "materials_availability": null,
+  "ethics_and_disclosures": "The authors declare no competing interests.",
+  "reporting_checklist": null,
+  "prior_reviews": null,
+  "author_response_to_reviews": null,
+  "reviewer_notes": null,
+  "external_constraints": [
+    "Synthetic external-paper calibration fixture."
+  ]
+}

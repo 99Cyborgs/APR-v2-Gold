@@ -14,6 +14,14 @@
 
 Every downstream consumer, including markdown rendering and gold-set evaluation, reads this object. No renderer is permitted to reinterpret or replace the semantic meaning of any canonical field.
 
+Derived review layers remain sibling artifacts rather than canonical extensions:
+
+- `DefenseReadinessRecord`
+- `QuestionChallengeRecord`
+- `PdfAnnotationManifest`
+
+These records may cite canonical field paths and evidence anchors, but they must not redefine or overwrite canonical recommendation semantics.
+
 The canonical provenance block is now intentionally replay-oriented and audit-bounded:
 
 - `processing_states_completed` stops at `PACKS_EXECUTED`; rendering remains downstream-only.

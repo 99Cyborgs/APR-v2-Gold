@@ -1,0 +1,34 @@
+{
+  "audit_mode": "full",
+  "manuscript_id": "external-defense-vulnerable-001",
+  "title": "A bedside triage model for neonatal deterioration alerts",
+  "abstract": "We report a bedside triage model for neonatal deterioration alerts and show faster alerting than routine review in one monitored unit. The manuscript claims general deployment readiness but leaves comparator logic, uncertainty treatment, and ethics provenance partially implicit.",
+  "manuscript_text": "We evaluate one bedside triage model in a single monitored unit. Figure 1 shows faster alerting for one cohort, but Table 1 reports only summary timing without confidence intervals or ablation logic. The manuscript argues that the model is ready for wider hospital deployment. Ethics language is brief, and the current text does not explain what alternative explanation or control would most weaken the claim.",
+  "figures_and_captions": [
+    "Figure 1. Faster alerting in one monitored neonatal unit."
+  ],
+  "tables": [
+    "Table 1. Summary alert timing for the monitored cohort."
+  ],
+  "references": [
+    "Ref1 routine overnight review baseline.",
+    "Ref2 neonatal triage cohort study.",
+    "Ref3 hospital-alert ethics guidance."
+  ],
+  "supplement_or_appendix": "Appendix A lists the monitored-unit inclusion criteria.",
+  "target_venue": "Clinical Decision Review",
+  "target_audience": "clinical decision-support reviewers and hospital boards",
+  "outlet_profile_hint": "specialist_research_journal",
+  "declared_article_type": "original_research",
+  "data_availability": "Deidentified summary tables are available on request.",
+  "code_availability": null,
+  "materials_availability": "Monitoring rules are summarized in the appendix.",
+  "ethics_and_disclosures": "The project was reviewed under hospital quality-improvement policy.",
+  "reporting_checklist": null,
+  "prior_reviews": null,
+  "author_response_to_reviews": null,
+  "reviewer_notes": null,
+  "external_constraints": [
+    "Synthetic external-paper calibration fixture."
+  ]
+}

@@ -21,10 +21,13 @@ from typing import Any
 import yaml
 from jsonschema import Draft202012Validator, validate
 
+from apr_core.defense_readiness import build_defense_readiness_record
 from apr_core.goldset.governance import governance_router
 from apr_core.goldset.governance import surface_contract as governance_surface_contract
+from apr_core.goldset.external_dissection import evaluate_external_dissection, summarize_external_dissection
 from apr_core.pipeline import ACTIVE_CONTRACT_ROOT, BOOTSTRAP_ENTRYPOINT, CORE_RUNTIME_ROOT, run_audit
 from apr_core.policy import load_canonical_record_schema, load_contract_manifest, load_policy_layer
+from apr_core.question_generation import build_question_challenge_record
 from apr_core.utils import (
     append_jsonl_atomic,
     get_by_path,
@@ -146,6 +149,14 @@ ERROR_CLASS_SEVERITY_WEIGHTS = {
     "wrong_article_type": 3,
     "wrong_domain_module": 3,
     "wrong_outlet_profile": 2,
+    "wrong_external_central_claim": 3,
+    "wrong_external_novelty_delta": 3,
+    "wrong_external_first_hard_object_kind": 3,
+    "wrong_external_decisive_support_object_kind": 3,
+    "wrong_external_risk_family": 2,
+    "wrong_external_question_family": 2,
+    "wrong_external_strength_anchor": 2,
+    "wrong_external_weakness_anchor": 2,
     "ambiguous_case_mismatch": 1,
     "underspecified_expectation": 1,
 }
@@ -387,6 +398,14 @@ ERROR_CLASS_MAP = {
     "wrong_venue_routing_state": "semantic",
     "wrong_human_escalation_state": "semantic",
     "wrong_integrity_status": "semantic",
+    "wrong_external_central_claim": "semantic",
+    "wrong_external_novelty_delta": "semantic",
+    "wrong_external_first_hard_object_kind": "semantic",
+    "wrong_external_decisive_support_object_kind": "semantic",
+    "wrong_external_risk_family": "semantic",
+    "wrong_external_question_family": "semantic",
+    "wrong_external_strength_anchor": "structural",
+    "wrong_external_weakness_anchor": "structural",
     "false_accept_on_fatal_case": "semantic",
     "missed_fatal_gate": "semantic",
     "hallucinated_fatal_gate": "semantic",
@@ -1348,6 +1367,8 @@ def _normalize_manifest(raw_manifest: dict[str, Any]) -> dict[str, Any]:
             "expected_decision": expected_decision,
             "expected": {"exact": exact},
         }
+        if "expected_external" in raw_case:
+            case["expected_external"] = dict(raw_case.get("expected_external") or {})
         if "input" in raw_case:
             case["input"] = raw_case.get("input")
         if "recommendation_band" in expected:
@@ -1394,7 +1415,11 @@ def validate_goldset_manifest(manifest: dict[str, Any], *, manifest_path: Path |
         if case["split"] not in {DEV_SPLIT, HOLDOUT_SPLIT}:
             errors.append(f"case {case_id} has unsupported split {case['split']}")
 
-        has_expectation = bool(case["expected"].get("exact")) or bool(case["expected"].get("recommendation_band"))
+        has_expectation = (
+            bool(case["expected"].get("exact"))
+            or bool(case["expected"].get("recommendation_band"))
+            or bool(case.get("expected_external"))
+        )
         has_required_paths = bool(case.get("required_nonempty_paths"))
         if case["case_state"] == "active":
             if not case.get("input"):
@@ -1956,6 +1981,16 @@ def _redact_holdout_result(result: dict[str, Any]) -> dict[str, Any]:
     redacted["editorial_forecast"] = None
     redacted["author_recommendation"] = None
     redacted["decision_consistency_status"] = "masked_holdout"
+    if "external_dissection" in redacted:
+        redacted["external_dissection"] = {
+            "available": bool(redacted["external_dissection"].get("available")),
+            "status": "masked_holdout",
+            "expected": {},
+            "observed": {},
+            "metrics": {},
+            "mismatches": [],
+            "error_classes": [],
+        }
     redacted["drift_counterfactual"] = None
     redacted["drift_counterfactuals"] = []
     redacted["drift_counterfactual_stability"] = None
@@ -2115,12 +2150,23 @@ def _evaluate_case(
     merged_pack_paths = [*case_pack_paths, *(extra_pack_paths or [])]
     governance_router.validate_input_surface_contract(payload, governance)
     record = run_audit(payload, pack_paths=merged_pack_paths)
+    external_dissection = {"available": False}
+    if case.get("expected_external"):
+        external_context = case["expected_external"].get("context_type", "phd_defense_committee")
+        defense_record = build_defense_readiness_record(record, payload=payload, context_type=external_context)
+        question_record = build_question_challenge_record(
+            record,
+            defense_record=defense_record,
+            context_type=external_context,
+        )
+        external_dissection = evaluate_external_dissection(case, record, defense_record, question_record)
 
     mismatches = _compare_exact_expectations(case, record)
     missing_required_paths = _missing_required_paths(case, record)
     observed = _summarize_observed_surface(record)
     error_classes = _contextual_error_classes(case, observed, mismatches, missing_required_paths, record)
-    ok = not mismatches and not missing_required_paths
+    error_classes = sorted({*error_classes, *external_dissection.get("error_classes", [])})
+    ok = not mismatches and not missing_required_paths and external_dissection.get("status", "pass") == "pass"
     editorial_first_pass = _build_editorial_first_pass(payload)
     decision_metrics = _build_case_decision_metrics(
         case,
@@ -2152,6 +2198,7 @@ def _evaluate_case(
         "mismatches": mismatches,
         "missing_required_paths": missing_required_paths,
         "error_classes": error_classes,
+        "external_dissection": external_dissection,
         "decision_recommendation": observed["decision.recommendation"],
         "editorial_first_pass": editorial_first_pass,
         **decision_metrics,
@@ -3636,6 +3683,13 @@ def _build_public_holdout_summary(
             "passed": masked_result_type_counts.get("pass", 0),
             "failed": masked_result_type_counts.get("fail", 0),
             "result_type_counts": dict(sorted(masked_result_type_counts.items())),
+            "external_dissection_summary": {
+                "available": False,
+                "case_count": summary["external_dissection_summary"]["case_count"],
+                "passed_case_count": 0,
+                "failed_case_count": 0,
+                "metric_means": {},
+            },
             "cases": redacted_cases,
         }
 
@@ -3665,6 +3719,13 @@ def _build_public_holdout_summary(
             "available": False,
             "total_changed_cases": 0,
             "by_transition": {},
+        },
+        "external_dissection_summary": {
+            "available": False,
+            "case_count": summary["external_dissection_summary"]["case_count"],
+            "passed_case_count": 0,
+            "failed_case_count": 0,
+            "metric_means": {},
         },
         "calibration_export": {
             "available": False,
@@ -3714,6 +3775,7 @@ def _build_ledger_entry(
         "editorial_first_pass_score": summary["editorial_first_pass_score"],
         "editorial_plausibility_flags": summary["editorial_plausibility_flags"],
         "editorial_anomalies": summary["editorial_anomalies"],
+        "external_dissection_summary": summary["external_dissection_summary"],
         "governance_report": summary["governance_report"],
         "calibration_export": summary["calibration_export"],
         "system_diagnostics": summary["system_diagnostics"],
@@ -3761,6 +3823,7 @@ def _build_ledger_entry(
                 "editorial_plausibility_flags": case["editorial_plausibility_flags"],
                 "editorial_first_pass": case["editorial_first_pass"],
                 "editorial_anomalies": case["editorial_anomalies"],
+                "external_dissection": case.get("external_dissection", {"available": False}),
                 **governance_router.export_governance_fields(case),
             }
             for case in summary["cases"]
@@ -3932,6 +3995,7 @@ def run_goldset_manifest(
     editorial_first_pass_score = _build_editorial_first_pass_summary(case_results)
     editorial_plausibility_flags = _count_editorial_plausibility_flags(case_results)
     editorial_anomalies = _count_editorial_anomaly_triggers(case_results)
+    external_dissection_summary = summarize_external_dissection(case_results)
     system_diagnostics = _build_system_diagnostics(
         case_results,
         baseline_entries,
@@ -3983,6 +4047,7 @@ def run_goldset_manifest(
         "editorial_first_pass_score": editorial_first_pass_score,
         "editorial_plausibility_flags": editorial_plausibility_flags,
         "editorial_anomalies": editorial_anomalies,
+        "external_dissection_summary": external_dissection_summary,
         "governance_report": governance_report,
         "cases": case_results,
         "calibration_export": _build_calibration_export(case_results, governance),

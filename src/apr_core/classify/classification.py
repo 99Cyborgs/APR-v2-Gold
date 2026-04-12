@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import re
 from typing import Any
 
 ARTICLE_TYPES = (
@@ -59,6 +60,12 @@ def _text(payload: dict[str, Any]) -> str:
             ],
         )
     ).lower()
+
+
+def _contains_term(text: str, term: str) -> bool:
+    if " " in term:
+        return term in text
+    return re.search(rf"\b{re.escape(term)}\b", text) is not None
 
 
 def _article_type(payload: dict[str, Any], text: str) -> str:
@@ -122,7 +129,10 @@ def _outlet_profile(payload: dict[str, Any], text: str) -> str:
 
 
 def _domain_module(article_type: str, claim_type: str, text: str) -> str:
-    if any(token in text for token in ["patient", "cohort", "clinical", "irb", "ethics approval", "retrospective"]):
+    clinical_tokens = ["patient", "cohort", "clinical", "irb", "ethics approval", "consent", "participants", "ward"]
+    if any(_contains_term(text, token) for token in clinical_tokens) or (
+        _contains_term(text, "retrospective") and any(_contains_term(text, token) for token in clinical_tokens)
+    ):
         return "clinical_or_human_subjects"
     if article_type in {"review", "systematic_review"}:
         return "review_synthesis"
