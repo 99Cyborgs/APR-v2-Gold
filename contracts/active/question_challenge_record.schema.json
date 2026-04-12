@@ -1,0 +1,176 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://apr-v2.local/contracts/active/question_challenge_record.schema.json",
+  "title": "QuestionChallengeRecord",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "artifact_type",
+    "schema_version",
+    "context_type",
+    "source",
+    "questions",
+    "summary",
+    "provenance"
+  ],
+  "properties": {
+    "artifact_type": { "const": "QuestionChallengeRecord" },
+    "schema_version": { "const": "1.0.0" },
+    "context_type": {
+      "type": "string",
+      "enum": [
+        "phd_defense_committee",
+        "dissertation_proposal_committee",
+        "departmental_research_review",
+        "journal_referee",
+        "ethics_or_compliance_board"
+      ]
+    },
+    "source": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "manuscript_id",
+        "title",
+        "canonical_record_sha256",
+        "defense_record_sha256",
+        "registry_sha256"
+      ],
+      "properties": {
+        "manuscript_id": { "type": ["string", "null"] },
+        "title": { "type": ["string", "null"] },
+        "canonical_record_sha256": { "type": "string" },
+        "defense_record_sha256": { "type": "string" },
+        "registry_sha256": { "type": "string" }
+      }
+    },
+    "questions": {
+      "type": "array",
+      "items": { "$ref": "#/$defs/questionItem" }
+    },
+    "summary": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "question_count",
+        "high_risk_question_count",
+        "answerability_counts",
+        "summary"
+      ],
+      "properties": {
+        "question_count": { "type": "integer", "minimum": 0 },
+        "high_risk_question_count": { "type": "integer", "minimum": 0 },
+        "answerability_counts": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["answered", "weak", "missing", "not_applicable"],
+          "properties": {
+            "answered": { "type": "integer", "minimum": 0 },
+            "weak": { "type": "integer", "minimum": 0 },
+            "missing": { "type": "integer", "minimum": 0 },
+            "not_applicable": { "type": "integer", "minimum": 0 }
+          }
+        },
+        "summary": { "type": "string" }
+      }
+    },
+    "provenance": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "generated_at_utc",
+        "runtime_version",
+        "source_contract_version",
+        "source_policy_layer_version"
+      ],
+      "properties": {
+        "generated_at_utc": { "type": "string", "format": "date-time" },
+        "runtime_version": { "type": "string" },
+        "source_contract_version": { "type": "string" },
+        "source_policy_layer_version": { "type": "string" }
+      }
+    }
+  },
+  "$defs": {
+    "anchor": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["location", "quote"],
+      "properties": {
+        "location": { "type": "string" },
+        "quote": { "type": "string" }
+      }
+    },
+    "questionItem": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "challenge_id",
+        "registry_question_id",
+        "question_text",
+        "category",
+        "why_this_manuscript_will_be_asked",
+        "targeted_claim_or_span",
+        "current_answerability",
+        "risk_if_asked",
+        "suggested_answer_ingredients",
+        "mitigation_or_prep_action",
+        "evidence_anchors",
+        "linked_risk_ids"
+      ],
+      "properties": {
+        "challenge_id": { "type": "string" },
+        "registry_question_id": { "type": "string" },
+        "question_text": { "type": "string" },
+        "category": {
+          "type": "string",
+          "enum": [
+            "central_question_and_significance",
+            "novelty_relative_to_nearest_prior_work",
+            "assumptions_and_theoretical_framing",
+            "method_choice_and_alternatives",
+            "dataset_sample_or_experimental_design",
+            "controls_and_baselines",
+            "uncertainty_statistics_and_robustness",
+            "interpretation_vs_alternative_explanations",
+            "limitations_and_failure_conditions",
+            "reproducibility_and_transparency",
+            "ethics_and_provenance",
+            "contribution_future_work_and_next_experiment"
+          ]
+        },
+        "why_this_manuscript_will_be_asked": { "type": "string" },
+        "targeted_claim_or_span": { "type": "string" },
+        "current_answerability": {
+          "type": "string",
+          "enum": ["answered", "weak", "missing", "not_applicable"]
+        },
+        "risk_if_asked": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["score", "severity"],
+          "properties": {
+            "score": { "type": "integer", "minimum": 0, "maximum": 100 },
+            "severity": {
+              "type": "string",
+              "enum": ["low", "moderate", "high", "critical"]
+            }
+          }
+        },
+        "suggested_answer_ingredients": {
+          "type": "array",
+          "items": { "type": "string" }
+        },
+        "mitigation_or_prep_action": { "type": "string" },
+        "evidence_anchors": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/anchor" }
+        },
+        "linked_risk_ids": {
+          "type": "array",
+          "items": { "type": "string" }
+        }
+      }
+    }
+  }
+}

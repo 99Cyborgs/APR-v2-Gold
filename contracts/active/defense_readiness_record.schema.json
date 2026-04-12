@@ -1,0 +1,222 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://apr-v2.local/contracts/active/defense_readiness_record.schema.json",
+  "title": "DefenseReadinessRecord",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "artifact_type",
+    "schema_version",
+    "context_type",
+    "overall_status",
+    "source",
+    "strength_anchors",
+    "weakness_anchors",
+    "risk_items",
+    "answerability_summary",
+    "recommended_mitigation_priorities",
+    "provenance"
+  ],
+  "properties": {
+    "artifact_type": { "const": "DefenseReadinessRecord" },
+    "schema_version": { "const": "1.0.0" },
+    "context_type": {
+      "type": "string",
+      "enum": [
+        "phd_defense_committee",
+        "dissertation_proposal_committee",
+        "departmental_research_review",
+        "journal_referee",
+        "ethics_or_compliance_board"
+      ]
+    },
+    "overall_status": {
+      "type": "string",
+      "enum": ["ready", "ready_with_mitigation", "vulnerable", "not_ready"]
+    },
+    "source": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "manuscript_id",
+        "title",
+        "canonical_record_sha256",
+        "payload_sha256",
+        "canonical_contract_version",
+        "canonical_policy_layer_version"
+      ],
+      "properties": {
+        "manuscript_id": { "type": ["string", "null"] },
+        "title": { "type": ["string", "null"] },
+        "canonical_record_sha256": { "type": "string" },
+        "payload_sha256": { "type": ["string", "null"] },
+        "canonical_contract_version": { "type": "string" },
+        "canonical_policy_layer_version": { "type": "string" }
+      }
+    },
+    "strength_anchors": {
+      "type": "array",
+      "items": { "$ref": "#/$defs/anchorAssessment" }
+    },
+    "weakness_anchors": {
+      "type": "array",
+      "items": { "$ref": "#/$defs/anchorAssessment" }
+    },
+    "risk_items": {
+      "type": "array",
+      "items": { "$ref": "#/$defs/riskItem" }
+    },
+    "answerability_summary": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["counts", "high_pressure_question_count", "summary"],
+      "properties": {
+        "counts": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["answered", "weak", "missing", "not_applicable"],
+          "properties": {
+            "answered": { "type": "integer", "minimum": 0 },
+            "weak": { "type": "integer", "minimum": 0 },
+            "missing": { "type": "integer", "minimum": 0 },
+            "not_applicable": { "type": "integer", "minimum": 0 }
+          }
+        },
+        "high_pressure_question_count": { "type": "integer", "minimum": 0 },
+        "summary": { "type": "string" }
+      }
+    },
+    "recommended_mitigation_priorities": {
+      "type": "array",
+      "items": { "$ref": "#/$defs/mitigationPriority" }
+    },
+    "provenance": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "generated_at_utc",
+        "runtime_version",
+        "source_contract_version",
+        "source_policy_layer_version"
+      ],
+      "properties": {
+        "generated_at_utc": { "type": "string", "format": "date-time" },
+        "runtime_version": { "type": "string" },
+        "source_contract_version": { "type": "string" },
+        "source_policy_layer_version": { "type": "string" }
+      }
+    }
+  },
+  "$defs": {
+    "anchor": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["location", "quote"],
+      "properties": {
+        "location": { "type": "string" },
+        "quote": { "type": "string" }
+      }
+    },
+    "anchorAssessment": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "anchor_id",
+        "label",
+        "summary",
+        "linked_canonical_field_paths",
+        "evidence_anchors"
+      ],
+      "properties": {
+        "anchor_id": { "type": "string" },
+        "label": { "type": "string" },
+        "summary": { "type": "string" },
+        "linked_canonical_field_paths": {
+          "type": "array",
+          "items": { "type": "string" }
+        },
+        "evidence_anchors": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/anchor" }
+        }
+      }
+    },
+    "riskItem": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "risk_id",
+        "category",
+        "score",
+        "severity",
+        "rationale",
+        "likely_attack_vector",
+        "expected_evidence_needed",
+        "current_answerability",
+        "mitigation_path",
+        "linked_canonical_field_paths",
+        "evidence_anchors"
+      ],
+      "properties": {
+        "risk_id": { "type": "string" },
+        "category": {
+          "type": "string",
+          "enum": [
+            "central_claim_clarity_risk",
+            "novelty_positioning_risk",
+            "literature_gap_risk",
+            "method_legibility_risk",
+            "evidence_alignment_risk",
+            "overclaim_risk",
+            "comparator_or_control_risk",
+            "reproducibility_risk",
+            "statistics_or_uncertainty_risk",
+            "scope_inflation_risk",
+            "limitations_acknowledgment_risk",
+            "ethics_or_provenance_risk",
+            "defense_question_pressure_risk"
+          ]
+        },
+        "score": { "type": "integer", "minimum": 0, "maximum": 100 },
+        "severity": {
+          "type": "string",
+          "enum": ["low", "moderate", "high", "critical"]
+        },
+        "rationale": { "type": "string" },
+        "likely_attack_vector": { "type": "string" },
+        "expected_evidence_needed": {
+          "type": "array",
+          "items": { "type": "string" }
+        },
+        "current_answerability": {
+          "type": "string",
+          "enum": ["answered", "weak", "missing", "not_applicable"]
+        },
+        "mitigation_path": { "type": "string" },
+        "linked_canonical_field_paths": {
+          "type": "array",
+          "items": { "type": "string" }
+        },
+        "evidence_anchors": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/anchor" }
+        }
+      }
+    },
+    "mitigationPriority": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["priority_rank", "title", "reason", "linked_risk_ids", "action"],
+      "properties": {
+        "priority_rank": { "type": "integer", "minimum": 1 },
+        "title": { "type": "string" },
+        "reason": { "type": "string" },
+        "linked_risk_ids": {
+          "type": "array",
+          "items": { "type": "string" }
+        },
+        "action": { "type": "string" }
+      }
+    }
+  }
+}

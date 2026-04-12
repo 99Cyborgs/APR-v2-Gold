@@ -1,0 +1,178 @@
+manifest_version: 1.0.0
+contract_version: 2.1.0
+case_root: ../../fixtures/external_papers
+strata:
+  - name: stress_gold
+    description: Synthetic external-paper calibration cases used for offline dissection scoring.
+    default_gate_behavior: monitor
+    include_in_regression_gate: false
+cases:
+  - case_id: external_strong_clear_paper
+    split: dev
+    stratum: stress_gold
+    partition: external_dissection_calibration
+    category: strong_clear_paper
+    case_state: active
+    gate_behavior: monitor
+    input: external_strong_clear_paper.json
+    pack_paths: []
+    expected:
+      exact:
+        parsing.central_claim: We present a calibration protocol for airborne methane sensors and show that it reduces drift by 14% relative to the current baseline across three field deployments.
+        classification.article_type: methods_or_tools
+        classification.claim_type: benchmark_claim
+    expected_external:
+      context_type: journal_referee
+      central_claim: We present a calibration protocol for airborne methane sensors and show that it reduces drift by 14% relative to the current baseline across three field deployments.
+      novelty_delta: We present a calibration protocol for airborne methane sensors and show that it reduces drift by 14% relative to the current baseline across three field deployments.
+      first_hard_object_kind: table
+      decisive_support_object_kind: table
+    required_nonempty_paths:
+      - parsing.central_claim_anchor
+      - parsing.decisive_support_object
+    rationale: Clear external paper with a bounded claim, visible support object, and transparent limitations.
+    tags:
+      - external_paper
+      - strong_clear
+    ambiguity_class: none
+
+  - case_id: external_polished_overclaimed_paper
+    split: dev
+    stratum: stress_gold
+    partition: external_dissection_calibration
+    category: polished_overclaimed_paper
+    case_state: active
+    gate_behavior: monitor
+    input: external_polished_overclaimed_paper.json
+    pack_paths: []
+    expected:
+      exact:
+        parsing.central_claim: We present a universal forecasting framework for all urban flood regimes and show a 3% improvement relative to the municipal baseline on one retrospective archive.
+        classification.article_type: methods_or_tools
+        classification.claim_type: benchmark_claim
+    expected_external:
+      context_type: phd_defense_committee
+      central_claim: We present a universal forecasting framework for all urban flood regimes and show a 3% improvement relative to the municipal baseline on one retrospective archive.
+      first_hard_object_kind: table
+      decisive_support_object_kind: table
+    required_nonempty_paths:
+      - parsing.central_claim_anchor
+      - claim_evidence_calibration.evidence_anchors
+    rationale: Overclaimed paper used to stress novelty, scope, and evidence-alignment recovery.
+    tags:
+      - external_paper
+      - overclaim
+    ambiguity_class: none
+
+  - case_id: external_narrow_specialist_paper
+    split: dev
+    stratum: stress_gold
+    partition: external_dissection_calibration
+    category: sound_narrow_specialist_paper
+    case_state: active
+    gate_behavior: monitor
+    input: external_narrow_specialist_paper.json
+    pack_paths: []
+    expected:
+      exact:
+        parsing.central_claim: We derive a cavity-specific correction term for cryogenic resonator drift and show that it improves stability in one experimentally relevant operating window relative to the standard control model.
+        classification.article_type: theory_or_model
+        classification.claim_type: model_claim
+    expected_external:
+      context_type: journal_referee
+      central_claim: We derive a cavity-specific correction term for cryogenic resonator drift and show that it improves stability in one experimentally relevant operating window relative to the standard control model.
+      first_hard_object_kind: equation_or_formal_object
+      decisive_support_object_kind: figure
+    required_nonempty_paths:
+      - parsing.central_claim_anchor
+      - parsing.first_hard_object
+    rationale: Sound narrow specialist paper used to verify that bounded specialist work is not collapsed into low-prestige failure.
+    tags:
+      - external_paper
+      - narrow_specialist
+    ambiguity_class: none
+
+  - case_id: external_null_replication_paper
+    split: dev
+    stratum: stress_gold
+    partition: external_dissection_calibration
+    category: null_replication_paper
+    case_state: active
+    gate_behavior: monitor
+    input: external_null_replication_paper.json
+    pack_paths: []
+    expected:
+      exact:
+        parsing.central_claim: We replicate a reported catalyst-speedup effect under preregistered null conditions and show that the effect does not persist relative to the original baseline assay.
+        classification.article_type: replication_or_validation
+        classification.claim_type: replication_claim
+    expected_external:
+      context_type: journal_referee
+      central_claim: We replicate a reported catalyst-speedup effect under preregistered null conditions and show that the effect does not persist relative to the original baseline assay.
+      novelty_delta: We replicate a reported catalyst-speedup effect under preregistered null conditions and show that the effect does not persist relative to the original baseline assay.
+      first_hard_object_kind: table
+      decisive_support_object_kind: table
+    required_nonempty_paths:
+      - parsing.central_claim_anchor
+      - parsing.decisive_support_object
+    rationale: Replication-like paper used to test null-result handling and defense question targeting.
+    tags:
+      - external_paper
+      - null_or_replication
+    ambiguity_class: none
+
+  - case_id: external_methodology_weak_paper
+    split: dev
+    stratum: stress_gold
+    partition: external_dissection_calibration
+    category: methodology_weak_paper
+    case_state: active
+    gate_behavior: monitor
+    input: external_methodology_weak_paper.json
+    pack_paths: []
+    expected:
+      exact:
+        parsing.central_claim: We propose a promising workflow for coral disease detection and report encouraging early performance on a small convenience sample.
+        classification.article_type: methods_or_tools
+        classification.claim_type: benchmark_claim
+    expected_external:
+      context_type: journal_referee
+      central_claim: We propose a promising workflow for coral disease detection and report encouraging early performance on a small convenience sample.
+      first_hard_object_kind: protocol
+      decisive_support_object_kind: protocol
+    required_nonempty_paths:
+      - parsing.central_claim_anchor
+      - reviewability.evidence_anchors
+    rationale: Methodology-weak paper used to stress method-legibility, evidence, and reproducibility recovery.
+    tags:
+      - external_paper
+      - methodology_weak
+    ambiguity_class: none
+
+  - case_id: external_defense_vulnerable_paper
+    split: dev
+    stratum: stress_gold
+    partition: external_dissection_calibration
+    category: committee_challenging_paper
+    case_state: active
+    gate_behavior: monitor
+    input: external_defense_vulnerable_paper.json
+    pack_paths: []
+    expected:
+      exact:
+        parsing.central_claim: We report a bedside triage model for neonatal deterioration alerts and show faster alerting than routine review in one monitored unit.
+        classification.article_type: original_research
+        classification.claim_type: empirical_claim
+    expected_external:
+      context_type: phd_defense_committee
+      central_claim: We report a bedside triage model for neonatal deterioration alerts and show faster alerting than routine review in one monitored unit.
+      first_hard_object_kind: table
+      decisive_support_object_kind: table
+    required_nonempty_paths:
+      - parsing.central_claim_anchor
+      - claim_evidence_calibration.evidence_anchors
+    rationale: Committee-challenging paper with visible defense vulnerabilities around comparator logic, uncertainty, and ethics framing.
+    tags:
+      - external_paper
+      - defense_vulnerable
+    ambiguity_class: none

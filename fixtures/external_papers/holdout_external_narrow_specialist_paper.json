@@ -1,0 +1,34 @@
+{
+  "audit_mode": "full",
+  "manuscript_id": "external-holdout-specialist-001",
+  "title": "A narrow correction for ion-beam mirror jitter in one optics geometry",
+  "abstract": "We derive a narrow correction for ion-beam mirror jitter in one optics geometry and show improved stability in one validated operating window relative to the standard mirror model.",
+  "manuscript_text": "We derive the correction for one optics geometry. Equation 1 defines the correction, Table 1 reports stability relative to the standard model, and Figure 1 shows the validated operating window. The contribution is intentionally narrow and should not be generalized outside the tested geometry.",
+  "figures_and_captions": [
+    "Figure 1. Validated operating window for the tested optics geometry."
+  ],
+  "tables": [
+    "Table 1. Stability comparison between the standard model and the correction."
+  ],
+  "references": [
+    "Ref1 standard mirror jitter model.",
+    "Ref2 ion-beam optics stability survey.",
+    "Ref3 bounded validation workflow."
+  ],
+  "supplement_or_appendix": "Appendix A lists the geometry constants and derivation details.",
+  "target_venue": "Optics Hardware Notes",
+  "target_audience": "optics hardware specialists",
+  "outlet_profile_hint": "specialist_research_journal",
+  "declared_article_type": "theory_or_model",
+  "data_availability": "Validation traces are archived with the appendix.",
+  "code_availability": "Derivation scripts are archived with the appendix.",
+  "materials_availability": "Geometry constants are included in the appendix.",
+  "ethics_and_disclosures": "The authors declare no competing interests.",
+  "reporting_checklist": null,
+  "prior_reviews": null,
+  "author_response_to_reviews": null,
+  "reviewer_notes": null,
+  "external_constraints": [
+    "Synthetic external-paper calibration fixture."
+  ]
+}

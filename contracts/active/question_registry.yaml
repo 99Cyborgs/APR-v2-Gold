@@ -1,0 +1,288 @@
+registry_type: QuestionRegistry
+schema_version: 1.0.0
+entries:
+  - question_id: central-claim-significance
+    contexts:
+      - phd_defense_committee
+      - dissertation_proposal_committee
+      - departmental_research_review
+      - journal_referee
+    category: central_question_and_significance
+    canonical_question_text: What is the central claim of this manuscript, and why is that claim scientifically worth defending?
+    why_boards_ask_it: Committees and referees test whether the work can state one bounded contribution before they debate impact, venue, or polish.
+    trigger_conditions:
+      risk_categories:
+        - central_claim_clarity_risk
+        - defense_question_pressure_risk
+      minimum_risk_score: 25
+      always_include: true
+      article_types: []
+      only_when_applicable: false
+    expected_answer_ingredients:
+      - One-sentence central claim
+      - Problem statement bounded to the manuscript's actual scope
+      - Why the result matters relative to the stated gap or baseline
+      - Direct evidence anchor for the main claim
+    linked_risk_families:
+      - central_claim_clarity_risk
+      - defense_question_pressure_risk
+
+  - question_id: novelty-relative-to-prior-work
+    contexts:
+      - phd_defense_committee
+      - dissertation_proposal_committee
+      - departmental_research_review
+      - journal_referee
+    category: novelty_relative_to_nearest_prior_work
+    canonical_question_text: Relative to the nearest prior work, what is actually novel here and what is only a baseline, implementation, or framing variant?
+    why_boards_ask_it: Novelty claims are often overstated or underspecified, so reviewers press for a nearest-neighbor comparison before accepting significance rhetoric.
+    trigger_conditions:
+      risk_categories:
+        - novelty_positioning_risk
+        - literature_gap_risk
+      minimum_risk_score: 30
+      always_include: true
+      article_types: []
+      only_when_applicable: false
+    expected_answer_ingredients:
+      - Named nearest prior work or baseline
+      - Explicit novelty delta
+      - Bound on what is not claimed as novel
+      - Evidence anchor that makes the delta visible
+    linked_risk_families:
+      - novelty_positioning_risk
+      - literature_gap_risk
+
+  - question_id: assumptions-and-framing
+    contexts:
+      - phd_defense_committee
+      - dissertation_proposal_committee
+      - departmental_research_review
+      - journal_referee
+    category: assumptions_and_theoretical_framing
+    canonical_question_text: Which assumptions are doing the real work in this manuscript, and what breaks if those assumptions fail?
+    why_boards_ask_it: Boards use assumption pressure to separate a scoped claim from a universal claim dressed up as a scoped one.
+    trigger_conditions:
+      risk_categories:
+        - scope_inflation_risk
+        - central_claim_clarity_risk
+      minimum_risk_score: 35
+      always_include: false
+      article_types: []
+      only_when_applicable: false
+    expected_answer_ingredients:
+      - Enumerated assumptions
+      - Failure condition or invalidation regime
+      - Why the assumptions are reasonable for the stated scope
+      - Evidence anchor that shows where the assumptions appear
+    linked_risk_families:
+      - scope_inflation_risk
+      - central_claim_clarity_risk
+
+  - question_id: method-choice-and-alternatives
+    contexts:
+      - phd_defense_committee
+      - dissertation_proposal_committee
+      - departmental_research_review
+      - journal_referee
+    category: method_choice_and_alternatives
+    canonical_question_text: Why was this method chosen over the nearest viable alternative, and what would the alternative likely change?
+    why_boards_ask_it: Method choice is a common attack surface because it reveals whether the design follows the claim or merely the author's preference.
+    trigger_conditions:
+      risk_categories:
+        - method_legibility_risk
+        - comparator_or_control_risk
+      minimum_risk_score: 30
+      always_include: true
+      article_types: []
+      only_when_applicable: false
+    expected_answer_ingredients:
+      - Stated method decision
+      - Nearest viable alternative
+      - Tradeoff or rejection reason
+      - Evidence anchor showing the method and its limits
+    linked_risk_families:
+      - method_legibility_risk
+      - comparator_or_control_risk
+
+  - question_id: controls-and-baselines
+    contexts:
+      - phd_defense_committee
+      - dissertation_proposal_committee
+      - departmental_research_review
+      - journal_referee
+    category: controls_and_baselines
+    canonical_question_text: What is the correct comparator, control, or baseline for this manuscript, and why is the chosen comparison sufficient?
+    why_boards_ask_it: A weak comparator can make an apparently positive result uninterpretable.
+    trigger_conditions:
+      risk_categories:
+        - comparator_or_control_risk
+        - literature_gap_risk
+      minimum_risk_score: 35
+      always_include: false
+      article_types:
+        - original_research
+        - methods_or_tools
+        - theory_or_model
+        - constraint_or_null_result
+        - replication_or_validation
+        - protocol_or_registered_report
+      only_when_applicable: true
+    expected_answer_ingredients:
+      - Named control or baseline
+      - Why it is the nearest fair comparison
+      - What would count as a stronger comparator
+      - Evidence anchor showing the current comparator
+    linked_risk_families:
+      - comparator_or_control_risk
+      - literature_gap_risk
+
+  - question_id: uncertainty-and-robustness
+    contexts:
+      - phd_defense_committee
+      - dissertation_proposal_committee
+      - departmental_research_review
+      - journal_referee
+    category: uncertainty_statistics_and_robustness
+    canonical_question_text: How should the uncertainty, robustness, or sensitivity of this result be interpreted, and what result would change your conclusion?
+    why_boards_ask_it: Strong-looking claims often collapse when uncertainty accounting is thin or sensitivity is hidden.
+    trigger_conditions:
+      risk_categories:
+        - statistics_or_uncertainty_risk
+        - reproducibility_risk
+      minimum_risk_score: 30
+      always_include: false
+      article_types: []
+      only_when_applicable: false
+    expected_answer_ingredients:
+      - Uncertainty statement or interval
+      - Robustness or sensitivity check
+      - Clear failure threshold
+      - Evidence anchor showing the relevant estimate or bound
+    linked_risk_families:
+      - statistics_or_uncertainty_risk
+      - reproducibility_risk
+
+  - question_id: interpretation-vs-alternatives
+    contexts:
+      - phd_defense_committee
+      - departmental_research_review
+      - journal_referee
+    category: interpretation_vs_alternative_explanations
+    canonical_question_text: Why is your interpretation better than the nearest alternative explanation supported by the same evidence?
+    why_boards_ask_it: The easiest defense failure is often an interpretation that outruns what the evidence can actually discriminate.
+    trigger_conditions:
+      risk_categories:
+        - evidence_alignment_risk
+        - overclaim_risk
+      minimum_risk_score: 35
+      always_include: false
+      article_types: []
+      only_when_applicable: false
+    expected_answer_ingredients:
+      - Competing explanation
+      - Why the manuscript's evidence discriminates between them
+      - Bound on what the data cannot decide
+      - Evidence anchor for the decisive support object
+    linked_risk_families:
+      - evidence_alignment_risk
+      - overclaim_risk
+
+  - question_id: limitations-and-failure-conditions
+    contexts:
+      - phd_defense_committee
+      - dissertation_proposal_committee
+      - departmental_research_review
+      - journal_referee
+    category: limitations_and_failure_conditions
+    canonical_question_text: What are the manuscript's real limitations and failure conditions, and which one most threatens the main claim?
+    why_boards_ask_it: Strong defenses usually fail where limitations are vague, displaced, or treated as future work instead of current bounds.
+    trigger_conditions:
+      risk_categories:
+        - limitations_acknowledgment_risk
+        - scope_inflation_risk
+      minimum_risk_score: 30
+      always_include: true
+      article_types: []
+      only_when_applicable: false
+    expected_answer_ingredients:
+      - Explicit limitation
+      - Explicit failure condition
+      - Which claim segment is weakened
+      - Repair or mitigation path
+    linked_risk_families:
+      - limitations_acknowledgment_risk
+      - scope_inflation_risk
+
+  - question_id: reproducibility-and-transparency
+    contexts:
+      - phd_defense_committee
+      - departmental_research_review
+      - journal_referee
+    category: reproducibility_and_transparency
+    canonical_question_text: Could another specialist reproduce or audit this result from the manuscript as written, and if not, what is missing?
+    why_boards_ask_it: Reproducibility pressure tests whether the manuscript exposes enough of the record to defend the claim under scrutiny.
+    trigger_conditions:
+      risk_categories:
+        - reproducibility_risk
+        - method_legibility_risk
+      minimum_risk_score: 25
+      always_include: true
+      article_types: []
+      only_when_applicable: false
+    expected_answer_ingredients:
+      - Data, code, or materials pathway
+      - Method detail sufficient for replication
+      - Missing item list if replication is incomplete
+      - Evidence anchor for the transparency statement
+    linked_risk_families:
+      - reproducibility_risk
+      - method_legibility_risk
+
+  - question_id: ethics-and-provenance
+    contexts:
+      - departmental_research_review
+      - journal_referee
+      - ethics_or_compliance_board
+    category: ethics_and_provenance
+    canonical_question_text: What ethical, provenance, or compliance assumptions are carrying this work, and where are those assumptions evidenced in the record?
+    why_boards_ask_it: Ethics and provenance issues are often manuscript-breaking even when the technical result looks sound.
+    trigger_conditions:
+      risk_categories:
+        - ethics_or_provenance_risk
+      minimum_risk_score: 20
+      always_include: false
+      article_types: []
+      only_when_applicable: true
+    expected_answer_ingredients:
+      - Ethics or disclosure statement
+      - Provenance chain for sensitive data, materials, or approvals
+      - What would require escalation or correction
+      - Evidence anchor for the relevant disclosure
+    linked_risk_families:
+      - ethics_or_provenance_risk
+
+  - question_id: contribution-and-next-experiment
+    contexts:
+      - phd_defense_committee
+      - dissertation_proposal_committee
+      - departmental_research_review
+    category: contribution_future_work_and_next_experiment
+    canonical_question_text: Given the current evidence, what is the strongest bounded contribution you can defend now, and what is the next discriminating experiment or analysis?
+    why_boards_ask_it: Committees want to know whether the author can separate the defendable contribution from the aspirational roadmap.
+    trigger_conditions:
+      risk_categories:
+        - defense_question_pressure_risk
+        - novelty_positioning_risk
+      minimum_risk_score: 25
+      always_include: true
+      article_types: []
+      only_when_applicable: false
+    expected_answer_ingredients:
+      - One bounded contribution statement
+      - Immediate repair or next experiment
+      - Why that next step resolves the main open risk
+      - Evidence anchor showing the current boundary
+    linked_risk_families:
+      - defense_question_pressure_risk
+      - novelty_positioning_risk

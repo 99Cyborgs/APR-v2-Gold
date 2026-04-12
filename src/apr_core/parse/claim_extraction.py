@@ -13,12 +13,24 @@ CLAIM_MARKERS = [
     "we develop",
     "we benchmark",
     "we reanalyze",
+    "we replicate",
+    "we rerun",
     "we propose",
     "we constrain",
 ]
 NOVELTY_MARKERS = ["first", "new", "novel", "improves", "reduces", "differs", "outperforms", "independent"]
 BROAD_MARKERS = ["universal", "paradigm", "all orbital phenomena", "framework for all", "overturns"]
 RESULT_MARKERS = ["results", "agreement", "reduces", "improves", "constraint", "signature", "benchmark"]
+COMPARISON_MARKERS = [
+    "relative to",
+    "compared with",
+    "compared to",
+    "baseline",
+    "does not persist",
+    "did not persist",
+    "replicate",
+    "replication",
+]
 WORD_RE = re.compile(r"[A-Za-z]{4,}")
 
 
@@ -32,25 +44,34 @@ def _score(unit: dict[str, str]) -> int:
         score += 4
     if location.startswith("Body"):
         score += 2
+    if location.startswith(("Abstract:s1", "Abstract:s2")):
+        score += 1
     if any(marker in quote for marker in CLAIM_MARKERS):
         score += 4
     if any(marker in quote for marker in NOVELTY_MARKERS):
         score += 2
     if any(marker in quote for marker in RESULT_MARKERS):
         score += 1
-    if any(marker in quote for marker in BROAD_MARKERS):
-        score -= 2
     if 25 <= len(unit["quote"]) <= 280:
         score += 1
     return score
 
 
-def _novelty_candidate(ranked: list[dict[str, str]]) -> tuple[str | None, dict[str, str] | None]:
+def _novelty_candidate(
+    ranked: list[dict[str, str]],
+    central_unit: dict[str, str] | None,
+) -> tuple[str | None, dict[str, str] | None]:
     for unit in ranked:
         quote = unit["quote"].lower()
         if any(marker in quote for marker in NOVELTY_MARKERS):
             return unit["quote"], unit
-    return (ranked[1]["quote"], ranked[1]) if len(ranked) > 1 else (None, None)
+    if central_unit:
+        central_quote = central_unit["quote"].lower()
+        if any(marker in central_quote for marker in CLAIM_MARKERS) and any(
+            marker in central_quote for marker in COMPARISON_MARKERS
+        ):
+            return central_unit["quote"], central_unit
+    return (ranked[0]["quote"], ranked[0]) if ranked else (None, None)
 
 
 def _contradictions(payload: dict[str, Any], central_claim: str | None, support_object: dict[str, str] | None) -> list[str]:
@@ -90,6 +111,48 @@ def _confidence(payload: dict[str, Any], ranked: list[dict[str, str]], support_o
     return round(min(1.0, confidence), 2)
 
 
+def _provisional_claim_type(payload: dict[str, Any]) -> str | None:
+    text = " ".join(
+        filter(
+            None,
+            [
+                payload.get("title"),
+                payload.get("abstract"),
+                payload.get("manuscript_text"),
+                payload.get("declared_article_type"),
+            ],
+        )
+    ).lower()
+    article_type = (payload.get("declared_article_type") or "").strip().lower()
+    if article_type in {"commentary_or_perspective", "editorial_or_opinion"}:
+        return "opinion_claim"
+    if article_type in {"review", "systematic_review"}:
+        return "synthesis_claim"
+    if article_type == "protocol_or_registered_report":
+        return "protocol_claim"
+    if article_type == "replication_or_validation":
+        return "replication_claim"
+    if article_type == "constraint_or_null_result":
+        return "null_result_claim"
+    if article_type == "theory_or_model":
+        return "model_claim"
+    if article_type == "methods_or_tools":
+        return "benchmark_claim"
+    if any(token in text for token in ("replication", "replicate", "rerun", "validation")):
+        return "replication_claim"
+    if any(token in text for token in ("null result", "does not persist", "did not persist", "constraint")):
+        return "null_result_claim"
+    if any(token in text for token in ("theorem", "lagrangian", "hamiltonian", "derive")):
+        return "model_claim"
+    if any(token in text for token in ("benchmark", "baseline", "compare", "compares")):
+        return "benchmark_claim"
+    if "protocol" in text:
+        return "protocol_claim"
+    if text:
+        return "empirical_claim"
+    return None
+
+
 def extract_claims(payload: dict[str, Any]) -> dict[str, Any]:
     units = [
         unit
@@ -99,8 +162,8 @@ def extract_claims(payload: dict[str, Any]) -> dict[str, Any]:
     ranked = sorted(units, key=_score, reverse=True)
     central_unit = ranked[0] if ranked and _score(ranked[0]) > 0 else (units[0] if units else None)
     first_hard_object = detect_first_hard_object(payload)
-    decisive_support_object = detect_decisive_support_object(payload)
-    novelty_text, novelty_anchor = _novelty_candidate(ranked[:8])
+    decisive_support_object = detect_decisive_support_object(payload, claim_type=_provisional_claim_type(payload))
+    novelty_text, novelty_anchor = _novelty_candidate(ranked[:8], central_unit)
     central_claim = central_unit["quote"] if central_unit else None
     contradiction_flags = _contradictions(payload, central_claim, decisive_support_object)
     anchor_index = dedupe_anchors([central_unit, novelty_anchor, first_hard_object, decisive_support_object, *ranked[:4]])

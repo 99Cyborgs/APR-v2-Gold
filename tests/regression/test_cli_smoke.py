@@ -46,10 +46,13 @@ def test_readiness_cli_smoke():
 
 def test_audit_render_goldset_and_packs_cli_smoke(tmp_path: Path):
     record_path = tmp_path / "record.json"
+    defense_path = tmp_path / "defense.json"
+    questions_path = tmp_path / "questions.json"
     review_path = tmp_path / "review_record.json"
     report_path = tmp_path / "report.md"
     goldset_path = tmp_path / "goldset.json"
     ledger_path = tmp_path / "goldset_ledger.jsonl"
+    annotation_dir = tmp_path / "annotation_view"
 
     audit = _run("audit", "fixtures/inputs/reviewable_sound_paper.json", "--output", str(record_path))
     assert audit.returncode == 0, audit.stderr or audit.stdout
@@ -70,6 +73,56 @@ def test_audit_render_goldset_and_packs_cli_smoke(tmp_path: Path):
     render = _run("render", str(record_path), "--output", str(report_path))
     assert render.returncode == 0, render.stderr or render.stdout
     assert report_path.exists()
+
+    defense = _run(
+        "defense",
+        str(record_path),
+        "--manuscript-package",
+        "fixtures/inputs/reviewable_sound_paper.json",
+        "--context",
+        "journal_referee",
+        "--output",
+        str(defense_path),
+    )
+    assert defense.returncode == 0, defense.stderr or defense.stdout
+    defense_record = json.loads(defense_path.read_text(encoding="utf-8"))
+    assert defense_record["artifact_type"] == "DefenseReadinessRecord"
+
+    questions = _run(
+        "questions",
+        str(record_path),
+        "--manuscript-package",
+        "fixtures/inputs/reviewable_sound_paper.json",
+        "--defense",
+        str(defense_path),
+        "--context",
+        "journal_referee",
+        "--output",
+        str(questions_path),
+    )
+    assert questions.returncode == 0, questions.stderr or questions.stdout
+    question_record = json.loads(questions_path.read_text(encoding="utf-8"))
+    assert question_record["artifact_type"] == "QuestionChallengeRecord"
+
+    annotate = _run(
+        "annotate-pdf",
+        str(record_path),
+        "--manuscript-package",
+        "fixtures/inputs/reviewable_sound_paper.json",
+        "--defense",
+        str(defense_path),
+        "--questions",
+        str(questions_path),
+        "--source-pdf",
+        "fixtures/inputs/reviewable_sound_paper.pdf",
+        "--output-dir",
+        str(annotation_dir),
+    )
+    assert annotate.returncode == 0, annotate.stderr or annotate.stdout
+    annotation_payload = json.loads(annotate.stdout)
+    assert annotation_payload["status"] == "ok"
+    assert Path(annotation_payload["manifest_path"]).exists()
+    assert Path(annotation_payload["html_path"]).exists()
 
     goldset = _run(
         "goldset",
@@ -111,6 +164,25 @@ def test_audit_render_goldset_and_packs_cli_smoke(tmp_path: Path):
     pack_report = json.loads(packs.stdout)
     assert [item["pack_id"] for item in pack_report["loaded_packs"]] == ["physics_pack", "clinical_pack"]
     assert pack_report["pack_load_failures"] == []
+
+
+def test_external_paper_goldset_cli_smoke(tmp_path: Path):
+    output_path = tmp_path / "external_papers_summary.json"
+
+    result = _run(
+        "goldset",
+        "--manifest",
+        "benchmarks/external_papers_dev/manifest.yaml",
+        "--no-ledger",
+        "--output",
+        str(output_path),
+    )
+    assert result.returncode == 0, result.stderr or result.stdout
+
+    summary = json.loads(output_path.read_text(encoding="utf-8"))
+    assert summary["failed"] == 0
+    assert summary["external_dissection_summary"]["available"] is True
+    assert summary["external_dissection_summary"]["passed_case_count"] == summary["total_cases"]
 
 
 def test_goldset_holdout_eval_cli_smoke(tmp_path: Path):

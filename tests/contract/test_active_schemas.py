@@ -12,8 +12,15 @@ if existing and not str(getattr(existing, "__file__", "")).startswith(str(SRC)):
         if name == "apr_core" or name.startswith("apr_core."):
             sys.modules.pop(name, None)
 
-from jsonschema import validate
+from jsonschema import Draft202012Validator, validate
 
+from apr_core.policy import (
+    load_defense_readiness_record_schema,
+    load_pdf_annotation_manifest_schema,
+    load_question_challenge_record_schema,
+    load_question_registry,
+    load_question_registry_schema,
+)
 from apr_core.pipeline import run_audit
 from apr_core.policy import load_audit_input_schema, load_canonical_record_schema
 from apr_core.utils import read_json
@@ -28,3 +35,15 @@ def test_reviewable_fixture_emits_schema_valid_record():
     payload = read_json(ROOT / "fixtures" / "inputs" / "reviewable_sound_paper.json")
     record = run_audit(payload)
     validate(instance=record, schema=load_canonical_record_schema())
+
+
+def test_additive_contract_schemas_and_registry_validate():
+    for schema in (
+        load_defense_readiness_record_schema(),
+        load_question_challenge_record_schema(),
+        load_pdf_annotation_manifest_schema(),
+        load_question_registry_schema(),
+    ):
+        Draft202012Validator.check_schema(schema)
+
+    validate(instance=load_question_registry(), schema=load_question_registry_schema())
