@@ -61,7 +61,11 @@ def main() -> int:
     _assert_lockstep("policy.domain_modules/runtime", policy["policy_layer"]["domain_modules"], DOMAIN_MODULES)
     _assert_lockstep("policy.outlet_profiles/runtime", policy["policy_layer"]["outlet_profiles"], OUTLET_PROFILES)
     _assert_lockstep("policy.processing_states/runtime", policy["policy_layer"]["processing_states"], AUDIT_PROCESSING_STATES)
-    assert set(policy["policy_layer"]["recommendation_states"]) == set(RECOMMENDATION_ORDINALS)
+    _assert_lockstep(
+        "policy.recommendation_states/runtime",
+        policy["policy_layer"]["recommendation_states"],
+        list(RECOMMENDATION_ORDINALS),
+    )
     _assert_lockstep(
         "canonical.classification.article_type",
         policy["policy_layer"]["article_types"],

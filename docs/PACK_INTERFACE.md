@@ -17,6 +17,8 @@ Packs may:
 - request human escalation
 - lower confidence indirectly through recorded uncertainty
 
+Pack fatal-gate requests are recorded under `pack_results[*].fatal_gates` as advisory metadata only. They may justify warnings or human escalation, but they do not participate in core recommendation selection and they do not override APR's scientific-record or recommendation state machines.
+
 Packs may not:
 
 - redefine core scientific-record criteria

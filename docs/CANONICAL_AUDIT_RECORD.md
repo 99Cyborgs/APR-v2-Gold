@@ -14,6 +14,14 @@
 
 Every downstream consumer, including markdown rendering and gold-set evaluation, reads this object. No renderer is permitted to reinterpret or replace the semantic meaning of any canonical field.
 
+The active schema also closes the fixed runtime namespaces for:
+
+- `classification.article_type`
+- `classification.claim_type`
+- `classification.outlet_profile`
+- `classification.domain_module`
+- `venue.routing_state`
+
 Derived review layers remain sibling artifacts rather than canonical extensions:
 
 - `DefenseReadinessRecord`
@@ -28,3 +36,5 @@ The canonical provenance block is now intentionally replay-oriented and audit-bo
 - `normalized_input_sha256`, `contract_manifest_sha256`, `policy_layer_sha256`, and `canonical_schema_sha256` fingerprint the deterministic runtime contract that produced the record.
 - `runtime_identity` names the bootstrap entrypoint, core runtime root, and active contract root.
 - `loaded_pack_fingerprints` records resolved path and manifest identity for every admitted advisory pack.
+
+`pack_results[*].fatal_gates` remain advisory pack requests, not core fatal gates. They are preserved for auditability and operator context, but they do not redefine canonical recommendation semantics.

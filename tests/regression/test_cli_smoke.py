@@ -9,6 +9,12 @@ from pathlib import Path
 import yaml
 
 ROOT = Path(__file__).resolve().parents[2]
+SRC = ROOT / "src"
+
+if str(SRC) not in sys.path:
+    sys.path.insert(0, str(SRC))
+
+from apr_core import cli
 
 
 def _run(*args: str) -> subprocess.CompletedProcess[str]:
@@ -42,6 +48,53 @@ def test_readiness_cli_smoke():
         assert payload["status"] == "error"
         assert payload["reason"] == "release_readiness_requires_clean_worktree"
         assert payload["git_status"] == "dirty"
+
+
+def test_doctor_command_reports_dirty_git_without_failing(monkeypatch, capsys):
+    monkeypatch.setattr(
+        cli,
+        "_doctor_report",
+        lambda: (
+            {
+                "status": "ok",
+                "repo_root": str(ROOT),
+                "contract_version": "2.1.0",
+                "policy_layer_version": "2.1.0",
+                "git_status": "dirty",
+                "git_detail": "",
+            },
+            0,
+        ),
+    )
+
+    assert cli.cmd_doctor(None) == 0
+    payload = json.loads(capsys.readouterr().out)
+    assert payload["status"] == "ok"
+    assert payload["git_status"] == "dirty"
+
+
+def test_readiness_command_rejects_dirty_git(monkeypatch, capsys):
+    monkeypatch.setattr(
+        cli,
+        "_doctor_report",
+        lambda: (
+            {
+                "status": "ok",
+                "repo_root": str(ROOT),
+                "contract_version": "2.1.0",
+                "policy_layer_version": "2.1.0",
+                "git_status": "dirty",
+                "git_detail": "",
+            },
+            0,
+        ),
+    )
+
+    assert cli.cmd_readiness(None) == 1
+    payload = json.loads(capsys.readouterr().out)
+    assert payload["status"] == "error"
+    assert payload["reason"] == "release_readiness_requires_clean_worktree"
+    assert payload["git_status"] == "dirty"
 
 
 def test_audit_render_goldset_and_packs_cli_smoke(tmp_path: Path):
@@ -259,3 +312,24 @@ def test_goldset_extended_plane_flags_cli_smoke(tmp_path: Path):
     assert first_calibration_case["editorial_score_vector"]["total"] is not None
     assert first_calibration_case["calibration_extended"]["scientific_vector"]["claim_clarity"] is not None
     assert first_calibration_case["calibration_extended"]["surface_contract"]["mixed_usage_violation"] is False
+
+
+def test_validate_goldset_script_fails_on_contract_version_drift(tmp_path: Path):
+    manifest = yaml.safe_load((ROOT / "benchmarks" / "goldset_dev" / "manifest.yaml").read_text(encoding="utf-8"))
+    manifest["contract_version"] = "9.9.9"
+    manifest_path = tmp_path / "drifted_manifest.yaml"
+    manifest_path.write_text(yaml.safe_dump(manifest, sort_keys=False), encoding="utf-8")
+
+    env = os.environ.copy()
+    env["PYTHONPATH"] = str(ROOT / "src") + os.pathsep + env.get("PYTHONPATH", "")
+    result = subprocess.run(
+        [sys.executable, "scripts/validate_goldset.py", "--manifest", str(manifest_path)],
+        cwd=ROOT,
+        env=env,
+        text=True,
+        capture_output=True,
+        check=False,
+    )
+
+    assert result.returncode != 0
+    assert "contract_version=9.9.9" in (result.stderr or result.stdout)

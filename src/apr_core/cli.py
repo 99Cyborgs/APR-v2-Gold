@@ -266,6 +266,27 @@ def cmd_render(args: argparse.Namespace) -> int:
     return 0
 
 
+def _goldset_output_bundle(summary: dict[str, object], output_path: Path) -> dict[Path, str]:
+    governance_report_path = output_path.with_name("governance_report.json")
+    return {
+        output_path: stable_json_dumps(summary) + "\n",
+        governance_report_path: stable_json_dumps(summary["governance_report"]) + "\n",
+    }
+
+
+def _snapshot_text_outputs(paths: list[Path]) -> dict[Path, str | None]:
+    return {path: path.read_text(encoding="utf-8") if path.exists() else None for path in paths}
+
+
+def _restore_text_outputs(snapshots: dict[Path, str | None]) -> None:
+    restore_bundle = {path: content for path, content in snapshots.items() if content is not None}
+    if restore_bundle:
+        write_text_bundle(restore_bundle)
+    for path, content in snapshots.items():
+        if content is None and path.exists():
+            path.unlink()
+
+
 def cmd_goldset(args: argparse.Namespace) -> int:
     holdout_requested = bool(getattr(args, "holdout", False) or getattr(args, "holdout_eval", False))
     manifest_path = args.manifest or (_default_holdout_manifest() if holdout_requested else _default_dev_manifest())
@@ -300,40 +321,37 @@ def cmd_goldset(args: argparse.Namespace) -> int:
         invariance_trace=args.invariance_trace if args.invariance_trace else None,
         strict_surface_contract=args.strict_surface_contract if args.strict_surface_contract else None,
     )
-    if args.output and defer_ledger_append:
-        output_path = Path(args.output)
-        governance_report_path = output_path.with_name("governance_report.json")
-        write_text_bundle(
-            {
-                output_path: stable_json_dumps(summary) + "\n",
-                governance_report_path: stable_json_dumps(summary["governance_report"]) + "\n",
-            }
-        )
     if defer_ledger_append:
+        output_path = Path(args.output)
+        ledger_file = Path(ledger_path)
         entry = build_goldset_ledger_entry(
             summary,
             manifest_path=manifest_path,
             notes=args.notes,
             operator=args.operator,
         )
-        append_goldset_ledger_entry(ledger_path, entry)
-        summary = {
+        final_summary = {
             **summary,
             "calibration_ledger": {
-                "path": str(Path(ledger_path).resolve()),
+                "path": str(ledger_file.resolve()),
                 "entry_appended": True,
                 "baseline_window": summary["calibration_ledger"]["baseline_window"],
             },
         }
+        snapshots = _snapshot_text_outputs(
+            [output_path, output_path.with_name("governance_report.json"), ledger_file]
+        )
+        write_text_bundle(_goldset_output_bundle(final_summary, output_path))
+        try:
+            append_goldset_ledger_entry(ledger_file, entry)
+        except Exception:
+            _restore_text_outputs(snapshots)
+            raise
+        summary = final_summary
     if args.output:
         output_path = Path(args.output)
-        governance_report_path = output_path.with_name("governance_report.json")
-        write_text_bundle(
-            {
-                output_path: stable_json_dumps(summary) + "\n",
-                governance_report_path: stable_json_dumps(summary["governance_report"]) + "\n",
-            }
-        )
+        if not defer_ledger_append:
+            write_text_bundle(_goldset_output_bundle(summary, output_path))
     else:
         print(json.dumps(summary, indent=2))
     return 0 if summary["gates"]["status"] == "pass" else 1

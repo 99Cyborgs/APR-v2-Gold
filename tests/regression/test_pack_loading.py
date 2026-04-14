@@ -31,6 +31,37 @@ def test_advisory_pack_loads_and_records_scoped_output():
     assert record["provenance"]["loaded_pack_fingerprints"][0]["resolved_repo_root"] == str(pack_root.resolve())
 
 
+def test_physics_pack_fatal_gates_remain_advisory_requests():
+    payload = read_json(ROOT / "fixtures" / "inputs" / "theory_pack_case.json")
+    payload["title"] = "A Hamiltonian framework for driven qubit relaxation"
+    payload["abstract"] = (
+        "We propose a Hamiltonian framework for driven qubit relaxation and discuss its broader conceptual implications."
+    )
+    payload["manuscript_text"] = (
+        "The manuscript outlines a Hamiltonian formulation for driven qubit relaxation and argues for a broader "
+        "reinterpretation of the problem, but it does not present a concrete experimental readout or comparator."
+    )
+    payload["figures_and_captions"] = ["Figure 1. Conceptual schematic of the proposed framework."]
+    payload["supplement_or_appendix"] = "Appendix A sketches the formal setup."
+
+    baseline = run_audit(payload)
+    record = run_audit(payload, pack_paths=[str(ROOT / "fixtures" / "external_packs" / "apr-pack-physics")])
+
+    assert record["decision"]["recommendation"] == baseline["decision"]["recommendation"]
+    assert record["pack_results"][0]["pack_id"] == "physics_pack"
+    assert record["pack_results"][0]["advisory_only"] is True
+    assert record["pack_results"][0]["status"] == "fail"
+    assert record["pack_results"][0]["human_escalation_required"] is True
+    assert len(record["pack_results"][0]["fatal_gates"]) == 1
+    assert record["pack_results"][0]["fatal_gates"][0]["code"] == "missing_observable_or_discriminating_consequence"
+    assert (
+        record["pack_results"][0]["fatal_gates"][0]["reason"]
+        == "theory/model manuscript lacks a visible observable anchor or discriminating consequence"
+    )
+    assert record["pack_results"][0]["fatal_gates"][0]["scope"] == "pack_specific_advisory"
+    assert record["pack_results"][0]["fatal_gates"][0]["evidence_anchors"]
+
+
 def test_clinical_pack_loads_and_preserves_core_recommendation():
     payload = read_json(ROOT / "fixtures" / "inputs" / "clinical_pack_readiness_case.json")
     baseline = run_audit(payload)

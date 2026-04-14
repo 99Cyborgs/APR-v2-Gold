@@ -4,7 +4,7 @@
 
 - Phase: `Phase 1`
 - Problem statement: Article, claim, outlet, domain, recommendation, and processing-state taxonomies are duplicated across policy, runtime, schema, benchmark code, and tests.
-- Confirmed repo context: `contracts/active/policy_layer.yaml` carries taxonomies; `src/apr_core/classify/classification.py`, `src/apr_core/pipeline.py`, and `src/apr_core/goldset/runner.py` hard-code related state sets; `scripts/validate_contract.py` currently validates versions and schemas but not taxonomy parity.
+- Confirmed repo context: `contracts/active/policy_layer.yaml` carries taxonomies; `src/apr_core/classify/classification.py`, `src/apr_core/pipeline.py`, and `src/apr_core/goldset/runner.py` hard-code related state sets; `scripts/validate_contract.py` now validates ordered taxonomy parity across the fixed policy/runtime/schema namespaces.
 - Exact files to inspect or modify later: `contracts/active/policy_layer.yaml`, `contracts/active/canonical_audit_record.schema.json`, `src/apr_core/classify/classification.py`, `src/apr_core/pipeline.py`, `src/apr_core/goldset/runner.py`, `scripts/validate_contract.py`, `tests/contract/test_contract_manifest.py`
 - Why the work package exists: This is the lowest-risk path to fail closed on contract drift before broader hardening lands.
 - Prerequisites: `none`
@@ -18,6 +18,8 @@
 - Confidence: `high`
 - Blocked-by fields: `none`
 - Enables fields: `WP-02`, `WP-03`, `WP-04`, `WP-05`
+- Execution status: `completed` on `2026-04-13`
+- Execution evidence: `scripts/validate_contract.py` already enforced policy/runtime/schema taxonomy parity for article, claim, domain, outlet, processing-state, and canonical recommendation surfaces; this pass tightened recommendation-state validation from set membership to ordered lockstep and `tests/contract/test_contract_manifest.py::test_runtime_taxonomies_remain_in_lockstep_with_policy_layer` now explicitly locks the recommendation namespace alongside the other policy/runtime taxonomies.
 
 ## WP-02 Canonical Schema Closure for Fixed Semantic Fields
 
@@ -37,12 +39,14 @@
 - Confidence: `high`
 - Blocked-by fields: `WP-01`
 - Enables fields: `WP-07`, `WP-10`
+- Execution status: `completed` on `2026-04-13`
+- Execution evidence: `contracts/active/canonical_audit_record.schema.json` already enum-closes `classification.article_type`, `classification.claim_type`, `classification.outlet_profile`, `classification.domain_module`, and `venue.routing_state`; `tests/contract/test_active_schemas.py::test_canonical_schema_closes_runtime_classification_and_routing_vocabularies` now locks those schema enums to the runtime vocabularies in `src/apr_core/classify/classification.py` and `src/apr_core/venue/routing.py`.
 
 ## WP-03 Processing-State and Renderer-Boundary Clarification
 
 - Phase: `Phase 1`
-- Problem statement: Policy lists `RENDERED`, but canonical audit provenance never emits that state because rendering is downstream of `run_audit()`.
-- Confirmed repo context: `contracts/active/policy_layer.yaml` includes `RENDERED`; `src/apr_core/pipeline.py` provenance ends at `PACKS_EXECUTED`; `src/apr_core/render/markdown.py` is a separate formatter.
+- Problem statement: Rendering is downstream of `run_audit()`, so canonical provenance and renderer-boundary docs must stay explicit about where audit processing stops.
+- Confirmed repo context: `contracts/active/policy_layer.yaml` now stops at `PACKS_EXECUTED`; `src/apr_core/pipeline.py` provenance ends at `PACKS_EXECUTED`; `src/apr_core/render/markdown.py` is a separate formatter.
 - Exact files to inspect or modify later: `contracts/active/policy_layer.yaml`, `src/apr_core/pipeline.py`, `src/apr_core/render/markdown.py`, `docs/{ARCHITECTURE.md,EXECUTION_MODEL.md,CANONICAL_AUDIT_RECORD.md}`, `tests/surface_lock/test_output_surfaces.py`
 - Why the work package exists: Replay and provenance semantics must distinguish audit completion from downstream rendering.
 - Prerequisites: `WP-01`
@@ -56,6 +60,8 @@
 - Confidence: `medium`
 - Blocked-by fields: `WP-01`
 - Enables fields: `WP-07`, `WP-12`
+- Execution status: `completed` on `2026-04-13`
+- Execution evidence: `tests/contract/test_contract_manifest.py::test_runtime_taxonomies_remain_in_lockstep_with_policy_layer` and `::test_canonical_schema_closes_fixed_classification_and_routing_enums` now prove policy/runtime/schema alignment on processing states, while `docs/CANONICAL_AUDIT_RECORD.md`, `docs/ARCHITECTURE.md`, and `docs/EXECUTION_MODEL.md` all state that canonical provenance stops at `PACKS_EXECUTED` and rendering remains downstream-only.
 
 ## WP-04 Benchmark Manifest / Active Contract Parity Guard
 
@@ -75,6 +81,8 @@
 - Confidence: `high`
 - Blocked-by fields: `none`
 - Enables fields: `WP-05`, `WP-06`, `WP-08`, `WP-16`
+- Execution status: `completed` on `2026-04-13`
+- Execution evidence: `src/apr_core/goldset/runner.py` enforces `_assert_manifest_contract_parity()` inside `validate_goldset_manifest()`; `tests/goldset/test_goldset_runner.py::test_goldset_manifest_must_match_active_contract_version` and `tests/regression/test_cli_smoke.py::test_validate_goldset_script_fails_on_contract_version_drift` now cover both the runner path and the `scripts/validate_goldset.py` entrypoint.
 
 ## WP-05 Unified Validation Matrix and Repo Lockstep Gate
 
@@ -94,6 +102,8 @@
 - Confidence: `medium`
 - Blocked-by fields: `WP-01`, `WP-04`
 - Enables fields: `WP-16`, `WP-17`
+- Execution status: `completed` on `2026-04-13`
+- Execution evidence: `scripts/validate_repo_lockstep.py` is the repo-level lockstep entrypoint, it is wired into `.github/workflows/ci.yml`, `Makefile`, and `docs/DEVELOPMENT.md`, and `tests/regression/test_repo_lockstep.py::test_validate_repo_lockstep_script_passes` now proves the entrypoint succeeds end-to-end.
 
 ## WP-06 Holdout Truthfulness and Split-Isolation Hardening
 
@@ -113,12 +123,14 @@
 - Confidence: `high`
 - Blocked-by fields: `WP-04`
 - Enables fields: `WP-08`, `WP-16`
+- Execution status: `completed` on `2026-04-13`
+- Execution evidence: `tests/goldset/test_holdout_leakage.py`, `tests/goldset/test_holdout_split_isolation.py`, and `tests/regression/test_cli_smoke.py::test_goldset_holdout_eval_cli_smoke` now cover blind-holdout masking, development-vs-holdout history isolation, authoritative holdout-doc truth, and CLI-level holdout redaction behavior.
 
 ## WP-07 Canonical Provenance Fingerprint Expansion
 
 - Phase: `Phase 3`
 - Problem statement: Canonical provenance is too thin for reliable replay and audit reconstruction.
-- Confirmed repo context: `src/apr_core/pipeline.py` records runtime version, generated time, contract/policy versions, and processing states only.
+- Confirmed repo context: `src/apr_core/pipeline.py` now records deterministic provenance fingerprints including normalized-input, contract, policy, schema, runtime-identity, and loaded-pack metadata.
 - Exact files to inspect or modify later: `src/apr_core/pipeline.py`, `src/apr_core/models.py`, `contracts/active/canonical_audit_record.schema.json`, `docs/CANONICAL_AUDIT_RECORD.md`, `tests/surface_lock/test_output_surfaces.py`, `tests/regression/test_minimal_pipeline.py`
 - Why the work package exists: Hardening needs deterministic replay evidence attached to the canonical truth object itself.
 - Prerequisites: `WP-02`, `WP-03`
@@ -132,6 +144,8 @@
 - Confidence: `medium`
 - Blocked-by fields: `WP-02`, `WP-03`
 - Enables fields: `WP-08`, `WP-10`, `WP-13`
+- Execution status: `completed` on `2026-04-13`
+- Execution evidence: `src/apr_core/pipeline.py` now emits `normalized_input_sha256`, `contract_manifest_sha256`, `policy_layer_sha256`, `canonical_schema_sha256`, `runtime_identity`, and `loaded_pack_fingerprints`; `tests/surface_lock/test_output_surfaces.py` and `tests/regression/test_trace_stability.py` both pass against that expanded canonical provenance surface.
 
 ## WP-08 Benchmark Summary / Ledger Replay Envelope
 
@@ -151,6 +165,8 @@
 - Confidence: `medium`
 - Blocked-by fields: `WP-04`, `WP-07`
 - Enables fields: `WP-09`, `WP-11`
+- Execution status: `completed` on `2026-04-13`
+- Execution evidence: `src/apr_core/goldset/runner.py` already emits `manifest_path`, `manifest_sha256`, active contract/policy/schema digests, `runtime_identity`, `repo_state`, `prior_run`, and `calibration_ledger` in the summary and mirrors the replay envelope into `build_goldset_ledger_entry()`; `tests/goldset/test_goldset_runner.py::test_goldset_summary_and_ledger_capture_replay_envelope` now locks that contract, while existing holdout redaction and split-isolation coverage continues to prove public holdout outputs stay blinded.
 
 ## WP-09 Failure-Class and Reason-Code Closure
 
@@ -170,12 +186,14 @@
 - Confidence: `medium`
 - Blocked-by fields: `WP-08`
 - Enables fields: `WP-11`, `WP-17`
+- Execution status: `completed` on `2026-04-13`
+- Execution evidence: `src/apr_core/goldset/runner.py` already centralizes `KNOWN_GOLDSET_ERROR_CLASSES` and `GOVERNANCE_REASON_CODES`, validates them through `_validate_summary()` and `_append_ledger_entry()`, and rejects unknown namespaces before durable artifact emission; `tests/goldset/test_goldset_runner.py::test_goldset_summary_rejects_unknown_failure_and_reason_namespaces` plus `::test_goldset_ledger_append_rejects_unknown_failure_and_reason_namespaces` now lock both summary and ledger enforcement, while `tests/adversarial/test_matrix.py` and `tests/adversarial/test_metric_reporting.py` continue to exercise the emitted governance-report surface.
 
 ## WP-10 Atomic Canonical JSON and Markdown Writes
 
 - Phase: `Phase 4`
 - Problem statement: Direct writes can leave partial files if the process is interrupted mid-write.
-- Confirmed repo context: `src/apr_core/utils.py` uses direct `write_text()` for JSON and markdown output helpers; `src/apr_core/cli.py` uses those helpers for canonical and rendered outputs.
+- Confirmed repo context: `src/apr_core/utils.py` already routes canonical JSON and markdown persistence through `_atomic_write_text()` and `write_text_bundle()`; `src/apr_core/cli.py` uses those helpers for audit, render, defense, question, and bundled goldset output surfaces.
 - Exact files to inspect or modify later: `src/apr_core/utils.py`, `src/apr_core/cli.py`, `tests/regression/test_cli_smoke.py`, targeted tempdir write-integrity tests under `tests/regression/`
 - Why the work package exists: Canonical records and rendered reports are user-facing durable artifacts and should be all-or-nothing writes.
 - Prerequisites: `WP-07`
@@ -189,12 +207,14 @@
 - Confidence: `medium`
 - Blocked-by fields: `WP-07`
 - Enables fields: `WP-11`, `WP-12`
+- Execution status: `completed` on `2026-04-13`
+- Execution evidence: `src/apr_core/utils.py` already provided `_atomic_write_text()`, `write_json()`, `write_text()`, and `write_text_bundle()`; `tests/regression/test_atomic_writes.py` now proves JSON writes, markdown writes, and multi-file bundle writes preserve the previous on-disk state when replacement fails, and existing CLI smoke coverage continues to exercise the public audit/render/goldset write paths.
 
 ## WP-11 Crash-Safe Summary and Ledger Emission
 
 - Phase: `Phase 4`
 - Problem statement: Goldset summary JSON, governance report JSON, and JSONL ledger append are not emitted as a cohesive crash-safe unit.
-- Confirmed repo context: `cmd_goldset()` writes summary JSON and a sibling `governance_report.json`; `_append_ledger_entry()` appends direct JSONL rows in `src/apr_core/goldset/runner.py`.
+- Confirmed repo context: `cmd_goldset()` now snapshots existing summary, governance-report, and ledger outputs, writes the final summary/report bundle once, and restores the old-good state if ledger append fails; `_append_ledger_entry()` still uses atomic JSONL replacement in `src/apr_core/goldset/runner.py`.
 - Exact files to inspect or modify later: `src/apr_core/cli.py`, `src/apr_core/goldset/runner.py`, `src/apr_core/utils.py`, `tests/goldset/test_goldset_runner.py`, `tests/regression/test_cli_smoke.py`
 - Why the work package exists: Benchmark governance artifacts should never be partially written or internally inconsistent after interruption.
 - Prerequisites: `WP-08`, `WP-10`
@@ -208,18 +228,20 @@
 - Confidence: `medium`
 - Blocked-by fields: `WP-08`, `WP-10`
 - Enables fields: `WP-12`, `WP-17`
+- Execution status: `completed` on `2026-04-13`
+- Execution evidence: `src/apr_core/cli.py::cmd_goldset` now emits the final summary/governance bundle once, snapshots prior summary/governance/ledger contents before append, and restores those files if `append_goldset_ledger_entry()` fails; `tests/regression/test_atomic_writes.py::test_cmd_goldset_restores_previous_outputs_when_ledger_append_fails` locks the rollback path, while existing CLI smoke and `python scripts/validate_goldset.py` continue to validate the successful path.
 
 ## WP-12 Doctor / Readiness Split
 
 - Phase: `Phase 4`
-- Problem statement: `apr doctor` currently reports both runtime-wiring status and dirty-worktree readiness failure through the same command path.
-- Confirmed repo context: `cmd_doctor()` validates contracts and a sample runtime audit, then returns an error if git status is dirty.
+- Problem statement: Hardening docs and tests still described `apr doctor` as a mixed runtime/readiness failure path even though the CLI had already split the semantics.
+- Confirmed repo context: `cmd_doctor()` returns `_doctor_report()` as-is and stays successful when `git_status` is `dirty`; `cmd_readiness()` reuses the same report but fail-closes with `reason=release_readiness_requires_clean_worktree` when the worktree is not clean.
 - Exact files to inspect or modify later: `src/apr_core/cli.py`, `scripts/build_release.py`, `docs/{DEVELOPMENT.md,RELEASE_POLICY.md}`, `tests/regression/test_cli_smoke.py`
 - Why the work package exists: Hardening should separate “runtime wiring is broken” from “release/readiness policy is not satisfied”.
 - Prerequisites: `WP-10`, `WP-11`
 - Recommended PR batch order: `9`
 - Acceptance criteria: Runtime validation and release-readiness semantics are clearly distinguishable without weakening clean-tree release policy.
-- Tests to add or update: CLI smoke tests around doctor/readiness behavior.
+- Tests to add or update: CLI smoke tests plus direct command-level regressions around dirty-worktree doctor/readiness behavior.
 - Failure modes to watch: Accidentally weakening release clean-tree enforcement or confusing existing operators.
 - Overreach risks: Turning `doctor` into a full repository-management command.
 - Invariant constraints: Release builds must still require clean-tree conditions where policy says they do.
@@ -227,6 +249,8 @@
 - Confidence: `medium`
 - Blocked-by fields: `WP-10`, `WP-11`
 - Enables fields: `WP-17`
+- Execution status: `completed` on `2026-04-13`
+- Execution evidence: `src/apr_core/cli.py` already exposed the split through `cmd_doctor()` and `cmd_readiness()`; `tests/regression/test_cli_smoke.py::test_doctor_command_reports_dirty_git_without_failing` and `::test_readiness_command_rejects_dirty_git` now lock the distinction directly, while `docs/DEVELOPMENT.md` and `docs/RELEASE_POLICY.md` remain aligned with the implemented behavior.
 
 ## WP-13 Pack Path Canonicalization and Source Identity Capture
 
@@ -234,6 +258,7 @@
 - Problem statement: Pack loading is explicit but path normalization and provenance capture are looser than the repo’s trust boundary doctrine suggests.
 - Confirmed repo context: `src/apr_core/packs/loader.py` accepts raw paths, resolves `pack.yaml`, mutates `sys.path`, and records pack metadata without canonical path or digest capture.
 - Exact files to inspect or modify later: `src/apr_core/packs/loader.py`, `src/apr_core/packs/protocol.py`, `src/apr_core/pipeline.py`, `docs/PACK_INTERFACE.md`, `tests/regression/test_pack_loading.py`, fixture-pack smoke tests
+- Superseding note (`2026-04-13`): the live loader already canonicalizes and dedupes requested pack roots through `_canonical_pack_request()` / `_canonical_requested_paths()`, records `manifest_path` and `manifest_sha256`, and `src/apr_core/pipeline.py` emits those identities under `provenance.loaded_pack_fingerprints`.
 - Why the work package exists: Pack provenance and trust boundaries should be explicit enough to remain advisory and reproducible.
 - Prerequisites: `WP-07`
 - Recommended PR batch order: `10`
@@ -246,6 +271,8 @@
 - Confidence: `medium`
 - Blocked-by fields: `WP-07`
 - Enables fields: `WP-14`, `WP-18`
+- Execution status: `completed` on `2026-04-13`
+- Execution evidence: `tests/regression/test_pack_loading.py::test_advisory_pack_loads_and_records_scoped_output` already locks canonicalized `requested_pack_paths`, resolved manifest paths, and `provenance.loaded_pack_fingerprints.resolved_repo_root`; `tests/surface_lock/test_output_surfaces.py` also locks pack fingerprint shape and `manifest_sha256` parity with `pack_execution.loaded_packs`.
 
 ## WP-14 Pack Advisory Semantics Clarification
 
@@ -265,6 +292,8 @@
 - Confidence: `medium`
 - Blocked-by fields: `WP-13`
 - Enables fields: `WP-18`
+- Execution status: `completed` on `2026-04-13`
+- Execution evidence: `src/apr_core/packs/loader.py::_normalize_fatal_gates()` now constrains pack gate scopes to the schema-backed advisory enums, `docs/PACK_INTERFACE.md` and `docs/CANONICAL_AUDIT_RECORD.md` say `pack_results[*].fatal_gates` are advisory pack requests only and do not participate in core recommendation selection, and `tests/regression/test_pack_loading.py::test_physics_pack_fatal_gates_remain_advisory_requests` locks the non-empty physics-pack `fatal_gates` case while proving the core recommendation remains unchanged.
 
 ## WP-15 Provider / Adapter Seam Quarantine and Admission Criteria
 
@@ -284,6 +313,8 @@
 - Confidence: `high`
 - Blocked-by fields: `none`
 - Enables fields: `WP-18`
+- Execution status: `completed` on `2026-04-13`
+- Execution evidence: `docs/EXECUTION_MODEL.md` and `docs/MIGRATION_POLICY.md` now require any future provider/adapter admission to be explicit in doctrine docs and validation before code activation, and `tests/regression/test_surface_isolation.py::test_extension_governance_docs_remain_in_lockstep_with_repo_boundary` plus `::test_provider_and_adapter_seams_remain_dormant_in_active_runtime` lock both the admission text and the active-runtime absence proof.
 
 ## WP-16 Docs Truthfulness Sweep for Manifest and Holdout Surfaces
 
@@ -324,6 +355,8 @@
 - Confidence: `medium`
 - Blocked-by fields: `WP-05`, `WP-11`, `WP-12`, `WP-16`
 - Enables fields: `WP-18`
+- Execution status: `completed` on `2026-04-13`
+- Execution evidence: `tests/regression/test_release_contract.py` now locks package identity, bootstrap entrypoint, manifest-sourced versioning, and release-bundle exclusions; `docs/RELEASE_POLICY.md` and `docs/DEVELOPMENT.md` already describe the same clean-tree release and readiness split.
 
 ## WP-18 Migration and Extension Governance Tightening
 
@@ -343,3 +376,5 @@
 - Confidence: `medium`
 - Blocked-by fields: `WP-13`, `WP-14`, `WP-15`, `WP-17`
 - Enables fields: `none`
+- Execution status: `completed` on `2026-04-13`
+- Execution evidence: `tests/regression/test_surface_isolation.py::test_extension_governance_docs_remain_in_lockstep_with_repo_boundary` now locks the governing extension text in `docs/MIGRATION_POLICY.md`, `docs/PACK_INTERFACE.md`, `docs/EXECUTION_MODEL.md`, and `docs/REPO_CHARTER.md`; the existing seam-dormancy regression remains intact alongside those docs.

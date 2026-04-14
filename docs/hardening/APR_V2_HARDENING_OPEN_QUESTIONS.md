@@ -12,7 +12,7 @@ These questions were not blocking for this planning pass. Each has a conservativ
 
 - Confirmed fact: `benchmarks/goldset_holdout/manifest.yaml` contains 3 active holdout cases, and the highest-signal authoritative docs were reconciled on 2026-04-09 to describe holdout as active blind evaluation.
 - Conservative default: treat `README.md`, `benchmarks/goldset/README.md`, `benchmarks/goldset/holdout/README.md`, `docs/SPEC_IMPLEMENTATION_MATRIX.md`, and `docs/BENCHMARK_POLICY.md` as the current authority; ignore stale strings in generated or historical artifacts.
-- Impact if ignored: contributors can still mistake derived artifacts for authority and reintroduce drift because no docs lockstep test exists yet.
+- Impact if ignored: contributors can still mistake derived artifacts for authority even though the authoritative docs now have automated lockstep coverage.
 
 ## OQ-03 Canonical Provenance Scope
 
@@ -22,24 +22,23 @@ These questions were not blocking for this planning pass. Each has a conservativ
 
 ## OQ-04 Pack Fatal-Gate Naming
 
-- Confirmed fact: pack outputs include `fatal_gates`, but the core decision path does not treat them as pack-owned recommendation overrides.
-- Conservative default: rename or document them as advisory fatal-gate requests, not core gates.
-- Impact if ignored: future contributors can over-interpret pack authority and erode pack restraint.
+- Resolved on `2026-04-13`: `docs/PACK_INTERFACE.md` and `docs/CANONICAL_AUDIT_RECORD.md` now say `pack_results[*].fatal_gates` are advisory pack requests only, and `tests/regression/test_pack_loading.py::test_physics_pack_fatal_gates_remain_advisory_requests` proves a non-empty `fatal_gates` case does not change the core recommendation.
+- Residual risk if ignored elsewhere: future wording drift could still overstate pack authority, but the current runtime and doctrine surfaces are explicit.
 
 ## OQ-05 `apr doctor` Semantics
 
-- Confirmed fact: `apr doctor` currently validates runtime wiring and also fails on dirty git state.
-- Conservative default: keep current behavior until a dedicated readiness-vs-runtime split is explicitly implemented.
-- Impact if ignored: local operators may continue to read a dirty-tree failure as a runtime defect rather than a readiness policy failure.
+- Resolved on `2026-04-13`: `src/apr_core/cli.py::cmd_doctor()` returns runtime and repo wiring status as-is, while `cmd_readiness()` applies the clean-worktree release gate with `reason=release_readiness_requires_clean_worktree`.
+- Validation evidence: `tests/regression/test_cli_smoke.py::test_doctor_command_reports_dirty_git_without_failing`, `tests/regression/test_cli_smoke.py::test_readiness_command_rejects_dirty_git`, `tests/regression/test_cli_smoke.py::test_doctor_cli_smoke`, and `::test_readiness_cli_smoke`.
+- Residual risk if ignored elsewhere: stale operator docs could still misdescribe the split, but the runtime path itself is no longer ambiguous.
 
 ## OQ-06 Replay Metadata Location for Goldset
 
-- Confirmed fact: the benchmark ledger already records commit, contract, manifest, gates, and governance fields, but not every potential replay fingerprint.
-- Conservative default: prefer benchmark-only replay metadata in summary/ledger surfaces rather than expanding the live runtime record with benchmark-specific details.
+- Confirmed fact: the benchmark summary/ledger replay envelope now records manifest path/hash, contract/policy/schema digests, runtime identity, repo state, prior-run linkage, governance, gates, and case outcomes.
+- Conservative default: preserve benchmark-only replay metadata in summary/ledger surfaces and extend that envelope there before considering any benchmark-specific addition to the live runtime record.
 - Impact if ignored: benchmark governance fields can leak into live runtime contract surfaces.
 
 ## OQ-07 Release Surface Lock Depth
 
-- Confirmed fact: releases currently rely on active manifest version and clean-tree enforcement, but there is no explicit release-surface lock test.
-- Conservative default: add release-surface tests only after docs, contract, and benchmark parity work lands.
-- Impact if ignored: release hardening can arrive before the repo’s truth surfaces are fully aligned and cause churn.
+- Confirmed fact: releases rely on active manifest version and clean-tree enforcement, and `tests/regression/test_release_contract.py` now locks the package/bootstrap/version/exclusion truth surface.
+- Conservative default: preserve the existing release-surface lock test and extend it only when package or release doctrine changes.
+- Impact if ignored: future release changes can still drift if contributors update packaging or docs without keeping the explicit lock test aligned.
