@@ -21,6 +21,7 @@ from apr_core.policy import (
     load_policy_layer,
 )
 from apr_core.classify.classification import ARTICLE_TYPES, CLAIM_TYPES, DOMAIN_MODULES, OUTLET_PROFILES
+from apr_core.goldset.runner import RECOMMENDATION_ORDINALS
 from apr_core.pipeline import AUDIT_PROCESSING_STATES
 from apr_core.venue.routing import ROUTING_STATES
 
@@ -46,6 +47,7 @@ def test_runtime_taxonomies_remain_in_lockstep_with_policy_layer():
     assert policy["domain_modules"] == list(DOMAIN_MODULES)
     assert policy["outlet_profiles"] == list(OUTLET_PROFILES)
     assert policy["processing_states"] == list(AUDIT_PROCESSING_STATES)
+    assert policy["recommendation_states"] == list(RECOMMENDATION_ORDINALS)
 
 
 def test_canonical_schema_closes_fixed_classification_and_routing_enums():

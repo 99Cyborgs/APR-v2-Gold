@@ -22,6 +22,10 @@ def _contracts_root() -> Path:
     return repo_root() / "contracts" / "active"
 
 
+def _load_json_contract(name: str) -> dict[str, Any]:
+    return json.loads((_contracts_root() / name).read_text(encoding="utf-8"))
+
+
 @lru_cache(maxsize=1)
 def load_contract_manifest() -> dict[str, Any]:
     # The manifest is the version authority that binds runtime behavior to one
@@ -38,12 +42,37 @@ def load_policy_layer() -> dict[str, Any]:
 
 @lru_cache(maxsize=1)
 def load_audit_input_schema() -> dict[str, Any]:
-    return json.loads((_contracts_root() / "audit_input.schema.json").read_text(encoding="utf-8"))
+    return _load_json_contract("audit_input.schema.json")
 
 
 @lru_cache(maxsize=1)
 def load_canonical_record_schema() -> dict[str, Any]:
-    return json.loads((_contracts_root() / "canonical_audit_record.schema.json").read_text(encoding="utf-8"))
+    return _load_json_contract("canonical_audit_record.schema.json")
+
+
+@lru_cache(maxsize=1)
+def load_defense_readiness_record_schema() -> dict[str, Any]:
+    return _load_json_contract("defense_readiness_record.schema.json")
+
+
+@lru_cache(maxsize=1)
+def load_question_challenge_record_schema() -> dict[str, Any]:
+    return _load_json_contract("question_challenge_record.schema.json")
+
+
+@lru_cache(maxsize=1)
+def load_pdf_annotation_manifest_schema() -> dict[str, Any]:
+    return _load_json_contract("pdf_annotation_manifest.schema.json")
+
+
+@lru_cache(maxsize=1)
+def load_question_registry_schema() -> dict[str, Any]:
+    return _load_json_contract("question_registry.schema.json")
+
+
+@lru_cache(maxsize=1)
+def load_question_registry() -> dict[str, Any]:
+    return yaml.safe_load((_contracts_root() / "question_registry.yaml").read_text(encoding="utf-8"))
 
 
 def contract_version() -> str:

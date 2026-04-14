@@ -104,6 +104,7 @@
   - Clean-tree `python scripts/build_release.py`
 - Rollback concerns: Atomic-write helpers must remain cross-platform and not break current path conventions or output locations.
 - Estimated PR waves: 2 to 3 PRs across `WP-10` to `WP-12`
+- Execution note: `WP-10`, `WP-11`, and `WP-12` completed on `2026-04-13`; Phase 4 now has explicit tempdir rollback coverage for local writes plus command-level regressions that distinguish `apr doctor` runtime health from `apr readiness` clean-worktree policy.
 - Explicitly out of scope:
   - Distributed locking
   - Queue-backed job management
@@ -132,6 +133,7 @@
   - Docs lockstep checks
 - Rollback concerns: Changes to normalized pack output must remain additive and preserve current pack fixtures as compatibility examples.
 - Estimated PR waves: 2 to 3 PRs across `WP-13` to `WP-15`
+- Execution note: `WP-13`, `WP-14`, and `WP-15` completed on `2026-04-13`; pack paths/source fingerprints are canonicalized, pack `fatal_gates` are explicitly documented and regression-tested as advisory-only, and provider/adapter seams now require explicit docs-and-tests admission before any future activation.
 - Explicitly out of scope:
   - New provider integrations
   - Pack marketplace or discovery service
@@ -159,11 +161,11 @@
   - Release smoke from a clean tree
   - CI parity check
 - Rollback concerns: Public docs may temporarily describe mixed branch states if release-truth updates and runtime hardening are merged separately.
-- Estimated PR waves: `WP-16` is complete as of 2026-04-09; 2 remaining PR waves across `WP-17` and `WP-18`
+- Estimated PR waves: `WP-16` completed on `2026-04-09`; `WP-17` and `WP-18` completed on `2026-04-13`
 - Explicitly out of scope:
   - Legacy runtime loading
   - Service deployment plans
   - New extension surfaces beyond the current repo boundary
 - Counterpoint: Docs-only work can wait until all runtime hardening is finished.
 - Resolution: Current repo-proven docs drift already changes operator understanding, so public truth surfaces need an explicit closing phase rather than opportunistic cleanup.
-- Execution note: `WP-16` landed as a docs-only truthfulness sweep in `README.md`, `benchmarks/goldset/README.md`, `benchmarks/goldset/holdout/README.md`, and `docs/SPEC_IMPLEMENTATION_MATRIX.md`.
+- Execution note: `WP-16` landed as a docs-only truthfulness sweep in `README.md`, `benchmarks/goldset/README.md`, `benchmarks/goldset/holdout/README.md`, and `docs/SPEC_IMPLEMENTATION_MATRIX.md`; `WP-17` landed via `tests/regression/test_release_contract.py` plus the existing release/readiness docs, and `WP-18` landed via the extension-governance lockstep coverage in `tests/regression/test_surface_isolation.py`.

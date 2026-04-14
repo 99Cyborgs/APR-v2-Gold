@@ -9,6 +9,12 @@ from pathlib import Path
 import yaml
 
 ROOT = Path(__file__).resolve().parents[2]
+SRC = ROOT / "src"
+
+if str(SRC) not in sys.path:
+    sys.path.insert(0, str(SRC))
+
+from apr_core import cli
 
 
 def _run(*args: str) -> subprocess.CompletedProcess[str]:
@@ -44,12 +50,62 @@ def test_readiness_cli_smoke():
         assert payload["git_status"] == "dirty"
 
 
+def test_doctor_command_reports_dirty_git_without_failing(monkeypatch, capsys):
+    monkeypatch.setattr(
+        cli,
+        "_doctor_report",
+        lambda: (
+            {
+                "status": "ok",
+                "repo_root": str(ROOT),
+                "contract_version": "2.1.0",
+                "policy_layer_version": "2.1.0",
+                "git_status": "dirty",
+                "git_detail": "",
+            },
+            0,
+        ),
+    )
+
+    assert cli.cmd_doctor(None) == 0
+    payload = json.loads(capsys.readouterr().out)
+    assert payload["status"] == "ok"
+    assert payload["git_status"] == "dirty"
+
+
+def test_readiness_command_rejects_dirty_git(monkeypatch, capsys):
+    monkeypatch.setattr(
+        cli,
+        "_doctor_report",
+        lambda: (
+            {
+                "status": "ok",
+                "repo_root": str(ROOT),
+                "contract_version": "2.1.0",
+                "policy_layer_version": "2.1.0",
+                "git_status": "dirty",
+                "git_detail": "",
+            },
+            0,
+        ),
+    )
+
+    assert cli.cmd_readiness(None) == 1
+    payload = json.loads(capsys.readouterr().out)
+    assert payload["status"] == "error"
+    assert payload["reason"] == "release_readiness_requires_clean_worktree"
+    assert payload["git_status"] == "dirty"
+
+
 def test_audit_render_goldset_and_packs_cli_smoke(tmp_path: Path):
     record_path = tmp_path / "record.json"
+    defense_path = tmp_path / "defense.json"
+    questions_path = tmp_path / "questions.json"
     review_path = tmp_path / "review_record.json"
     report_path = tmp_path / "report.md"
     goldset_path = tmp_path / "goldset.json"
     ledger_path = tmp_path / "goldset_ledger.jsonl"
+    annotation_dir = tmp_path / "annotation_view"
 
     audit = _run("audit", "fixtures/inputs/reviewable_sound_paper.json", "--output", str(record_path))
     assert audit.returncode == 0, audit.stderr or audit.stdout
@@ -70,6 +126,56 @@ def test_audit_render_goldset_and_packs_cli_smoke(tmp_path: Path):
     render = _run("render", str(record_path), "--output", str(report_path))
     assert render.returncode == 0, render.stderr or render.stdout
     assert report_path.exists()
+
+    defense = _run(
+        "defense",
+        str(record_path),
+        "--manuscript-package",
+        "fixtures/inputs/reviewable_sound_paper.json",
+        "--context",
+        "journal_referee",
+        "--output",
+        str(defense_path),
+    )
+    assert defense.returncode == 0, defense.stderr or defense.stdout
+    defense_record = json.loads(defense_path.read_text(encoding="utf-8"))
+    assert defense_record["artifact_type"] == "DefenseReadinessRecord"
+
+    questions = _run(
+        "questions",
+        str(record_path),
+        "--manuscript-package",
+        "fixtures/inputs/reviewable_sound_paper.json",
+        "--defense",
+        str(defense_path),
+        "--context",
+        "journal_referee",
+        "--output",
+        str(questions_path),
+    )
+    assert questions.returncode == 0, questions.stderr or questions.stdout
+    question_record = json.loads(questions_path.read_text(encoding="utf-8"))
+    assert question_record["artifact_type"] == "QuestionChallengeRecord"
+
+    annotate = _run(
+        "annotate-pdf",
+        str(record_path),
+        "--manuscript-package",
+        "fixtures/inputs/reviewable_sound_paper.json",
+        "--defense",
+        str(defense_path),
+        "--questions",
+        str(questions_path),
+        "--source-pdf",
+        "fixtures/inputs/reviewable_sound_paper.pdf",
+        "--output-dir",
+        str(annotation_dir),
+    )
+    assert annotate.returncode == 0, annotate.stderr or annotate.stdout
+    annotation_payload = json.loads(annotate.stdout)
+    assert annotation_payload["status"] == "ok"
+    assert Path(annotation_payload["manifest_path"]).exists()
+    assert Path(annotation_payload["html_path"]).exists()
 
     goldset = _run(
         "goldset",
@@ -111,6 +217,25 @@ def test_audit_render_goldset_and_packs_cli_smoke(tmp_path: Path):
     pack_report = json.loads(packs.stdout)
     assert [item["pack_id"] for item in pack_report["loaded_packs"]] == ["physics_pack", "clinical_pack"]
     assert pack_report["pack_load_failures"] == []
+
+
+def test_external_paper_goldset_cli_smoke(tmp_path: Path):
+    output_path = tmp_path / "external_papers_summary.json"
+
+    result = _run(
+        "goldset",
+        "--manifest",
+        "benchmarks/external_papers_dev/manifest.yaml",
+        "--no-ledger",
+        "--output",
+        str(output_path),
+    )
+    assert result.returncode == 0, result.stderr or result.stdout
+
+    summary = json.loads(output_path.read_text(encoding="utf-8"))
+    assert summary["failed"] == 0
+    assert summary["external_dissection_summary"]["available"] is True
+    assert summary["external_dissection_summary"]["passed_case_count"] == summary["total_cases"]
 
 
 def test_goldset_holdout_eval_cli_smoke(tmp_path: Path):
@@ -187,3 +312,24 @@ def test_goldset_extended_plane_flags_cli_smoke(tmp_path: Path):
     assert first_calibration_case["editorial_score_vector"]["total"] is not None
     assert first_calibration_case["calibration_extended"]["scientific_vector"]["claim_clarity"] is not None
     assert first_calibration_case["calibration_extended"]["surface_contract"]["mixed_usage_violation"] is False
+
+
+def test_validate_goldset_script_fails_on_contract_version_drift(tmp_path: Path):
+    manifest = yaml.safe_load((ROOT / "benchmarks" / "goldset_dev" / "manifest.yaml").read_text(encoding="utf-8"))
+    manifest["contract_version"] = "9.9.9"
+    manifest_path = tmp_path / "drifted_manifest.yaml"
+    manifest_path.write_text(yaml.safe_dump(manifest, sort_keys=False), encoding="utf-8")
+
+    env = os.environ.copy()
+    env["PYTHONPATH"] = str(ROOT / "src") + os.pathsep + env.get("PYTHONPATH", "")
+    result = subprocess.run(
+        [sys.executable, "scripts/validate_goldset.py", "--manifest", str(manifest_path)],
+        cwd=ROOT,
+        env=env,
+        text=True,
+        capture_output=True,
+        check=False,
+    )
+
+    assert result.returncode != 0
+    assert "contract_version=9.9.9" in (result.stderr or result.stdout)

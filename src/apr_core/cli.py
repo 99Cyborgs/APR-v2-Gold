@@ -13,8 +13,9 @@ import json
 import sys
 from pathlib import Path
 
-from jsonschema import Draft202012Validator, validate
+from jsonschema import Draft202012Validator, ValidationError, validate
 
+from apr_core.defense_readiness import DEFAULT_DEFENSE_CONTEXT, build_defense_readiness_record
 from apr_core.goldset import (
     append_goldset_ledger_entry,
     build_goldset_ledger_entry,
@@ -29,7 +30,20 @@ from apr_core.goldset import (
 )
 from apr_core.packs import inspect_packs
 from apr_core.pipeline import run_audit
-from apr_core.policy import load_audit_input_schema, load_canonical_record_schema, load_contract_manifest, load_policy_layer
+from apr_core.pdf_annotations import build_pdf_annotation_manifest
+from apr_core.pdf_viewer import write_annotation_viewer
+from apr_core.policy import (
+    load_audit_input_schema,
+    load_canonical_record_schema,
+    load_contract_manifest,
+    load_defense_readiness_record_schema,
+    load_pdf_annotation_manifest_schema,
+    load_policy_layer,
+    load_question_challenge_record_schema,
+    load_question_registry,
+    load_question_registry_schema,
+)
+from apr_core.question_generation import build_question_challenge_record
 from apr_core.render import render_markdown_report
 from apr_core.utils import git_output, read_json, repo_root, stable_json_dumps, write_json, write_text, write_text_bundle
 
@@ -71,15 +85,74 @@ def _apply_profile_override(payload: dict[str, object], profile: str | None) -> 
     return overridden
 
 
+def _payload_from_canonical(record: dict[str, object]) -> dict[str, object]:
+    metadata = record.get("metadata", {})
+    parsing = record.get("parsing", {})
+    support = parsing.get("decisive_support_object")
+    return {
+        "audit_mode": record.get("audit_mode", "full"),
+        "manuscript_id": metadata.get("manuscript_id"),
+        "title": metadata.get("title"),
+        "abstract": parsing.get("central_claim"),
+        "manuscript_text": record.get("scientific_record", {}).get("evidence_summary"),
+        "figures_and_captions": [support["quote"]] if isinstance(support, dict) and support.get("kind") == "figure" else [],
+        "tables": [support["quote"]] if isinstance(support, dict) and support.get("kind") == "table" else [],
+        "references": [],
+        "supplement_or_appendix": None,
+        "target_venue": metadata.get("target_venue"),
+        "target_audience": metadata.get("target_audience"),
+        "outlet_profile_hint": metadata.get("outlet_profile_hint"),
+        "declared_article_type": metadata.get("declared_article_type"),
+        "data_availability": None,
+        "code_availability": None,
+        "materials_availability": None,
+        "ethics_and_disclosures": None,
+        "reporting_checklist": None,
+        "prior_reviews": None,
+        "author_response_to_reviews": None,
+        "reviewer_notes": None,
+        "external_constraints": None,
+    }
+
+
+def _load_package(path: str | Path) -> dict[str, object]:
+    payload = read_json(path)
+    validate(instance=payload, schema=load_audit_input_schema())
+    return payload
+
+
+def _load_json_by_schema(path: str | Path, schema: dict[str, object]) -> dict[str, object]:
+    payload = read_json(path)
+    validate(instance=payload, schema=schema)
+    return payload
+
+
+def _load_canonical_or_package(path: str | Path, *, pack_paths: list[str] | None = None) -> tuple[dict[str, object], dict[str, object] | None, str]:
+    payload = read_json(path)
+    try:
+        validate(instance=payload, schema=load_canonical_record_schema())
+        return payload, None, "canonical"
+    except ValidationError:
+        pass
+
+    validate(instance=payload, schema=load_audit_input_schema())
+    return run_audit(payload, pack_paths=pack_paths or []), payload, "package"
+
+
 def _doctor_report() -> tuple[dict[str, object], int]:
     root = repo_root()
     manifest = load_contract_manifest()
     policy = load_policy_layer()
     Draft202012Validator.check_schema(load_audit_input_schema())
     Draft202012Validator.check_schema(load_canonical_record_schema())
+    Draft202012Validator.check_schema(load_defense_readiness_record_schema())
+    Draft202012Validator.check_schema(load_question_challenge_record_schema())
+    Draft202012Validator.check_schema(load_pdf_annotation_manifest_schema())
+    Draft202012Validator.check_schema(load_question_registry_schema())
     Draft202012Validator.check_schema(load_goldset_manifest_schema())
     Draft202012Validator.check_schema(load_goldset_summary_schema())
     Draft202012Validator.check_schema(load_goldset_ledger_entry_schema())
+    validate(instance=load_question_registry(), schema=load_question_registry_schema())
     load_goldset_manifest(_default_dev_manifest())
     load_goldset_manifest(_default_holdout_manifest())
 
@@ -87,15 +160,27 @@ def _doctor_report() -> tuple[dict[str, object], int]:
         root / "contracts" / "active" / "manifest.yaml",
         root / "contracts" / "active" / "audit_input.schema.json",
         root / "contracts" / "active" / "canonical_audit_record.schema.json",
+        root / "contracts" / "active" / "defense_readiness_record.schema.json",
+        root / "contracts" / "active" / "question_challenge_record.schema.json",
+        root / "contracts" / "active" / "pdf_annotation_manifest.schema.json",
+        root / "contracts" / "active" / "question_registry.schema.json",
+        root / "contracts" / "active" / "question_registry.yaml",
         root / "contracts" / "active" / "policy_layer.yaml",
         root / "docs" / "ARCHITECTURE.md",
         root / "docs" / "BENCHMARK_POLICY.md",
         root / "docs" / "PACK_INTERFACE.md",
         root / "docs" / "CANONICAL_AUDIT_RECORD.md",
+        root / "docs" / "PHASE_AB_EXTENSION.md",
+        root / "docs" / "QUESTION_REGISTRY_GUIDANCE.md",
         root / "docs" / "GOLDSET_CASE_SCHEMA.md",
         root / "docs" / "SPEC_IMPLEMENTATION_MATRIX.md",
         root / "benchmarks" / "goldset_dev" / "manifest.yaml",
         root / "benchmarks" / "goldset_holdout" / "manifest.yaml",
+        root / "benchmarks" / "external_papers_dev" / "manifest.yaml",
+        root / "benchmarks" / "external_papers_holdout" / "manifest.yaml",
+        root / "benchmarks" / "external_papers_dev" / "README.md",
+        root / "benchmarks" / "external_papers_holdout" / "README.md",
+        root / "fixtures" / "external_papers" / "README.md",
         root / "benchmarks" / "goldset" / "schemas" / "manifest.schema.json",
         root / "benchmarks" / "goldset" / "schemas" / "summary.schema.json",
         root / "benchmarks" / "goldset" / "schemas" / "ledger_entry.schema.json",
@@ -181,6 +266,27 @@ def cmd_render(args: argparse.Namespace) -> int:
     return 0
 
 
+def _goldset_output_bundle(summary: dict[str, object], output_path: Path) -> dict[Path, str]:
+    governance_report_path = output_path.with_name("governance_report.json")
+    return {
+        output_path: stable_json_dumps(summary) + "\n",
+        governance_report_path: stable_json_dumps(summary["governance_report"]) + "\n",
+    }
+
+
+def _snapshot_text_outputs(paths: list[Path]) -> dict[Path, str | None]:
+    return {path: path.read_text(encoding="utf-8") if path.exists() else None for path in paths}
+
+
+def _restore_text_outputs(snapshots: dict[Path, str | None]) -> None:
+    restore_bundle = {path: content for path, content in snapshots.items() if content is not None}
+    if restore_bundle:
+        write_text_bundle(restore_bundle)
+    for path, content in snapshots.items():
+        if content is None and path.exists():
+            path.unlink()
+
+
 def cmd_goldset(args: argparse.Namespace) -> int:
     holdout_requested = bool(getattr(args, "holdout", False) or getattr(args, "holdout_eval", False))
     manifest_path = args.manifest or (_default_holdout_manifest() if holdout_requested else _default_dev_manifest())
@@ -215,40 +321,37 @@ def cmd_goldset(args: argparse.Namespace) -> int:
         invariance_trace=args.invariance_trace if args.invariance_trace else None,
         strict_surface_contract=args.strict_surface_contract if args.strict_surface_contract else None,
     )
-    if args.output and defer_ledger_append:
-        output_path = Path(args.output)
-        governance_report_path = output_path.with_name("governance_report.json")
-        write_text_bundle(
-            {
-                output_path: stable_json_dumps(summary) + "\n",
-                governance_report_path: stable_json_dumps(summary["governance_report"]) + "\n",
-            }
-        )
     if defer_ledger_append:
+        output_path = Path(args.output)
+        ledger_file = Path(ledger_path)
         entry = build_goldset_ledger_entry(
             summary,
             manifest_path=manifest_path,
             notes=args.notes,
             operator=args.operator,
         )
-        append_goldset_ledger_entry(ledger_path, entry)
-        summary = {
+        final_summary = {
             **summary,
             "calibration_ledger": {
-                "path": str(Path(ledger_path).resolve()),
+                "path": str(ledger_file.resolve()),
                 "entry_appended": True,
                 "baseline_window": summary["calibration_ledger"]["baseline_window"],
             },
         }
+        snapshots = _snapshot_text_outputs(
+            [output_path, output_path.with_name("governance_report.json"), ledger_file]
+        )
+        write_text_bundle(_goldset_output_bundle(final_summary, output_path))
+        try:
+            append_goldset_ledger_entry(ledger_file, entry)
+        except Exception:
+            _restore_text_outputs(snapshots)
+            raise
+        summary = final_summary
     if args.output:
         output_path = Path(args.output)
-        governance_report_path = output_path.with_name("governance_report.json")
-        write_text_bundle(
-            {
-                output_path: stable_json_dumps(summary) + "\n",
-                governance_report_path: stable_json_dumps(summary["governance_report"]) + "\n",
-            }
-        )
+        if not defer_ledger_append:
+            write_text_bundle(_goldset_output_bundle(summary, output_path))
     else:
         print(json.dumps(summary, indent=2))
     return 0 if summary["gates"]["status"] == "pass" else 1
@@ -258,6 +361,74 @@ def cmd_packs(args: argparse.Namespace) -> int:
     report = inspect_packs(args.pack_path)
     print(json.dumps(report, indent=2))
     return 0 if not report["pack_load_failures"] else 1
+
+
+def cmd_defense(args: argparse.Namespace) -> int:
+    canonical_record, payload, input_kind = _load_canonical_or_package(args.input, pack_paths=args.pack_path or [])
+    if input_kind == "canonical" and args.manuscript_package:
+        payload = _load_package(args.manuscript_package)
+    record = build_defense_readiness_record(
+        canonical_record,
+        payload=payload,
+        context_type=args.context,
+    )
+    if args.output:
+        write_json(args.output, record)
+    else:
+        print(json.dumps(record, indent=2))
+    return 0
+
+
+def cmd_questions(args: argparse.Namespace) -> int:
+    canonical_record, payload, input_kind = _load_canonical_or_package(args.input, pack_paths=args.pack_path or [])
+    if input_kind == "canonical" and args.manuscript_package:
+        payload = _load_package(args.manuscript_package)
+    defense_record = (
+        _load_json_by_schema(args.defense, load_defense_readiness_record_schema())
+        if args.defense
+        else build_defense_readiness_record(canonical_record, payload=payload, context_type=args.context)
+    )
+    record = build_question_challenge_record(
+        canonical_record,
+        defense_record=defense_record,
+        context_type=args.context,
+        limit=args.limit,
+    )
+    if args.output:
+        write_json(args.output, record)
+    else:
+        print(json.dumps(record, indent=2))
+    return 0
+
+
+def cmd_annotate_pdf(args: argparse.Namespace) -> int:
+    canonical_record, payload, input_kind = _load_canonical_or_package(args.input, pack_paths=args.pack_path or [])
+    if args.canonical:
+        canonical_record = _load_json_by_schema(args.canonical, load_canonical_record_schema())
+    if input_kind == "canonical":
+        payload = _load_package(args.manuscript_package) if args.manuscript_package else _payload_from_canonical(canonical_record)
+
+    defense_record = (
+        _load_json_by_schema(args.defense, load_defense_readiness_record_schema())
+        if args.defense
+        else build_defense_readiness_record(canonical_record, payload=payload, context_type=args.context)
+    )
+    question_record = (
+        _load_json_by_schema(args.questions, load_question_challenge_record_schema())
+        if args.questions
+        else build_question_challenge_record(canonical_record, defense_record=defense_record, context_type=args.context)
+    )
+    manifest = build_pdf_annotation_manifest(
+        canonical_record,
+        payload=payload,
+        defense_record=defense_record,
+        question_record=question_record,
+        source_pdf_path=args.source_pdf,
+        context_type=args.context,
+    )
+    written = write_annotation_viewer(args.output_dir, payload, manifest)
+    print(json.dumps({"status": "ok", **written}, indent=2))
+    return 0
 
 
 def build_parser() -> argparse.ArgumentParser:
@@ -294,6 +465,62 @@ def build_parser() -> argparse.ArgumentParser:
     render.add_argument("input", help="Path to a canonical audit record JSON file.")
     render.add_argument("--output", help="Optional output path for rendered markdown.")
     render.set_defaults(func=cmd_render)
+
+    context_choices = [
+        "phd_defense_committee",
+        "dissertation_proposal_committee",
+        "departmental_research_review",
+        "journal_referee",
+        "ethics_or_compliance_board",
+    ]
+
+    defense = subparsers.add_parser(
+        "defense",
+        help="Generate a deterministic defense-readiness record from a manuscript package or canonical record.",
+    )
+    defense.add_argument("input", help="Path to a normalized manuscript package JSON or canonical audit record JSON.")
+    defense.add_argument("--output", help="Optional output path for the defense-readiness JSON.")
+    defense.add_argument("--pack-path", action="append", default=[], help="Explicit external pack path. Repeatable.")
+    defense.add_argument(
+        "--manuscript-package",
+        help="Optional manuscript package JSON used only when the primary input is a canonical record.",
+    )
+    defense.add_argument("--context", choices=context_choices, default=DEFAULT_DEFENSE_CONTEXT, help="Board or committee context.")
+    defense.set_defaults(func=cmd_defense)
+
+    questions = subparsers.add_parser(
+        "questions",
+        help="Generate typed manuscript-specific challenge questions from canonical and defense surfaces.",
+    )
+    questions.add_argument("input", help="Path to a normalized manuscript package JSON or canonical audit record JSON.")
+    questions.add_argument("--output", help="Optional output path for the question-challenge JSON.")
+    questions.add_argument("--defense", help="Optional path to an existing defense-readiness record JSON.")
+    questions.add_argument("--limit", type=_non_negative_int, help="Optional maximum number of questions to emit.")
+    questions.add_argument("--pack-path", action="append", default=[], help="Explicit external pack path. Repeatable.")
+    questions.add_argument(
+        "--manuscript-package",
+        help="Optional manuscript package JSON used only when the primary input is a canonical record.",
+    )
+    questions.add_argument("--context", choices=context_choices, default=DEFAULT_DEFENSE_CONTEXT, help="Board or committee context.")
+    questions.set_defaults(func=cmd_questions)
+
+    annotate = subparsers.add_parser(
+        "annotate-pdf",
+        help="Generate an annotation manifest and static HTML review surface from manuscript, defense, and question records.",
+    )
+    annotate.add_argument("input", help="Path to a normalized manuscript package JSON or canonical audit record JSON.")
+    annotate.add_argument("--output-dir", required=True, help="Directory where the manifest and HTML review artifact will be written.")
+    annotate.add_argument("--canonical", help="Optional canonical record JSON to use instead of deriving from the input.")
+    annotate.add_argument("--defense", help="Optional path to an existing defense-readiness record JSON.")
+    annotate.add_argument("--questions", help="Optional path to an existing question-challenge record JSON.")
+    annotate.add_argument("--source-pdf", help="Optional source PDF path recorded in the output manifest and viewer.")
+    annotate.add_argument("--pack-path", action="append", default=[], help="Explicit external pack path. Repeatable.")
+    annotate.add_argument(
+        "--manuscript-package",
+        help="Optional manuscript package JSON used only when the primary input is a canonical record.",
+    )
+    annotate.add_argument("--context", choices=context_choices, default=DEFAULT_DEFENSE_CONTEXT, help="Board or committee context.")
+    annotate.set_defaults(func=cmd_annotate_pdf)
 
     goldset = subparsers.add_parser("goldset", help="Run the benchmark harness.")
     goldset.add_argument(

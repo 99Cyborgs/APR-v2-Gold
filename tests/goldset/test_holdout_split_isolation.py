@@ -17,13 +17,35 @@ import apr_core.goldset.runner as goldset_runner  # noqa: E402
 
 DEV_MANIFEST = ROOT / "benchmarks" / "goldset_dev" / "manifest.yaml"
 HOLDOUT_MANIFEST = ROOT / "benchmarks" / "goldset_holdout" / "manifest.yaml"
-AUTHORITATIVE_DOCS = [
-    ROOT / "README.md",
-    ROOT / "benchmarks" / "goldset" / "README.md",
-    ROOT / "benchmarks" / "goldset" / "holdout" / "README.md",
-    ROOT / "docs" / "SPEC_IMPLEMENTATION_MATRIX.md",
-    ROOT / "docs" / "BENCHMARK_POLICY.md",
-]
+AUTHORITATIVE_DOC_EXPECTATIONS = {
+    ROOT / "README.md": [
+        "benchmarks/goldset_dev/manifest.yaml",
+        "benchmarks/goldset_holdout/manifest.yaml",
+    ],
+    ROOT / "benchmarks" / "goldset" / "README.md": [
+        "../goldset_dev/manifest.yaml",
+        "../goldset_holdout/manifest.yaml",
+        "blind holdout lane",
+    ],
+    ROOT / "benchmarks" / "goldset" / "holdout" / "README.md": [
+        "benchmarks/goldset_holdout/manifest.yaml",
+        "compatibility placeholder only",
+    ],
+    ROOT / "docs" / "SPEC_IMPLEMENTATION_MATRIX.md": [
+        "Blind holdout benchmark lane",
+        "benchmarks/goldset_holdout/manifest.yaml",
+    ],
+    ROOT / "docs" / "BENCHMARK_POLICY.md": [
+        "benchmarks/goldset_dev/manifest.yaml",
+        "benchmarks/goldset_holdout/manifest.yaml",
+        "apr goldset --holdout",
+        "blind evaluation",
+    ],
+}
+STALE_DOC_SNIPPETS = (
+    "benchmarks/goldset/manifest.yaml",
+    "benchmarks/goldset/holdout/manifest.yaml",
+)
 
 
 def test_holdout_ledger_entries_do_not_seed_dev_baselines(tmp_path: Path):
@@ -58,10 +80,9 @@ def test_holdout_ledger_entries_do_not_enter_dev_case_history(tmp_path: Path, mo
 
 
 def test_holdout_authoritative_docs_describe_active_blind_lane():
-    for doc_path in AUTHORITATIVE_DOCS:
+    for doc_path, required_snippets in AUTHORITATIVE_DOC_EXPECTATIONS.items():
         content = doc_path.read_text(encoding="utf-8")
-        assert "goldset_dev/" in content
-        assert "goldset_holdout/" in content
-    benchmark_policy = (ROOT / "docs" / "BENCHMARK_POLICY.md").read_text(encoding="utf-8")
-    assert "apr goldset --holdout" in benchmark_policy
-    assert "blind evaluation" in benchmark_policy
+        for snippet in required_snippets:
+            assert snippet in content, f"{doc_path.name} is missing authoritative benchmark guidance: {snippet}"
+        for stale_snippet in STALE_DOC_SNIPPETS:
+            assert stale_snippet not in content, f"{doc_path.name} reintroduced stale benchmark path: {stale_snippet}"

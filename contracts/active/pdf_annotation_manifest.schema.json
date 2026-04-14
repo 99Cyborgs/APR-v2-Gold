@@ -1,0 +1,162 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://apr-v2.local/contracts/active/pdf_annotation_manifest.schema.json",
+  "title": "PdfAnnotationManifest",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "artifact_type",
+    "schema_version",
+    "viewer_mode",
+    "source",
+    "annotations",
+    "drilldowns",
+    "provenance"
+  ],
+  "properties": {
+    "artifact_type": { "const": "PdfAnnotationManifest" },
+    "schema_version": { "const": "1.0.0" },
+    "viewer_mode": {
+      "type": "string",
+      "enum": ["text_facsimile", "text_facsimile_with_source_pdf"]
+    },
+    "source": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "manuscript_id",
+        "title",
+        "canonical_record_sha256",
+        "defense_record_sha256",
+        "question_record_sha256",
+        "source_pdf_path"
+      ],
+      "properties": {
+        "manuscript_id": { "type": ["string", "null"] },
+        "title": { "type": ["string", "null"] },
+        "canonical_record_sha256": { "type": "string" },
+        "defense_record_sha256": { "type": "string" },
+        "question_record_sha256": { "type": "string" },
+        "source_pdf_path": { "type": ["string", "null"] }
+      }
+    },
+    "annotations": {
+      "type": "array",
+      "items": { "$ref": "#/$defs/annotation" }
+    },
+    "drilldowns": {
+      "type": "array",
+      "items": { "$ref": "#/$defs/drilldown" }
+    },
+    "provenance": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "generated_at_utc",
+        "runtime_version",
+        "source_contract_version",
+        "source_policy_layer_version"
+      ],
+      "properties": {
+        "generated_at_utc": { "type": "string", "format": "date-time" },
+        "runtime_version": { "type": "string" },
+        "source_contract_version": { "type": "string" },
+        "source_policy_layer_version": { "type": "string" }
+      }
+    }
+  },
+  "$defs": {
+    "anchor": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["location", "quote"],
+      "properties": {
+        "location": { "type": "string" },
+        "quote": { "type": "string" }
+      }
+    },
+    "annotation": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "annotation_id",
+        "source_type",
+        "location",
+        "page_number",
+        "text_quote",
+        "category",
+        "severity",
+        "linked_artifact_paths",
+        "short_inline_label",
+        "suggested_repair_note",
+        "drilldown_id"
+      ],
+      "properties": {
+        "annotation_id": { "type": "string" },
+        "source_type": {
+          "type": "string",
+          "enum": ["pdf_span", "text_span", "section_anchor", "fallback"]
+        },
+        "location": { "type": "string" },
+        "page_number": { "type": ["integer", "null"], "minimum": 1 },
+        "text_quote": { "type": "string" },
+        "category": {
+          "type": "string",
+          "enum": [
+            "strength_anchor",
+            "weakness_anchor",
+            "ambiguity_anchor",
+            "risk_anchor",
+            "question_anchor",
+            "repair_anchor"
+          ]
+        },
+        "severity": {
+          "type": "string",
+          "enum": ["positive", "low", "moderate", "high", "critical"]
+        },
+        "linked_artifact_paths": {
+          "type": "array",
+          "items": { "type": "string" }
+        },
+        "short_inline_label": { "type": "string" },
+        "suggested_repair_note": { "type": ["string", "null"] },
+        "drilldown_id": { "type": "string" }
+      }
+    },
+    "drilldown": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "drilldown_id",
+        "title",
+        "summary",
+        "evidence",
+        "linked_risk_items",
+        "linked_question_items",
+        "mitigation_notes"
+      ],
+      "properties": {
+        "drilldown_id": { "type": "string" },
+        "title": { "type": "string" },
+        "summary": { "type": "string" },
+        "evidence": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/anchor" }
+        },
+        "linked_risk_items": {
+          "type": "array",
+          "items": { "type": "string" }
+        },
+        "linked_question_items": {
+          "type": "array",
+          "items": { "type": "string" }
+        },
+        "mitigation_notes": {
+          "type": "array",
+          "items": { "type": "string" }
+        }
+      }
+    }
+  }
+}

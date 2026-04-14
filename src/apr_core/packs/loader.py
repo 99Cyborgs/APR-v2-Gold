@@ -20,6 +20,7 @@ from apr_core.packs.protocol import PackSpec
 from apr_core.utils import repo_root, sha256_file
 
 PACK_API_VERSION = 1
+PACK_FATAL_GATE_SCOPES = {"advisory_pack_request", "pack_specific_advisory"}
 
 
 def _load_manifest(path: Path) -> dict[str, Any]:
@@ -137,11 +138,14 @@ def _not_applicable_result(spec: PackSpec, domain_module: str) -> dict[str, Any]
 def _normalize_fatal_gates(items: list[dict[str, Any]] | None) -> list[dict[str, Any]]:
     output: list[dict[str, Any]] = []
     for item in items or []:
+        scope = str(item.get("scope") or "advisory_pack_request")
+        if scope not in PACK_FATAL_GATE_SCOPES:
+            scope = "pack_specific_advisory"
         output.append(
             {
                 "code": str(item.get("code") or "unspecified_pack_gate"),
                 "reason": str(item.get("reason") or "unspecified_pack_reason"),
-                "scope": str(item.get("scope") or "advisory_pack_request"),
+                "scope": scope,
                 "evidence_anchors": dedupe_anchors(item.get("evidence_anchors") or []),
             }
         )

@@ -1,0 +1,34 @@
+{
+  "audit_mode": "full",
+  "manuscript_id": "external-specialist-001",
+  "title": "A cavity-specific correction term for cryogenic resonator drift",
+  "abstract": "We derive a cavity-specific correction term for cryogenic resonator drift and show that it improves stability in one experimentally relevant operating window relative to the standard control model. The contribution is narrow, bounded, and intended for specialist hardware readers.",
+  "manuscript_text": "We derive the correction term for one resonator geometry and validate it in a cryogenic operating window. Equation 1 defines the correction term, Table 1 reports stability relative to the control model, and Figure 1 shows the bounded improvement window. The model is limited to the tested geometry and should not be generalized outside that operating range.",
+  "figures_and_captions": [
+    "Figure 1. Stability improvement window for the tested resonator geometry."
+  ],
+  "tables": [
+    "Table 1. Stability comparison between the control model and the correction term."
+  ],
+  "references": [
+    "Ref1 standard resonator control model.",
+    "Ref2 cryogenic resonator drift survey.",
+    "Ref3 bounded operating-window validation."
+  ],
+  "supplement_or_appendix": "Appendix A provides the derivation steps and geometry constants.",
+  "target_venue": "Cryogenic Hardware Review",
+  "target_audience": "specialist hardware physicists",
+  "outlet_profile_hint": "specialist_research_journal",
+  "declared_article_type": "theory_or_model",
+  "data_availability": "Validation traces are archived with the appendix.",
+  "code_availability": "Symbolic derivation scripts are archived with the appendix.",
+  "materials_availability": "Geometry constants and derivation notes are in the appendix.",
+  "ethics_and_disclosures": "The authors declare no competing interests.",
+  "reporting_checklist": null,
+  "prior_reviews": null,
+  "author_response_to_reviews": null,
+  "reviewer_notes": null,
+  "external_constraints": [
+    "Synthetic external-paper calibration fixture."
+  ]
+}

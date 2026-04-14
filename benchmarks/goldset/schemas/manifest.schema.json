@@ -238,6 +238,70 @@
                 ]
               }
             }
+          },
+          "expected_external": {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+              "context_type": {
+                "type": "string",
+                "enum": [
+                  "phd_defense_committee",
+                  "dissertation_proposal_committee",
+                  "departmental_research_review",
+                  "journal_referee",
+                  "ethics_or_compliance_board"
+                ]
+              },
+              "central_claim": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "novelty_delta": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "first_hard_object_kind": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "decisive_support_object_kind": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "risk_categories": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                }
+              },
+              "question_categories": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                }
+              },
+              "strength_anchor_locations": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                }
+              },
+              "weakness_anchor_locations": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                }
+              }
+            }
           }
         }
       }

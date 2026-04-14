@@ -3,6 +3,7 @@ import copy
 import json
 import sys
 
+import pytest
 from jsonschema import validate
 import yaml
 
@@ -18,6 +19,8 @@ if existing and not str(getattr(existing, "__file__", "")).startswith(str(SRC)):
             sys.modules.pop(name, None)
 
 from apr_core.goldset import (  # noqa: E402
+    append_goldset_ledger_entry,
+    build_goldset_ledger_entry,
     default_goldset_governance_config,
     load_goldset_ledger_entry_schema,
     load_goldset_manifest,
@@ -29,6 +32,8 @@ import apr_core.goldset.runner as goldset_runner  # noqa: E402
 
 DEV_MANIFEST = ROOT / "benchmarks" / "goldset_dev" / "manifest.yaml"
 HOLDOUT_MANIFEST = ROOT / "benchmarks" / "goldset_holdout" / "manifest.yaml"
+EXTERNAL_DEV_MANIFEST = ROOT / "benchmarks" / "external_papers_dev" / "manifest.yaml"
+EXTERNAL_HOLDOUT_MANIFEST = ROOT / "benchmarks" / "external_papers_holdout" / "manifest.yaml"
 
 
 def _write_manifest(tmp_path: Path, manifest: dict) -> Path:
@@ -46,6 +51,16 @@ def test_goldset_manifest_passes_schema_validation():
     assert all(case["claim_type"] for case in manifest["cases"])
     assert all("recommendation_band" in case["expected_decision"] for case in manifest["cases"])
     assert {case["split"] for case in manifest["cases"]} == {"dev"}
+
+
+def test_external_paper_manifest_passes_schema_validation():
+    manifest = load_goldset_manifest(EXTERNAL_DEV_MANIFEST)
+    validate(instance=manifest, schema=load_goldset_manifest_schema())
+
+    assert len(manifest["cases"]) == 6
+    assert all(case["partition"] == "external_dissection_calibration" for case in manifest["cases"])
+    assert all(case["expected_external"]["first_hard_object_kind"] for case in manifest["cases"])
+    assert all(case["expected_external"]["decisive_support_object_kind"] for case in manifest["cases"])
 
 
 def test_goldset_runner_passes_fixture_manifest_and_emits_governance_fields():
@@ -74,6 +89,26 @@ def test_goldset_runner_passes_fixture_manifest_and_emits_governance_fields():
     assert summary["case_deltas"]["available"] is False
 
 
+def test_external_paper_lane_runs_and_holdout_masks_external_dissection():
+    development = run_goldset_manifest(EXTERNAL_DEV_MANIFEST)
+    holdout = run_goldset_manifest(EXTERNAL_HOLDOUT_MANIFEST, holdout_eval=True)
+
+    assert development["failed"] == 0
+    assert development["external_dissection_summary"]["available"] is True
+    assert development["external_dissection_summary"]["passed_case_count"] == development["total_cases"]
+    assert development["external_dissection_summary"]["metric_means"]["central_claim_token_f1"] == 1.0
+    assert development["external_dissection_summary"]["metric_means"]["decisive_support_object_kind_match"] == 1.0
+
+    assert holdout["evaluation_mode"] == "holdout_blind"
+    assert holdout["total_cases"] == 2
+    assert holdout["external_dissection_summary"]["available"] is False
+    assert holdout["external_dissection_summary"]["case_count"] == 2
+    assert holdout["external_dissection_summary"]["metric_means"] == {}
+    assert all(case["external_dissection"]["status"] == "masked_holdout" for case in holdout["cases"])
+    assert all(case["external_dissection"]["expected"] == {} for case in holdout["cases"])
+    assert all(case["external_dissection"]["observed"] == {} for case in holdout["cases"])
+
+
 def test_goldset_runner_writes_valid_calibration_ledger(tmp_path: Path):
     ledger_path = tmp_path / "calibration_ledger.jsonl"
 
@@ -94,6 +129,79 @@ def test_goldset_runner_writes_valid_calibration_ledger(tmp_path: Path):
         assert entry["contract_manifest_sha256"]
         assert entry["policy_layer_sha256"]
         assert entry["canonical_schema_sha256"]
+
+
+def test_goldset_summary_and_ledger_capture_replay_envelope(tmp_path: Path):
+    ledger_path = tmp_path / "calibration_ledger.jsonl"
+
+    summary = run_goldset_manifest(DEV_MANIFEST, ledger_path=ledger_path, notes="baseline")
+    ledger_entry = json.loads(ledger_path.read_text(encoding="utf-8").splitlines()[-1])
+
+    assert summary["manifest_path"] == str(DEV_MANIFEST.resolve())
+    assert summary["manifest_sha256"] == goldset_runner.sha256_file(DEV_MANIFEST)
+    assert summary["contract_manifest_sha256"]
+    assert summary["policy_layer_sha256"]
+    assert summary["canonical_schema_sha256"]
+    assert summary["runtime_identity"] == {
+        "bootstrap_entrypoint": "src/apr_core_bootstrap.py",
+        "core_runtime_root": "src/apr_core",
+        "active_contract_root": "contracts/active",
+    }
+    assert set(summary["repo_state"]) == {"commit_sha", "git_dirty"}
+    assert summary["prior_run"] == {
+        "available": False,
+        "generated_at_utc": None,
+        "manifest_sha256": None,
+        "contract_version": None,
+    }
+    assert summary["calibration_ledger"] == {
+        "path": str(ledger_path.resolve()),
+        "entry_appended": True,
+        "baseline_window": default_goldset_governance_config()["baseline_window"],
+    }
+
+    assert ledger_entry["manifest_path"] == summary["manifest_path"]
+    assert ledger_entry["manifest_sha256"] == summary["manifest_sha256"]
+    assert ledger_entry["contract_version"] == summary["contract_version"]
+    assert ledger_entry["policy_layer_version"] == summary["policy_layer_version"]
+    assert ledger_entry["contract_manifest_sha256"] == summary["contract_manifest_sha256"]
+    assert ledger_entry["policy_layer_sha256"] == summary["policy_layer_sha256"]
+    assert ledger_entry["canonical_schema_sha256"] == summary["canonical_schema_sha256"]
+    assert ledger_entry["runtime_identity"] == summary["runtime_identity"]
+    assert ledger_entry["repo_state"] == summary["repo_state"]
+    assert ledger_entry["evaluation_mode"] == summary["evaluation_mode"]
+    assert ledger_entry["holdout"] == summary["holdout"]
+    assert ledger_entry["gates"] == summary["gates"]
+    assert ledger_entry["prior_generated_at_utc"] == summary["prior_run"]["generated_at_utc"]
+
+
+def test_goldset_summary_rejects_unknown_failure_and_reason_namespaces():
+    summary = run_goldset_manifest(DEV_MANIFEST)
+
+    invalid_error_class_summary = copy.deepcopy(summary)
+    invalid_error_class_summary["error_class_counts"]["unknown_error_class"] = 1
+    with pytest.raises(ValueError, match="unknown goldset error classes"):
+        goldset_runner._validate_summary(invalid_error_class_summary)
+
+    invalid_reason_code_summary = copy.deepcopy(summary)
+    invalid_reason_code_summary["governance_report"]["warning_mode"]["reason_codes"] = ["unknown_reason_code"]
+    with pytest.raises(ValueError, match="unknown governance reason codes"):
+        goldset_runner._validate_summary(invalid_reason_code_summary)
+
+
+def test_goldset_ledger_append_rejects_unknown_failure_and_reason_namespaces(tmp_path: Path):
+    summary = run_goldset_manifest(DEV_MANIFEST)
+    ledger_path = tmp_path / "calibration_ledger.jsonl"
+
+    invalid_error_class_entry = build_goldset_ledger_entry(summary, manifest_path=DEV_MANIFEST, notes="baseline")
+    invalid_error_class_entry["case_outcomes"][0]["error_classes"] = ["unknown_error_class"]
+    with pytest.raises(ValueError, match="unknown goldset error classes"):
+        append_goldset_ledger_entry(ledger_path, invalid_error_class_entry)
+
+    invalid_reason_code_entry = build_goldset_ledger_entry(summary, manifest_path=DEV_MANIFEST, notes="baseline")
+    invalid_reason_code_entry["governance_report"]["contract_status"]["hard_fail_reason_codes"] = ["unknown_reason_code"]
+    with pytest.raises(ValueError, match="unknown governance reason codes"):
+        append_goldset_ledger_entry(ledger_path, invalid_reason_code_entry)
 
 
 def test_goldset_manifest_must_match_active_contract_version(tmp_path: Path):

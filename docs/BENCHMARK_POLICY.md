@@ -48,8 +48,10 @@ This file is the authoritative benchmark-governance document for APR v2 Gold.
 
 - `apr goldset` writes JSONL ledger entries by default to `benchmarks/goldset/output/calibration_ledger.jsonl`.
 - `apr goldset --holdout` writes to the separate holdout ledger by default unless a ledger path is passed explicitly. `--holdout-eval` remains a compatibility alias.
+- Summary JSON and appended ledger rows are the replay envelope for benchmark runs: they carry manifest path/hash, active contract/policy/schema digests, runtime identity, repo state, prior-run linkage, governance, gates, and case outcomes.
 - When summary files are emitted, the summary JSON and governance report are persisted before the ledger row is appended.
 - Ledger entries record manifest hash, contract version, result counts, error-class counts, decision-algebra totals, cross-case diagnostics, case deltas, recommendation transitions, gate status, and optional notes/operator metadata.
+- Unknown benchmark failure classes or governance reason codes are rejected before summary return or ledger append so durable artifacts fail closed on namespace drift.
 - No fake history is backfilled. The ledger is current-forward only.
 
 ## Terminology

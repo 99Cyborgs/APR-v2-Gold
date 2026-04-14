@@ -84,19 +84,19 @@
 
 ## 5. Hardening Risk Register Summary
 
-- `HR-01`: taxonomy drift across manifest, policy layer, schema, runtime, and benchmark code.
+- `HR-01`: taxonomy drift is now fail-closed for the fixed policy/runtime/schema namespaces, so residual risk is future additive taxonomy changes landing without synchronized validation updates.
 - `HR-02`: canonical schema under-specifies several semantic nested fields.
-- `HR-03`: processing-state duplication leaves `RENDERED` inconsistent with canonical audit provenance.
-- `HR-04`: benchmark manifests carry `contract_version` as a free string with no active-contract parity check.
-- `HR-05`: docs lockstep risk remains, but the highest-signal authoritative drift on manifest paths and holdout status was corrected on 2026-04-09.
+- `HR-03`: renderer-boundary drift remains a maintenance risk, but policy/runtime/docs now agree that canonical provenance stops at `PACKS_EXECUTED`.
+- `HR-04`: benchmark manifests still carry `contract_version` as a free string in schema, but runtime and validator entrypoints now fail closed on active-contract parity.
+- `HR-05`: docs lockstep risk is reduced because authoritative benchmark docs now have automated lockstep coverage, though generated or historical artifacts can still carry stale wording.
 - `HR-06`: canonical provenance is too thin for strong replay and audit reconstruction.
-- `HR-07`: goldset summary/ledger provenance is richer than runtime provenance but still lacks some replay fingerprints and closed failure taxonomies.
-- `HR-08`: canonical JSON, markdown, summary JSON, governance report JSON, and JSONL ledger writes are not atomic.
-- `HR-09`: pack path handling and import-root mutation are permissive relative to the repo’s conservative trust boundary.
-- `HR-10`: pack fatal-gate semantics are documented as requests but runtime behavior leaves the semantics implicit.
-- `HR-11`: dormant provider/adapter seams could be admitted later without explicit local-first/determinism gates.
-- `HR-12`: release/install truth surfaces are duplicated across manifest, packaging, tests, docs, and scripts.
-- `HR-13`: docs and tests are strong, but lockstep enforcement is spread across several entrypoints rather than one explicit hardening matrix.
+- `HR-07`: goldset summary/ledger provenance now carries the benchmark replay envelope and fail-closed namespace validation, so residual risk is limited to future additive surfaces drifting without matching tests/docs.
+- `HR-08`: canonical/report writes are already atomic on the current helper path, so residual risk is future output surfaces bypassing those helpers and the separate ledger-consistency problem tracked in `HR-09`.
+- `HR-09`: goldset summary/governance/ledger consistency is now guarded by rollback sequencing in `cmd_goldset()`, so residual risk is future bundled artifact expansion without matching rollback tests.
+- `HR-11`: pack fatal-gate semantics are now explicitly documented and regression-tested as advisory-only; residual risk is future wording drift, not a live runtime ambiguity.
+- `HR-12`: provider/adapter seams are now explicitly quarantined by doctrine docs and seam-isolation tests; residual risk is future activation pressure, not missing admission criteria.
+- `HR-13`: release/install truth surfaces are duplicated across manifest, packaging, tests, docs, and scripts.
+- Validation surfaces are strong, but lockstep enforcement is still spread across several entrypoints rather than one explicit hardening matrix.
 
 See `APR_V2_HARDENING_RISK_REGISTER.md` for full detail.
 
@@ -104,17 +104,17 @@ See `APR_V2_HARDENING_RISK_REGISTER.md` for full detail.
 
 | Current state | Weakness | Proposed addition | Change class | Exact affected files | Dependency order | Validation needed | Migration risk | When |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- |
-| Policy, runtime, schema, and benchmark duplicate taxonomies | Silent drift can survive until a specific test trips | Add explicit lockstep validators and close schema enums where semantics are already fixed | Additive | `contracts/active/*`, `src/apr_core/{pipeline.py,classify/classification.py}`, `src/apr_core/goldset/runner.py`, `scripts/validate_contract.py` | First | Contract script + targeted pytest | Low if additive | Now |
+| Policy, runtime, schema, and benchmark duplicate taxonomies | Residual risk is maintenance drift on future additive namespaces rather than missing validation on current fixed sets | Preserve explicit lockstep validators and contract tests for the fixed taxonomies | Ongoing additive guard | `contracts/active/*`, `src/apr_core/{pipeline.py,classify/classification.py}`, `src/apr_core/goldset/runner.py`, `scripts/validate_contract.py` | First | Contract script + targeted pytest | Low if additive | Completed on `2026-04-13`; preserve going forward |
 | Canonical schema is closed at top level but loose in some nested semantics | Semantic strings can drift without contract failure | Tighten nested enums and closed object surfaces for classification, routing, provenance, and pack metadata | Additive schema hardening | `contracts/active/canonical_audit_record.schema.json`, docs, surface-lock tests | After taxonomy inventory | Contract tests + surface-lock tests | Medium because downstream snapshots must update intentionally | Now |
-| Benchmark manifests match active contract today by convention only | Manifest/runtime mismatch can go undetected | Add active-contract parity checks for dev and holdout manifests and CI enforcement | Additive validation | `scripts/validate_goldset.py`, `src/apr_core/goldset/runner.py`, `benchmarks/goldset/schemas/manifest.schema.json` | Early | Goldset validation + targeted goldset tests | Low | Now |
+| Benchmark manifests still type `contract_version` loosely in schema | Manifest/runtime mismatch must keep failing closed outside schema alone | Preserve active-contract parity checks for dev and holdout manifests and keep CI validation routing through them | Additive validation | `scripts/validate_goldset.py`, `src/apr_core/goldset/runner.py`, `benchmarks/goldset/schemas/manifest.schema.json` | Early | Goldset validation + targeted goldset tests | Low | Ongoing guard |
 | Canonical provenance only records time, versions, and stage list | Replay and audit reconstruction are incomplete | Add deterministic replay fingerprints and source digests without changing recommendation semantics | Additive schema/runtime change | `src/apr_core/pipeline.py`, canonical schema, docs, tests | After schema closure | Contract tests + replay tests + surface locks | Medium | Now |
-| Goldset summary and ledger track governance well but not every replay surface | Regression evidence may be harder to reconstruct than necessary | Expand ledger/summary replay envelope and failure-class closures | Additive benchmark hardening | `src/apr_core/goldset/runner.py`, summary/ledger schemas, tests | After manifest parity | Goldset tests + ledger replay checks | Medium | Now |
-| Output writes are direct file writes or direct JSONL append | Partial writes are possible on interruption | Add atomic write primitives and crash-safe ledger append strategy | Refactor-level local IO hardening | `src/apr_core/utils.py`, `src/apr_core/cli.py`, `src/apr_core/goldset/runner.py` | After provenance design | CLI smoke + tempdir tests | Low to medium | Now |
-| Pack paths are raw strings and global import roots are mutated | Advisory seam is broader than necessary | Canonicalize paths, dedupe requests, capture pack fingerprints, and constrain import behavior | Additive trust-boundary hardening | `src/apr_core/packs/loader.py`, pack docs, pack tests | Independent | Regression pack tests + surface locks | Medium | Now |
+| Goldset summary and ledger now carry the benchmark replay envelope and fail-closed namespace validation | Residual risk is future additive replay or taxonomy surfaces drifting without synchronized tests/docs | Preserve the replay-envelope and namespace-validator regression package as an ongoing guard | Ongoing benchmark hardening | `src/apr_core/goldset/runner.py`, summary/ledger schemas, tests | After manifest parity | Goldset tests + ledger replay checks | Low to medium | Completed on `2026-04-13`; preserve going forward |
+| Canonical and report outputs already route through atomic helper writes | Residual risk is helper bypass on future output paths plus separate ledger-consistency semantics | Preserve the atomic helper layer and lock it with tempdir failure-path tests | Ongoing local IO hardening | `src/apr_core/utils.py`, `src/apr_core/cli.py`, tests | After provenance design | CLI smoke + tempdir tests | Low | Completed on `2026-04-13`; preserve going forward |
+| Pack paths are already canonicalized and fingerprinted, but import roots still use temporary `sys.path` mutation | Residual seam is import-boundary discipline rather than missing provenance | Preserve canonical path/fingerprint capture and tighten import behavior additively if later hardening warrants it | Additive trust-boundary hardening | `src/apr_core/packs/loader.py`, pack docs, pack tests | Independent | Regression pack tests + surface locks | Low to medium | `WP-13` completed on `2026-04-13`; preserve going forward |
 | Pack docs mention fatal-gate requests but runtime treats them as additive metadata | Readers can over-interpret pack authority | Clarify/request semantics in docs, schema names, and decision-path tests without giving packs ownership of recommendations | Additive doctrine hardening | `docs/PACK_INTERFACE.md`, pack schema/runtime docs/tests, possibly normalized pack-result naming | After pack path hardening | Pack regression tests + docs lockstep | Low | Now |
-| Provider and adapter seams are dormant but lightly defined | Future activation could violate determinism/local-first assumptions | Add explicit admission checklist, tests, and docs proving inertness until admitted | Additive guardrail | `src/apr_core/providers/*`, `src/apr_core/adapters/*`, docs, tests | Independent | Grep-based tests / targeted unit tests | Low | Later-now |
+| Provider and adapter seams are dormant and now explicitly quarantined by admission-criteria docs plus seam-isolation tests | Residual risk is future activation pressure rather than missing inertness proof | Preserve the current admission checklist wording and absence proofs until an intentional architecture change supersedes them | Additive guardrail | `src/apr_core/providers/*`, `src/apr_core/adapters/*`, docs, tests | Independent | Grep-based tests / targeted unit tests | Low | `WP-15` completed on `2026-04-13`; preserve going forward |
 | Benchmark and README docs can drift from live manifests and holdout reality | Users can act on stale repo guidance | Correct authoritative docs, then add lockstep checks tied to manifests/tests | Additive docs hardening | `README.md`, `benchmarks/goldset/README.md`, `benchmarks/goldset/holdout/README.md`, `docs/SPEC_IMPLEMENTATION_MATRIX.md`, `docs/BENCHMARK_POLICY.md` | Earliest | Docs lockstep checks | Low | Now |
-| Release/build truth is spread across manifest, packaging, scripts, and tests | Future release changes can become incoherent | Add explicit release-surface lock tests and docs alignment | Additive release hardening | `pyproject.toml`, `setup.py`, `scripts/build_release.py`, `docs/RELEASE_POLICY.md`, CI/tests | Late | Release smoke + clean-tree release check | Low | Later |
+| Release/build truth is spread across manifest, packaging, scripts, and tests | Future release changes can become incoherent | Preserve explicit release-surface lock tests and docs alignment | Additive release hardening | `pyproject.toml`, `setup.py`, `scripts/build_release.py`, `docs/RELEASE_POLICY.md`, CI/tests | Late | Release smoke + clean-tree release check | Low | Ongoing guard |
 
 ## 7. Phase-by-Phase Roadmap
 
@@ -137,12 +137,12 @@ See `APR_V2_HARDENING_PHASES.md` for full phase detail.
 - Treat release/migration work as the final wave after runtime, benchmark, and docs surfaces are in lockstep.
 
 Recommended execution waves:
-- Wave 1: `WP-16` completed on 2026-04-09; next execution order is `WP-04`, then `WP-01`
-- Wave 2: `WP-02`, `WP-03`, `WP-05`, `WP-06`
-- Wave 3: `WP-07`, `WP-08`, `WP-09`
-- Wave 4: `WP-10`, `WP-11`, `WP-12`
-- Wave 5: `WP-13`, `WP-14`, `WP-15`
-- Wave 6: `WP-17`, `WP-18`
+- Wave 1: `WP-16` completed on `2026-04-09`; `WP-04` and `WP-01` completed on `2026-04-13`
+- Wave 2: `WP-02`, `WP-03`, `WP-05`, and `WP-06` completed on `2026-04-13`
+- Wave 3: `WP-07`, `WP-08`, and `WP-09` completed on `2026-04-13`
+- Wave 4: `WP-10`, `WP-11`, and `WP-12` completed on `2026-04-13`
+- Wave 5: `WP-13`, `WP-14`, and `WP-15` completed on `2026-04-13`
+- Wave 6: `WP-17` completed on `2026-04-13`; `WP-18` completed on `2026-04-13`
 
 ## 9. Validation Strategy
 
@@ -180,4 +180,6 @@ The highest-value work is to remove silent drift channels between doctrine, sche
 - The highest-signal authoritative docs now describe holdout as active and split-manifest based, but generated and historical surfaces can still carry stale strings and should not be treated as authority.
 - Provenance hardening needs a precise choice about which replay fingerprints belong in `CanonicalAuditRecord` versus benchmark-only ledger surfaces.
 - Pack “fatal-gate requests” need clearer naming so they remain advisory without being mistaken for core recommendation ownership.
-- `apr doctor` currently mixes runtime validation with clean-tree readiness. The hardening plan treats that as a design choice to revisit, not an immediate bug.
+- Superseding note (`2026-04-13`): `pack_results[*].fatal_gates` are now explicitly documented and regression-tested as advisory-only; remaining Phase 5 uncertainty is limited to dormant seam admission criteria.
+- Superseding note (`2026-04-13`): provider and adapter seams are now explicitly quarantined by doctrine docs and seam-isolation tests; Phase 5 no longer has open extension-seam admission work.
+- `apr doctor` vs `apr readiness` semantics are now explicitly split in code, tests, and docs; remaining uncertainty is limited to later release-surface work, not local runtime-vs-readiness ambiguity.
